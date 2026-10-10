@@ -3,12 +3,26 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { UserCircle, Upload } from "lucide-react";
+import { UserCircle, Upload, Trash2, Plus, GitBranch, AtSign, Camera, Film, Tv, Gamepad2, Link as LinkIcon } from "lucide-react";
 import Logo from "@/components/ui/Logo";
+import Select from "@/components/ui/Select";
+
+const PLATFORMS = [
+  { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <GitBranch className="w-4 h-4" /> },
+  { id: 'twitter', label: 'Twitter (X)', placeholder: 'Nombre de usuario', icon: <AtSign className="w-4 h-4" /> },
+  { id: 'instagram', label: 'Instagram', placeholder: 'Nombre de usuario', icon: <Camera className="w-4 h-4" /> },
+  { id: 'letterboxd', label: 'Letterboxd', placeholder: 'Nombre de usuario', icon: <Film className="w-4 h-4" /> },
+  { id: 'anilist', label: 'AniList', placeholder: 'Nombre de usuario', icon: <Tv className="w-4 h-4" /> },
+  { id: 'backloggd', label: 'Backloggd', placeholder: 'Nombre de usuario', icon: <Gamepad2 className="w-4 h-4" /> },
+  { id: 'custom', label: 'Otros', placeholder: 'https://tu-web.com', icon: <LinkIcon className="w-4 h-4" /> },
+];
 
 export default function Settings() {
   const [user, setUser] = useState<any>(null);
   const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [socialLinks, setSocialLinks] = useState<{ platform: string, value: string }[]>([]);
+  
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -31,12 +45,15 @@ export default function Settings() {
 
       const { data } = await supabase
         .from("users")
-        .select("username, avatar_url")
+        .select("username, avatar_url, bio, social_links")
         .eq("id", session.user.id)
         .single();
       
       if (data) {
         setUsername(data.username || "");
+        setBio(data.bio || "");
+        setSocialLinks(data.social_links || []);
+        
         if (data.avatar_url) {
           setAvatarUrl(data.avatar_url);
           setPreviewUrl(data.avatar_url);
@@ -78,21 +95,44 @@ export default function Settings() {
       }
     }
 
+    const cleanLinks = socialLinks.filter(link => link.platform !== "" && link.value.trim() !== "");
+
     const { error } = await supabase
       .from("users")
-      .update({ username, avatar_url: finalAvatarUrl })
+      .update({ 
+        username, 
+        bio,
+        social_links: cleanLinks,
+        avatar_url: finalAvatarUrl 
+      })
       .eq("id", user.id);
       
     setSaving(false);
     
     if (error) {
-      setMessage({ text: "error al actualizar perfil", type: "error" });
+      setMessage({ text: "Error al actualizar perfil", type: "error" });
     } else {
-      setMessage({ text: "perfil guardado correctamente", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 1000);
+      setSocialLinks(cleanLinks);
+      setMessage({ text: "Perfil guardado correctamente", type: "success" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     }
   };
 
+  const handleLinkChange = (index: number, field: 'platform' | 'value', val: string) => {
+    const newLinks = [...socialLinks];
+    newLinks[index][field] = val;
+    setSocialLinks(newLinks);
+  };
+
+  const removeLink = (index: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
+  };
+
+  const addLink = () => {
+    if (socialLinks.length < 10) {
+      setSocialLinks([...socialLinks, { platform: '', value: '' }]);
+    }
+  };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">Cargando...</div>;
 
@@ -134,32 +174,90 @@ export default function Settings() {
               Cambiar foto
             </button>
           </div>
-
           <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">usuario</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Biografía</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Cuéntanos un poco sobre ti..."
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none resize-none h-24"
+                  maxLength={300}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between items-end mb-2">
+                  <label className="block text-sm font-medium text-zinc-400">Redes sociales</label>
+                  <span className="text-xs text-zinc-600">
+                    {socialLinks.length}/10
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  {socialLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Select
+                        value={link.platform}
+                        onChange={(val) => handleLinkChange(index, 'platform', val)}
+                        options={PLATFORMS}
+                        className="w-[140px] shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={link.value}
+                        disabled={!link.platform}
+                        placeholder={!link.platform ? "Elige plataforma..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
+                        onChange={(e) => handleLinkChange(index, 'value', e.target.value)}
+                        className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => removeLink(index)}
+                        className="p-2 text-zinc-500 hover:text-red-400 transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {socialLinks.length < 10 && (
+                    <button
+                      type="button"
+                      onClick={addLink}
+                      className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#8AD6D1] rounded-md hover:bg-[#8AD6D1]/10 transition-colors w-max"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Añadir
+                    </button>
+                  )}
+                </div>
+              </div>
+
             </div>
 
             <div className="mt-8">
               {message.text && (
-                <div className={`text-sm mb-3 font-medium ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`text-sm mb-3 text-center font-medium ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                   {message.text}
                 </div>
               )}
               <button
+                type="button"
                 onClick={handleUpdate}
                 disabled={saving}
-                className="w-full py-2 bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
+                className="w-full py-2 bg-[#8AD6D1] hover:bg-[#96c2c2] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
               >
-                {saving ? "Guardando..." : "Guardar"}
+                {saving ? "Guardando..." : "Guardar cambios"}
               </button>
             </div>
           </div>
@@ -168,4 +266,3 @@ export default function Settings() {
     </div>
   );
 }
-

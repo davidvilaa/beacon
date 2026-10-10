@@ -108,7 +108,7 @@ export default function Home() {
                       <Settings2 className="w-4 h-4" />
                       Ajustes
                     </Link>
-                    <hr className="border-zinc-700/60" />
+                    <hr className="border-zinc-700/60 mx-6" />
                     <button 
                       onClick={async () => await supabase.auth.signOut()} 
                       className="px-4 py-3 text-sm font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300 transition-colors text-left flex items-center gap-2"

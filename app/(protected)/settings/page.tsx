@@ -86,10 +86,10 @@ export default function Settings() {
     setSaving(false);
     
     if (error) {
-      setMessage({ text: "Error al actualizar perfil", type: "error" });
+      setMessage({ text: "error al actualizar perfil", type: "error" });
     } else {
-      setMessage({ text: "Perfil guardado correctamente", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      setMessage({ text: "perfil guardado correctamente", type: "success" });
+      setTimeout(() => setMessage({ text: "", type: "" }), 1000);
     }
   };
 
@@ -138,7 +138,7 @@ export default function Settings() {
           <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">usuario</label>
                 <input
                   type="text"
                   value={username}
@@ -159,7 +159,7 @@ export default function Settings() {
                 disabled={saving}
                 className="w-full py-2 bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
               >
-                {saving ? "Guardando..." : "Guardar cambios"}
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { UserCircle, Upload } from "lucide-react";
-import Link from "next/link";
+import Logo from "@/components/ui/Logo";
 
 export default function Settings() {
   const [user, setUser] = useState<any>(null);
@@ -101,29 +101,28 @@ export default function Settings() {
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">Cargando...</div>;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50">
-      <div className="w-full max-w-md p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50 py-12">
+      <div className="w-full max-w-2xl p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
         <div className="text-center mb-6">
-          <Link href="/" className="inline-block text-3xl font-black tracking-widest text-zinc-100 hover:text-white transition-colors">
-            BEACON
-          </Link>
+          <Logo className="text-3xl" />
           <p className="text-zinc-400 mt-1">Ajustes de perfil</p>
         </div>
 
-        <hr className="border-zinc-800/50 mb-6" />
+        <hr className="border-zinc-700/60 mb-8" />
 
-        <div className="space-y-6">
-          <div className="flex flex-col items-center gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Columna Izquierda: Foto de Perfil */}
+          <div className="col-span-1 flex flex-col items-center">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               {previewUrl ? (
-                <img src={previewUrl} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2 border-zinc-700" />
+                <img src={previewUrl} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-zinc-800" />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-zinc-700">
-                  <UserCircle className="w-12 h-12 text-zinc-500" />
+                <div className="w-32 h-32 rounded-full bg-zinc-800 flex items-center justify-center border-4 border-zinc-700">
+                  <UserCircle className="w-16 h-16 text-zinc-500" />
                 </div>
               )}
               <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Upload className="w-6 h-6 text-white" />
+                <Upload className="w-8 h-8 text-white" />
               </div>
             </div>
             <input 
@@ -135,45 +134,54 @@ export default function Settings() {
             />
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-zinc-400 hover:text-white transition-colors"
+              className="mt-3 text-sm text-zinc-400 hover:text-white transition-colors"
             >
               Cambiar foto
             </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-
-          {message.text && (
-            <div className={`text-sm text-center font-medium ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-              {message.text}
+          {/* Columna Derecha: Inputs y Guardar */}
+          <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+              {/* Espacio para futuros inputs */}
             </div>
-          )}
 
-          <button
-            onClick={handleUpdate}
-            disabled={saving}
-            className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md font-medium transition-colors"
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
+            <div className="mt-8">
+              {message.text && (
+                <div className={`text-sm mb-3 font-medium ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {message.text}
+                </div>
+              )}
+              <button
+                onClick={handleUpdate}
+                disabled={saving}
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md font-medium transition-colors"
+              >
+                {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <hr className="border-zinc-800/50 my-6" />
+        <hr className="border-zinc-700/60 my-8" />
 
-        <button
-          onClick={handleLogout}
-          className="w-full py-2 bg-transparent border border-red-900/50 text-red-500 hover:bg-red-950/30 rounded-md font-medium transition-colors"
-        >
-          Cerrar sesión
-        </button>
+        <div className="flex justify-end">
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 bg-transparent border border-red-900/50 text-red-500 hover:bg-red-950/30 rounded-md font-medium transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
     </div>
   );

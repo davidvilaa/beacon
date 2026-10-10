@@ -13,8 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Beacon | Tu refugio personal",
-  description: "Centro de mando para todos tus hobbies",
+  title: "beacon",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

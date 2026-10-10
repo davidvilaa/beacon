@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '../lib/supabase/client';
+import Logo from '@/components/ui/Logo';
 
 const backgrounds = [
   "/backgrounds/01.jpg",
@@ -85,24 +86,32 @@ export default function Home() {
           showNav ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
-          <Link href="/" className="text-xl font-black tracking-widest text-zinc-100 hover:text-white transition-colors">
-            BEACON
-          </Link>
+        <header className="relative z-10 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
+          <Logo className="text-xl" />
           
           <div className="flex items-center">
             {user ? (
-              <Link href="/settings">
-                <button className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors overflow-hidden border border-zinc-700">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
-                  ) : (
-                    <UserCircle className="h-5 w-5 text-zinc-400" />
-                  )}
-                </button>
-              </Link>
+              <div className="relative group">
+                <Link href="/profile">
+                  <button className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors overflow-hidden border border-zinc-700">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserCircle className="h-5 w-5 text-zinc-400" />
+                    )}
+                  </button>
+                </Link>
+
+                <div className="absolute right-0 top-full pt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
+                    <Link href="/settings" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">
+                      Ajustes
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <Link href="/login" className="text-sm font-medium border border-zinc-700 hover:bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-md transition-colors">
                   Entrar
                 </Link>

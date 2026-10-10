@@ -37,22 +37,22 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">e-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-indigo-500 focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Contraseña</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">contraseña</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-indigo-500 focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
                 required
               />
             </div>
@@ -62,7 +62,7 @@ export default function Login() {
           <div className="mt-8">
             <button
               type="submit"
-              className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-md font-medium transition-colors"
+              className="w-full py-3 bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 rounded-md font-medium transition-colors"
             >
               Entrar
             </button>
@@ -72,9 +72,10 @@ export default function Login() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          ¿No tienes cuenta? <Link href="/register" className="text-indigo-400 hover:underline">Regístrate</Link>
+          ¿no tienes cuenta? <Link href="/register" className="text-[#8ad6d1] hover:underline">Regístrate</Link>
         </div>
       </div>
     </div>
   );
 }
+

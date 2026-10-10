@@ -1,6 +1,6 @@
 "use client";
 
-import { UserCircle } from 'lucide-react';
+import { UserCircle, Settings2, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -104,9 +104,18 @@ export default function Home() {
 
                 <div className="absolute right-0 top-full pt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
-                    <Link href="/settings" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors">
+                    <Link href="/settings" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                      <Settings2 className="w-4 h-4" />
                       Ajustes
                     </Link>
+                    <hr className="border-zinc-700/60" />
+                    <button 
+                      onClick={async () => await supabase.auth.signOut()} 
+                      className="px-4 py-3 text-sm font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300 transition-colors text-left flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Cerrar sesión
+                    </button>
                   </div>
                 </div>
               </div>
@@ -115,8 +124,8 @@ export default function Home() {
                 <Link href="/login" className="text-sm font-medium border border-zinc-700 hover:bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-md transition-colors">
                   Entrar
                 </Link>
-                <Link href="/register" className="text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md transition-colors">
-                  Registro
+                <Link href="/register" className="text-sm font-medium bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 px-4 py-1.5 rounded-md transition-colors">
+                  Registrarse
                 </Link>
               </div>
             )}
@@ -140,3 +149,4 @@ export default function Home() {
     </div>
   );
 }
+

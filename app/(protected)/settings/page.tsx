@@ -93,10 +93,6 @@ export default function Settings() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">Cargando...</div>;
 
@@ -111,7 +107,6 @@ export default function Settings() {
         <hr className="border-zinc-700/60 mb-8" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Columna Izquierda: Foto de Perfil */}
           <div className="col-span-1 flex flex-col items-center">
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               {previewUrl ? (
@@ -140,7 +135,6 @@ export default function Settings() {
             </button>
           </div>
 
-          {/* Columna Derecha: Inputs y Guardar */}
           <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
@@ -149,10 +143,9 @@ export default function Settings() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-indigo-500 focus:outline-none"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
                 />
               </div>
-              {/* Espacio para futuros inputs */}
             </div>
 
             <div className="mt-8">
@@ -164,25 +157,15 @@ export default function Settings() {
               <button
                 onClick={handleUpdate}
                 disabled={saving}
-                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-md font-medium transition-colors"
+                className="w-full py-2 bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
             </div>
           </div>
         </div>
-
-        <hr className="border-zinc-700/60 my-8" />
-
-        <div className="flex justify-end">
-          <button
-            onClick={handleLogout}
-            className="px-6 py-2 bg-transparent border border-red-900/50 text-red-500 hover:bg-red-950/30 rounded-md font-medium transition-colors"
-          >
-            Cerrar sesión
-          </button>
-        </div>
       </div>
     </div>
   );
 }
+

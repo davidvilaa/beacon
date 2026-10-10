@@ -3,17 +3,15 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { UserCircle, Upload, Trash2, Plus, GitBranch, AtSign, Camera, Film, Tv, Gamepad2, Link as LinkIcon } from "lucide-react";
+import { UserCircle, Upload, Trash2, Plus, Link as LinkIcon } from "lucide-react";
+import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import Logo from "@/components/ui/Logo";
 import Select from "@/components/ui/Select";
 
 const PLATFORMS = [
-  { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <GitBranch className="w-4 h-4" /> },
-  { id: 'twitter', label: 'Twitter (X)', placeholder: 'Nombre de usuario', icon: <AtSign className="w-4 h-4" /> },
-  { id: 'instagram', label: 'Instagram', placeholder: 'Nombre de usuario', icon: <Camera className="w-4 h-4" /> },
-  { id: 'letterboxd', label: 'Letterboxd', placeholder: 'Nombre de usuario', icon: <Film className="w-4 h-4" /> },
-  { id: 'anilist', label: 'AniList', placeholder: 'Nombre de usuario', icon: <Tv className="w-4 h-4" /> },
-  { id: 'backloggd', label: 'Backloggd', placeholder: 'Nombre de usuario', icon: <Gamepad2 className="w-4 h-4" /> },
+  { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <FaGithub className="w-4 h-4" /> },
+  { id: 'twitter', label: 'X (Twitter)', placeholder: 'Nombre de usuario', icon: <FaXTwitter className="w-4 h-4" /> },
+  { id: 'instagram', label: 'Instagram', placeholder: 'Nombre de usuario', icon: <FaInstagram className="w-4 h-4" /> },
   { id: 'custom', label: 'Otros', placeholder: 'https://tu-web.com', icon: <LinkIcon className="w-4 h-4" /> },
 ];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { UserCircle, Settings2, LogOut } from 'lucide-react';
+import { UserCircle, Settings2, LogOut, CircleUserRound } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -104,11 +104,15 @@ export default function Home() {
 
                 <div className="absolute right-0 top-full pt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
+                    <Link href="/profile" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                      <CircleUserRound className="w-4 h-4" />
+                      Perfil
+                    </Link>
+                    <hr className="border-zinc-700/60 mx-6" />
                     <Link href="/settings" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
                       <Settings2 className="w-4 h-4" />
                       Ajustes
                     </Link>
-                    <hr className="border-zinc-700/60 mx-6" />
                     <button 
                       onClick={async () => await supabase.auth.signOut()} 
                       className="px-4 py-3 text-sm font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300 transition-colors text-left flex items-center gap-2"

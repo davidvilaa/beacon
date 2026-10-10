@@ -7,6 +7,7 @@ import { UserCircle, Upload, Trash2, Plus, Link as LinkIcon } from "lucide-react
 import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import Logo from "@/components/ui/Logo";
 import Select from "@/components/ui/Select";
+import { useToast } from "@/components/ui/Toast";
 
 const PLATFORMS = [
   { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <FaGithub className="w-4 h-4" /> },
@@ -26,8 +27,8 @@ export default function Settings() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" });
   
+  const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -73,7 +74,18 @@ export default function Settings() {
   const handleUpdate = async () => {
     if (!user) return;
     setSaving(true);
-    setMessage({ text: "", type: "" });
+
+    if (username.length < 3 || username.length > 20) {
+      addToast("El usuario debe tener entre 3 y 20 caracteres", "error");
+      setSaving(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      addToast("El usuario solo permite letras, números y barra baja", "error");
+      setSaving(false);
+      return;
+    }
+
     let finalAvatarUrl = avatarUrl;
 
     if (avatarFile) {
@@ -87,7 +99,7 @@ export default function Settings() {
         const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
         finalAvatarUrl = publicUrl;
       } else {
-        setMessage({ text: "Error subiendo la foto", type: "error" });
+        addToast("Error subiendo la foto", "error");
         setSaving(false);
         return;
       }
@@ -108,11 +120,10 @@ export default function Settings() {
     setSaving(false);
     
     if (error) {
-      setMessage({ text: "Error al actualizar perfil", type: "error" });
+      addToast("Error al actualizar perfil", "error");
     } else {
       setSocialLinks(cleanLinks);
-      setMessage({ text: "Perfil guardado correctamente", type: "success" });
-      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      addToast("Perfil guardado correctamente", "success");
     }
   };
 
@@ -178,6 +189,7 @@ export default function Settings() {
                 <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
                 <input
                   type="text"
+                  maxLength={20}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
@@ -235,7 +247,7 @@ export default function Settings() {
                       className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#8AD6D1] rounded-md hover:bg-[#8AD6D1]/10 transition-colors w-max"
                     >
                       <Plus className="w-4 h-4" />
-                      Añadir
+                      Añadir enlace
                     </button>
                   )}
                 </div>
@@ -244,11 +256,6 @@ export default function Settings() {
             </div>
 
             <div className="mt-8">
-              {message.text && (
-                <div className={`text-sm mb-3 text-center font-medium ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                  {message.text}
-                </div>
-              )}
               <button
                 type="button"
                 onClick={handleUpdate}

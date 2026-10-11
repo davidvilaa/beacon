@@ -6,23 +6,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import { PrimaryButton } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { addToast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setLoading(true);
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) setError(error.message);
-    else router.push("/");
+
+    if (error) {
+      const msg = error.message.toLowerCase().includes("invalid login credentials")
+        ? "Credenciales incorrectas. Comprueba tu e-mail y contraseña."
+        : error.message;
+      addToast(msg, "error");
+      setLoading(false);
+    } else {
+      addToast("Has iniciado sesión con éxito", "success");
+      router.push("/");
+    }
   };
 
   return (
@@ -57,15 +69,15 @@ export default function Login() {
                 required
               />
             </div>
-            {error && <p className="text-red-500 text-sm text-center pt-2">{error}</p>}
           </div>
 
           <div className="mt-8">
             <PrimaryButton
               type="submit"
+              disabled={loading}
               className="w-full py-3"
             >
-              Entrar
+              {loading ? "Entrando..." : "Entrar"}
             </PrimaryButton>
           </div>
         </form>
@@ -79,4 +91,3 @@ export default function Login() {
     </div>
   );
 }
-

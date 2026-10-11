@@ -18,6 +18,8 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+const MAX_TOASTS = 5;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const lastAddedAt = useRef(0);
@@ -25,8 +27,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const addToast = useCallback((message: string, type: ToastType = "info") => {
     const now = Date.now();
-    
-    // Si se añade en el mismo lote (a menos de 80ms del anterior), aumentamos el escalón
     if (now - lastAddedAt.current < 80) {
       batchCounter.current += 1;
     } else {
@@ -35,9 +35,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     lastAddedAt.current = now;
 
     const id = now + Math.random();
-    const stagger = batchCounter.current;
+    const stagger = Math.min(batchCounter.current, MAX_TOASTS - 1);
     
-    setToasts((prev) => [...prev, { id, message, type, stagger }]);
+    setToasts((prev) => {
+      const next = [...prev, { id, message, type, stagger }];
+      return next.length > MAX_TOASTS ? next.slice(next.length - MAX_TOASTS) : next;
+    });
   }, []);
 
   const removeToast = useCallback((id: number) => {
@@ -66,15 +69,13 @@ function ToastItem({
   const [isMounted, setIsMounted] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   
-  // Guardamos la referencia de onRemove para que el efecto nunca se reinicie por re-renders del padre
   const onRemoveRef = useRef(onRemove);
   onRemoveRef.current = onRemove;
 
   useEffect(() => {
-    // Se ejecuta estrictamente UNA sola vez por toast al nacer
     const enterTimer = setTimeout(() => {
       setIsMounted(true);
-    }, toast.stagger * 70);
+    }, 35 + toast.stagger * 70);
 
     const exitTimer = setTimeout(() => {
       setIsExiting(true);
@@ -89,7 +90,7 @@ function ToastItem({
       clearTimeout(exitTimer);
       clearTimeout(removeTimer);
     };
-  }, []); // <<-- Vacío: ¡GARANTIZA que ningún render padre reinicie los temporizadores!
+  }, []);
 
   const handleClose = () => {
     setIsExiting(true);
@@ -98,7 +99,7 @@ function ToastItem({
 
   return (
     <div
-      className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg shadow-2xl min-w-[300px] max-w-sm transition-all duration-300 transform ${
+      className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg shadow-2xl min-w-[300px] max-w-sm sm:max-w-md transition-all duration-300 transform ${
         !isMounted ? 'opacity-0 translate-x-8 scale-95' :
         isExiting ? 'opacity-0 translate-x-8 scale-95' :
         'opacity-100 translate-x-0 scale-100'
@@ -110,22 +111,22 @@ function ToastItem({
           : 'border-b-2 border-b-[#a8dadc]'
       }`}
     >
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      <div className="flex items-start gap-2.5 flex-1 min-w-0">
         {toast.type === 'success' ? (
-          <CircleCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <CircleCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         ) : toast.type === 'error' ? (
-          <CircleX className="w-4 h-4 text-red-400 shrink-0" />
+          <CircleX className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
         ) : (
-          <span className="w-2 h-2 rounded-full bg-[#a8dadc] shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-[#a8dadc] shrink-0 mt-1.5" />
         )}
-        <span className="text-sm font-medium text-zinc-200 truncate">
+        <span className="text-sm font-medium text-zinc-200 leading-snug break-words">
           {toast.message}
         </span>
       </div>
 
       <button 
         onClick={handleClose} 
-        className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors shrink-0 p-0.5 rounded hover:bg-zinc-800"
+        className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors shrink-0 p-0.5 rounded hover:bg-zinc-800 mt-0.5"
       >
         <X className="w-3.5 h-3.5" />
       </button>

@@ -110,7 +110,7 @@ export default function Register() {
                 maxLength={20}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>
@@ -124,7 +124,7 @@ export default function Register() {
                 maxLength={254}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>
@@ -138,7 +138,7 @@ export default function Register() {
                 maxLength={30}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 required
               />
               {password.length > 0 && (
@@ -161,7 +161,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 bg-[#8AD6D1] hover:bg-[#96c2c2] disabled:opacity-50 text-zinc-950 rounded-md font-medium transition-colors"
+              className="w-full py-2 bg-[#a8dadc] hover:bg-[#8ec5c8] disabled:opacity-50 text-zinc-950 rounded-md font-medium transition-colors"
             >
               {loading ? "Cargando..." : "Registrarse"}
             </button>
@@ -171,7 +171,7 @@ export default function Register() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          ¿ya tienes cuenta? <Link href="/login" className="text-[#8AD6D1] hover:underline">Entra aquí</Link>
+          ¿ya tienes cuenta? <Link href="/login" className="text-[#a8dadc] hover:underline">Entra aquí</Link>
         </div>
       </div>
     </div>

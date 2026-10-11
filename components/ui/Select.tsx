@@ -38,7 +38,7 @@ export default function Select({ value, onChange, options, placeholder = "Selecc
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between p-2 bg-zinc-950 border ${isOpen ? 'border-[#8AD6D1]' : 'border-zinc-800'} rounded-md focus:outline-none text-sm text-left hover:bg-zinc-900/50 transition-colors ${!selectedOption ? 'text-zinc-500' : 'text-zinc-300'}`}
+        className={`w-full flex items-center justify-between p-2 bg-zinc-950 border ${isOpen ? 'border-[#a8dadc]' : 'border-zinc-800'} rounded-md focus:outline-none text-sm text-left hover:bg-zinc-900/50 transition-colors ${!selectedOption ? 'text-zinc-500' : 'text-zinc-300'}`}
       >
         <div className="flex items-center gap-2 truncate">
           {selectedOption?.icon}
@@ -59,12 +59,12 @@ export default function Select({ value, onChange, options, placeholder = "Selecc
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
                 value === option.id 
-                  ? 'bg-zinc-800 text-[#8AD6D1] font-medium' 
+                  ? 'bg-zinc-800 text-[#a8dadc] font-medium' 
                   : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
               }`}
             >
               {option.icon && (
-                <span className={value === option.id ? 'text-[#8AD6D1]' : 'text-zinc-400'}>
+                <span className={value === option.id ? 'text-[#a8dadc]' : 'text-zinc-400'}>
                   {option.icon}
                 </span>
               )}

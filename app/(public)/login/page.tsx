@@ -42,7 +42,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>
@@ -52,7 +52,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8ad6d1] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>
@@ -62,7 +62,7 @@ export default function Login() {
           <div className="mt-8">
             <button
               type="submit"
-              className="w-full py-3 bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 rounded-md font-medium transition-colors"
+              className="w-full py-3 bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 rounded-md font-medium transition-colors"
             >
               Entrar
             </button>
@@ -72,7 +72,7 @@ export default function Login() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          ¿no tienes cuenta? <Link href="/register" className="text-[#8ad6d1] hover:underline">Regístrate</Link>
+          ¿no tienes cuenta? <Link href="/register" className="text-[#a8dadc] hover:underline">Regístrate</Link>
         </div>
       </div>
     </div>

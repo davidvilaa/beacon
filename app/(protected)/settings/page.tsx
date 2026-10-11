@@ -192,7 +192,7 @@ export default function Settings() {
                   maxLength={20}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
                 />
               </div>
               <div>
@@ -201,7 +201,7 @@ export default function Settings() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Cuéntanos un poco sobre ti..."
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none resize-none h-24"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none resize-none h-24"
                   maxLength={300}
                 />
               </div>
@@ -228,7 +228,7 @@ export default function Settings() {
                         disabled={!link.platform}
                         placeholder={!link.platform ? "Elige plataforma..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
                         onChange={(e) => handleLinkChange(index, 'value', e.target.value)}
-                        className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#8AD6D1] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <button 
                         type="button"
@@ -244,7 +244,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={addLink}
-                      className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#8AD6D1] rounded-md hover:bg-[#8AD6D1]/10 transition-colors w-max"
+                      className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#a8dadc] rounded-md hover:bg-[#a8dadc]/10 transition-colors w-max"
                     >
                       <Plus className="w-4 h-4" />
                       Añadir enlace
@@ -260,7 +260,7 @@ export default function Settings() {
                 type="button"
                 onClick={handleUpdate}
                 disabled={saving}
-                className="w-full py-2 bg-[#8AD6D1] hover:bg-[#96c2c2] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
+                className="w-full py-2 bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>

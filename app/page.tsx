@@ -128,7 +128,7 @@ export default function Home() {
                 <Link href="/login" className="text-sm font-medium border border-zinc-700 hover:bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-md transition-colors">
                   Entrar
                 </Link>
-                <Link href="/register" className="text-sm font-medium bg-[#8ad6d1] hover:bg-[#96c2c2] text-zinc-950 px-4 py-1.5 rounded-md transition-colors">
+                <Link href="/register" className="text-sm font-medium bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 px-4 py-1.5 rounded-md transition-colors">
                   Registrarse
                 </Link>
               </div>

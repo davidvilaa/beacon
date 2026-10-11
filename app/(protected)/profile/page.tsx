@@ -88,7 +88,7 @@ export default function Profile() {
                     href={getSocialUrl(link.platform, link.value)} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-[#8AD6D1] transition-colors"
+                    className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors"
                   >
                     {renderSocialIcon(link.platform, "w-4 h-4")}
                     <span>{link.value.replace(/^https?:\/\/(www\.)?/, '')}</span>

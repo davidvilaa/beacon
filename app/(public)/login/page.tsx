@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
+import { PrimaryButton } from "@/components/ui/Button";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -60,12 +61,12 @@ export default function Login() {
           </div>
 
           <div className="mt-8">
-            <button
+            <PrimaryButton
               type="submit"
-              className="w-full py-3 bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 rounded-md font-medium transition-colors"
+              className="w-full py-3"
             >
               Entrar
-            </button>
+            </PrimaryButton>
           </div>
         </form>
 

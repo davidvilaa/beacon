@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '../lib/supabase/client';
 import Logo from '@/components/ui/Logo';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Button';
 
 const backgrounds = [
   "/backgrounds/01.jpg",
@@ -125,11 +126,15 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/login" className="text-sm font-medium border border-zinc-700 hover:bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-md transition-colors">
-                  Entrar
+                <Link href="/login">
+                  <SecondaryButton className="py-1.5 px-3.5">
+                    Entrar
+                  </SecondaryButton>
                 </Link>
-                <Link href="/register" className="text-sm font-medium bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 px-4 py-1.5 rounded-md transition-colors">
-                  Registrarse
+                <Link href="/register">
+                  <PrimaryButton className="py-1.5 px-3.5">
+                    Registrarse
+                  </PrimaryButton>
                 </Link>
               </div>
             )}

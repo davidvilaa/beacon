@@ -8,6 +8,7 @@ import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import Logo from "@/components/ui/Logo";
 import Select from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
+import { PrimaryButton } from "@/components/ui/Button";
 
 const PLATFORMS = [
   { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <FaGithub className="w-4 h-4" /> },
@@ -256,14 +257,14 @@ export default function Settings() {
             </div>
 
             <div className="mt-8">
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={handleUpdate}
                 disabled={saving}
-                className="w-full py-2 bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 disabled:opacity-50 rounded-md font-medium transition-colors"
+                className="w-full py-2.5"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>

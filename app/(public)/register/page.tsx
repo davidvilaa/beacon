@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import { useToast } from "@/components/ui/Toast";
+import { PrimaryButton } from "@/components/ui/Button";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -158,13 +159,13 @@ export default function Register() {
           </div>
 
           <div className="mt-8">
-            <button
+            <PrimaryButton
               type="submit"
               disabled={loading}
-              className="w-full py-2 bg-[#a8dadc] hover:bg-[#8ec5c8] disabled:opacity-50 text-zinc-950 rounded-md font-medium transition-colors"
+              className="w-full py-2.5"
             >
               {loading ? "Cargando..." : "Registrarse"}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
 

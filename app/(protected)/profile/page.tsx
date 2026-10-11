@@ -54,7 +54,7 @@ export default function Profile() {
   if (!profile) return null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-50">
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-50 font-[family-name:var(--font-geist-sans)]">
       <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
         <Logo className="text-xl" />
       </header>

@@ -109,14 +109,11 @@ export default function Home() {
           showNav ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <header className="relative z-10 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md overflow-hidden">
+        <header className="relative z-10 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
           <div 
-            className={`flex h-full items-center justify-between w-full transition-all duration-500 ease-in-out ${
-              isSearchOpen ? 'pointer-events-none' : 'pointer-events-auto'
+            className={`flex h-full items-center justify-between w-full transition-opacity duration-300 ease-in-out ${
+              isSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
             }`}
-            style={{
-              clipPath: isSearchOpen ? 'inset(0 100% 0 0)' : 'inset(0 0% 0 0)',
-            }}
           >
             <Logo className="text-xl" />
             
@@ -180,15 +177,15 @@ export default function Home() {
           </div>
 
           <div 
-            className="absolute top-0 bottom-0 w-[2px] bg-[#a8dadc] shadow-[0_0_12px_#a8dadc] transition-all duration-500 ease-in-out pointer-events-none z-30"
+            className="absolute top-0 bottom-0 w-[2px] bg-[#a8dadc] shadow-[0_0_12px_#a8dadc] transition-all duration-300 ease-in-out pointer-events-none z-30"
             style={{
-              left: isSearchOpen ? '0%' : '100%',
+              left: isSearchOpen ? '0%' : 'calc(100% - 2px)',
               opacity: isSearchOpen ? 1 : 0,
             }} 
           />
 
           <div
-            className={`absolute inset-0 px-6 flex items-center transition-all duration-500 ease-in-out z-20 ${
+            className={`absolute inset-0 px-6 flex items-center transition-all duration-300 ease-in-out z-20 ${
               isSearchOpen 
                 ? 'pointer-events-auto opacity-100' 
                 : 'pointer-events-none opacity-0'

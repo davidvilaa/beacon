@@ -54,13 +54,8 @@ export default function Profile() {
   if (!profile) return null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-50 font-[family-name:var(--font-geist-sans)]">
-      <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
-        <Logo className="text-xl" />
-      </header>
-
-      <main className="flex-1 w-full max-w-4xl mx-auto p-8 pt-16">
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+    <main className="flex-1 w-full max-w-4xl mx-auto p-8 font-[family-name:var(--font-geist-sans)]">
+      <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="shrink-0">
             {profile.avatar_url ? (
               <img 
@@ -105,6 +100,5 @@ export default function Profile() {
           </div>
         </div>
       </main>
-    </div>
   );
 }

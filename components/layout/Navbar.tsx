@@ -204,13 +204,14 @@ export default function Navbar() {
       </header>
 
       <nav className="flex items-center justify-start h-12 border-b border-zinc-800/50 bg-zinc-900/40 px-6 backdrop-blur-sm overflow-x-auto scrollbar-none">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Link 
             href="/movies" 
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors py-1.5 px-3 rounded-md hover:bg-zinc-800/50"
+            title="Movies"
+            aria-label="Movies"
+            className="w-8 h-8 rounded-full bg-zinc-800/60 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] hover:border-[#a8dadc]/50 hover:bg-zinc-800 transition-all cursor-pointer"
           >
-            <Film className="w-3.5 h-3.5 text-[#a8dadc]" />
-            <span>Movies</span>
+            <Film className="w-4 h-4" />
           </Link>
         </div>
       </nav>

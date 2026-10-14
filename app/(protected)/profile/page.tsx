@@ -1,104 +1,107 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { UserCircle, Link as LinkIcon } from "lucide-react";
-import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
-import Logo from "@/components/ui/Logo";
+import Link from "next/link";
+import { Film, Tv, Gamepad2, Sparkles, ArrowRight, Clock } from "lucide-react";
 
-export default function Profile() {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
-      const { data } = await supabase
-        .from("users")
-        .select("username, avatar_url, bio, social_links")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (data) {
-        setProfile(data);
-      }
-      setLoading(false);
-    };
-    fetchProfile();
-  }, [router, supabase]);
-
-  const getSocialUrl = (platform: string, value: string) => {
-    if (platform === 'github') return `https://github.com/${value}`;
-    if (platform === 'twitter') return `https://x.com/${value}`;
-    if (platform === 'instagram') return `https://instagram.com/${value}`;
-    if (platform === 'custom' && !value.startsWith('http')) return `https://${value}`;
-    return value;
-  };
-
-  const renderSocialIcon = (platform: string, className: string) => {
-    if (platform === 'github') return <FaGithub className={className} />;
-    if (platform === 'twitter') return <FaXTwitter className={className} />;
-    if (platform === 'instagram') return <FaInstagram className={className} />;
-    return <LinkIcon className={className} />;
-  };
-
-  if (loading) return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">Cargando...</div>;
-  if (!profile) return null;
+export default function ProfileGeneralPage() {
+  const activeModules = [
+    {
+      id: "movies",
+      title: "Películas",
+      icon: Film,
+      href: "/profile/movies",
+      stats: "0 vistas · 0 en watchlist",
+      desc: "Tu diario de cine, notas y listas personalizadas.",
+    },
+    {
+      id: "series",
+      title: "Series",
+      icon: Tv,
+      href: "/profile/series",
+      stats: "0 seguidas",
+      desc: "Control de episodios y temporadas al día.",
+    },
+    {
+      id: "anime",
+      title: "Anime",
+      icon: Sparkles,
+      href: "/profile/anime",
+      stats: "0 vistos",
+      desc: "Registro de animes en emisión y completados.",
+    },
+    {
+      id: "games",
+      title: "Videojuegos",
+      icon: Gamepad2,
+      href: "/profile/games",
+      stats: "0 completados",
+      desc: "Backlog y biblioteca de juegos terminados.",
+    },
+  ];
 
   return (
-    <main className="flex-1 w-full max-w-4xl mx-auto p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-          <div className="shrink-0">
-            {profile.avatar_url ? (
-              <img 
-                src={profile.avatar_url} 
-                alt="Avatar" 
-                className="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover border-4 border-zinc-800 shadow-xl" 
-              />
-            ) : (
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-zinc-900 flex items-center justify-center border-4 border-zinc-800 shadow-xl">
-                <UserCircle className="w-16 h-16 md:w-24 md:h-24 text-zinc-700" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 flex-1 pt-2 md:pt-4">
-            <h1 className="text-3xl md:text-5xl font-black text-zinc-100 tracking-tight">
-              {profile.username || "Usuario"}
-            </h1>
-            
-            {profile.social_links && profile.social_links.length > 0 && (
-              <div className="flex flex-wrap gap-4 items-center mt-1">
-                {profile.social_links.map((link: any, i: number) => (
-                  <a 
-                    key={i} 
-                    href={getSocialUrl(link.platform, link.value)} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors"
-                  >
-                    {renderSocialIcon(link.platform, "w-4 h-4")}
-                    <span>{link.value.replace(/^https?:\/\/(www\.)?/, '')}</span>
-                  </a>
-                ))}
-              </div>
-            )}
-
-            {profile.bio && (
-              <p className="text-zinc-300 mt-3 text-sm md:text-base leading-relaxed whitespace-pre-wrap max-w-2xl">
-                {profile.bio}
-              </p>
-            )}
-          </div>
+    <div className="space-y-10">
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            Tus módulos activos
+          </h2>
+          <span className="text-xs text-zinc-600">
+            {activeModules.length} instalados
+          </span>
         </div>
-      </main>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {activeModules.map((mod) => {
+            const Icon = mod.icon;
+            return (
+              <Link
+                key={mod.id}
+                href={mod.href}
+                className="group p-5 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-[#a8dadc]/60 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-[#a8dadc] group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      {mod.stats}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-zinc-100 group-hover:text-[#a8dadc] transition-colors">
+                    {mod.title}
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    {mod.desc}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1 text-xs text-[#a8dadc] font-medium mt-4 pt-3 border-t border-zinc-800/60 opacity-80 group-hover:opacity-100">
+                  <span>Abrir módulo</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            Actividad reciente
+          </h2>
+        </div>
+
+        <div className="p-8 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 text-center flex flex-col items-center justify-center">
+          <Clock className="w-8 h-8 text-zinc-700 mb-2" />
+          <p className="text-xs text-zinc-500">
+            No tienes actividad reciente en tus módulos.
+          </p>
+        </div>
+      </section>
+    </div>
   );
 }

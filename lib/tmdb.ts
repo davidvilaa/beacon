@@ -112,3 +112,51 @@ export async function searchMovies(
     include_adult: "false",
   });
 }
+
+export interface MovieCast {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+export interface MovieCrew {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path?: string | null;
+}
+
+export interface MovieImage {
+  file_path: string;
+  vote_average: number;
+  width?: number;
+  height?: number;
+}
+
+export interface MovieDetails extends Movie {
+  tagline: string | null;
+  runtime: number | null;
+  genres: { id: number; name: string }[];
+  status: string;
+  budget?: number;
+  revenue?: number;
+  original_language?: string;
+  credits?: {
+    cast: MovieCast[];
+    crew: MovieCrew[];
+  };
+  images?: {
+    backdrops: MovieImage[];
+    posters: MovieImage[];
+  };
+}
+
+export async function getMovieDetails(
+  id: string | number
+): Promise<MovieDetails> {
+  return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
+    append_to_response: "credits,images",
+  });
+}

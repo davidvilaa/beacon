@@ -22,12 +22,12 @@ interface SearchMovieItem extends Movie {
 }
 
 const allModules = [
-  { id: "movies", title: "Películas", icon: Film, href: "/movies" },
-  { id: "series", title: "Series", icon: Tv, href: "/series" },
-  { id: "anime", title: "Anime", icon: Sparkles, href: "/anime" },
-  { id: "games", title: "Videojuegos", icon: Gamepad2, href: "/games" },
-  { id: "manga", title: "Manga", icon: BookOpen, href: "/manga" },
-  { id: "comics", title: "Cómics", icon: BookCopy, href: "/comics" },
+  { id: "movies", title: "Películas", icon: Film },
+  { id: "series", title: "Series", icon: Tv },
+  { id: "anime", title: "Anime", icon: Sparkles },
+  { id: "games", title: "Videojuegos", icon: Gamepad2 },
+  { id: "manga", title: "Manga", icon: BookOpen },
+  { id: "comics", title: "Cómics", icon: BookCopy },
 ];
 
 function getPageNumbers(current: number, total: number): (number | string)[] {
@@ -51,6 +51,7 @@ function SearchContent() {
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [movies, setMovies] = useState<SearchMovieItem[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
@@ -103,60 +104,59 @@ function SearchContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const detectedTypes = new Set(movies.map((m) => m.moduleType || "movies"));
-  const matchedModules =
-    currentPage === 1 && movies.length > 0
-      ? allModules.filter((mod) => detectedTypes.has(mod.id))
-      : [];
+  const handleModuleClick = (moduleId: string) => {
+    setSelectedModule((prev) => (prev === moduleId ? null : moduleId));
+  };
+
+  const filteredMovies = selectedModule
+    ? movies.filter((m) => (m.moduleType || "movies") === selectedModule)
+    : movies;
 
   return (
     <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
-      <p className="text-sm italic text-zinc-400 mb-10">
+      <p className="text-sm italic text-zinc-400 mb-8">
         resultados para{" "}
         <span className="text-[#a8dadc] not-italic font-medium">
           &ldquo;{query.toLowerCase()}&rdquo;
         </span>
       </p>
 
-      {currentPage === 1 && matchedModules.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-              Módulos encontrados
-            </h2>
-            <span className="text-xs text-zinc-600">
-              {matchedModules.length} disponible
-              {matchedModules.length === 1 ? "" : "s"}
-            </span>
-          </div>
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            Módulos
+          </h2>
+        </div>
 
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            {matchedModules.map((mod) => {
-              const Icon = mod.icon;
-              return (
-                <Link
-                  key={mod.id}
-                  href={mod.href}
-                  title={mod.title}
-                  aria-label={mod.title}
-                  className="w-14 h-14 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 hover:border-[#a8dadc]/60 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
-                >
-                  <Icon className="w-6 h-6" />
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+          {allModules.map((mod) => {
+            const Icon = mod.icon;
+            const isSelected = selectedModule === mod.id;
+            return (
+              <button
+                key={mod.id}
+                type="button"
+                onClick={() => handleModuleClick(mod.id)}
+                title={mod.title}
+                aria-label={mod.title}
+                className={`w-14 h-14 rounded-md border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 ${
+                  isSelected
+                    ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc] shadow-[0_0_20px_rgba(168,218,220,0.25)]"
+                    : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900"
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
             Resultados
           </h2>
-          <span className="text-xs text-zinc-600">
-            {loading ? "Buscando..." : `${totalResults} disponibles`}
-          </span>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -177,17 +177,18 @@ function SearchContent() {
                 </div>
               </div>
             ))
-          ) : movies.length > 0 ? (
-            movies.map((movie) => {
+          ) : filteredMovies.length > 0 ? (
+            filteredMovies.map((movie) => {
               const posterUrl = getPosterUrl(movie.poster_path, "w342");
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
                 : "—";
 
               return (
-                <div
+                <Link
                   key={movie.id}
-                  className="group flex items-start gap-4 p-3 sm:p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/70 hover:border-[#a8dadc]/50 transition-all duration-200 cursor-pointer"
+                  href={`/movie/${movie.id}`}
+                  className="group flex items-start gap-4 p-3 sm:p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/70 hover:border-[#a8dadc]/50 transition-all duration-200 cursor-pointer block"
                 >
                   <div className="relative w-20 h-28 sm:w-24 sm:h-36 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800 shrink-0">
                     {posterUrl ? (
@@ -196,7 +197,7 @@ function SearchContent() {
                         alt={movie.title}
                         fill
                         sizes="(max-width: 640px) 80px, 96px"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-zinc-900">
@@ -231,24 +232,15 @@ function SearchContent() {
                       {movie.overview || "Sin descripción disponible."}
                     </p>
                   </div>
-                </div>
+                </Link>
               );
             })
-          ) : query ? (
-            <div className="py-12 text-center rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20">
-              <p className="text-sm text-zinc-400">
-                No se encontraron películas para &ldquo;{query}&rdquo;.
-              </p>
-            </div>
           ) : (
-            <div className="py-12 text-center text-xs text-zinc-500">
-              Introduce un término en el buscador superior para buscar módulos o
-              películas.
-            </div>
+            <div className="py-16 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20" />
           )}
         </div>
 
-        {!loading && totalPages > 1 && (
+        {!loading && totalPages > 1 && (!selectedModule || selectedModule === "movies") && (
           <div className="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-zinc-800/60">
             <button
               type="button"

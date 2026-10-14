@@ -37,7 +37,7 @@ export default function Home() {
 
       <Navbar />
 
-      <main className="flex-1 relative flex flex-col pt-[104px]"> 
+      <main className="flex-1 relative flex flex-col pt-14"> 
       </main>
 
       <footer className="border-t border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md py-8 text-center text-xs text-zinc-500 mt-auto">

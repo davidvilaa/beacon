@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { Film, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { Movie, getPosterUrl } from "@/lib/tmdb";
@@ -89,9 +90,10 @@ export default function TrendingMovies() {
               : "—";
 
             return (
-              <div
+              <Link
                 key={movie.id}
-                className="group w-[calc(25%-12px)] min-w-[190px] sm:min-w-[210px] md:min-w-[220px] max-w-[245px] shrink-0 snap-start cursor-pointer select-none"
+                href={`/movie/${movie.id}`}
+                className="group w-[calc(25%-12px)] min-w-[190px] sm:min-w-[210px] md:min-w-[220px] max-w-[245px] shrink-0 snap-start cursor-pointer select-none block"
               >
                 <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800/80 group-hover:border-[#a8dadc]/60 group-hover:shadow-[0_0_20px_rgba(168,218,220,0.12)] transition-all duration-300">
                   {posterUrl ? (
@@ -100,7 +102,7 @@ export default function TrendingMovies() {
                       alt={movie.title}
                       fill
                       sizes="(max-width: 640px) 190px, (max-width: 1024px) 220px, 245px"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-zinc-900">
@@ -139,7 +141,7 @@ export default function TrendingMovies() {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })
         ) : (

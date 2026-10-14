@@ -1,73 +1,40 @@
 "use client";
 
-import Link from "next/link";
-import Logo from "@/components/ui/Logo";
-import { PrimaryButton } from "@/components/ui/Button";
-import { Film, Plus, Star, Bookmark, Calendar, Search } from "lucide-react";
-
+import { Film } from "lucide-react";
 import { TrendingMovies } from "@/components/modules/movies";
 
 export default function MoviesPage() {
   return (
-    <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-10 font-[family-name:var(--font-geist-sans)]">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-zinc-800">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
-            Módulo de Cine & Series
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-black text-zinc-100 tracking-tight">
-            Tu diario cinematográfico
-          </h1>
-          <p className="text-sm text-zinc-400 mt-2 max-w-xl leading-relaxed">
-            Registra cada película que veas, puntúala, escribe tus reseñas y mantén tu lista de pendientes siempre organizada.
-          </p>
+    <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
+      <TrendingMovies />
+
+      <section className="w-full mt-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            Actividad de tus amigos
+          </h2>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <PrimaryButton className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            <span>Registrar película</span>
-          </PrimaryButton>
+        <div className="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="w-[calc(25%-12px)] min-w-[190px] sm:min-w-[210px] md:min-w-[220px] max-w-[245px] shrink-0"
+            >
+              <div className="aspect-[2/3] w-full rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 flex flex-col items-center justify-center text-zinc-700">
+                <Film className="w-8 h-8 stroke-[1.5] mb-2 opacity-40" />
+                <span className="text-[11px] text-zinc-600 font-medium">
+                  Sin actividad
+                </span>
+              </div>
+              <div className="mt-2.5 space-y-1.5">
+                <div className="h-3.5 bg-zinc-900/50 rounded-md w-3/4" />
+                <div className="h-2.5 bg-zinc-900/30 rounded-md w-1/2" />
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <Film className="w-3.5 h-3.5 text-[#a8dadc]" />
-            <span>Películas vistas</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-100">0</p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <Bookmark className="w-3.5 h-3.5 text-[#a8dadc]" />
-            <span>Watchlist</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-100">0</p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <Star className="w-3.5 h-3.5 text-[#a8dadc]" />
-            <span>Nota media</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-100">—</p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <Calendar className="w-3.5 h-3.5 text-[#a8dadc]" />
-            <span>Este año</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-100">0</p>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <TrendingMovies />
-      </div>
+      </section>
     </main>
   );
 }

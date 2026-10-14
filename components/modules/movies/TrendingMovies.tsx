@@ -40,14 +40,9 @@ export default function TrendingMovies() {
   return (
     <section className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Películas en tendencia
-          </h2>
-          <span className="text-xs text-zinc-600">
-            {loading ? "Cargando..." : `${movies.length} disponibles`}
-          </span>
-        </div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+          Películas en tendencia
+        </h2>
 
         <div className="flex items-center gap-1.5">
           <button

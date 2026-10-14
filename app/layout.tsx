@@ -18,7 +18,11 @@ export const metadata: Metadata = {
 
 import { ToastProvider } from "@/components/ui/Toast";
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="es"

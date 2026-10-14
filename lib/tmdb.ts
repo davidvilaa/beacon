@@ -84,15 +84,6 @@ async function fetchFromTmdb<T>(
   return res.json() as Promise<T>;
 }
 
-export async function getTrendingMovies(
-  timeWindow: "day" | "week" = "day"
-): Promise<Movie[]> {
-  const data = await fetchFromTmdb<TmdbPaginatedResponse<Movie>>(
-    `/trending/movie/${timeWindow}`
-  );
-  return data.results || [];
-}
-
 export async function searchMovies(
   query: string,
   page: number = 1

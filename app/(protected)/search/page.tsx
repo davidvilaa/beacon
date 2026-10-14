@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Movie, getPosterUrl } from "@/lib/tmdb";
+import Loading from "@/components/ui/Loading";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;
@@ -303,8 +304,8 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-zinc-500">
-          Cargando resultados...
+        <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex items-center justify-center min-h-[40vh]">
+          <Loading />
         </div>
       }
     >

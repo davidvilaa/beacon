@@ -17,6 +17,7 @@ import {
   BookCopy,
 } from "lucide-react";
 import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
+import Loading from "@/components/ui/Loading";
 
 export default function ProfileLayout({
   children,
@@ -70,8 +71,8 @@ export default function ProfileLayout({
 
   if (loading) {
     return (
-      <div className="flex-1 w-full max-w-5xl mx-auto p-8 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#a8dadc] border-t-transparent animate-spin" />
+      <div className="flex-1 w-full max-w-5xl mx-auto p-12 flex items-center justify-center min-h-[50vh]">
+        <Loading />
       </div>
     );
   }

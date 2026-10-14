@@ -9,6 +9,7 @@ import Logo from "@/components/ui/Logo";
 import Select from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
 import { PrimaryButton } from "@/components/ui/Button";
+import Loading from "@/components/ui/Loading";
 
 const PLATFORMS = [
   { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <FaGithub className="w-4 h-4" /> },
@@ -144,7 +145,13 @@ export default function Settings() {
     }
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">Cargando...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50 py-12">

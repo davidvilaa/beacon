@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -15,7 +15,7 @@ import {
   X,
   Star,
 } from "lucide-react";
-import { MovieDetails, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 
 function formatRuntime(minutes: number | null): string {
@@ -77,6 +77,52 @@ function MovieDetailContent() {
     }
   }, [activeTab, movie]);
 
+  const rawPosters = movie?.images?.posters || [];
+  const postersList = useMemo(() => {
+    const valid = rawPosters.filter((p) => {
+      if (p.aspect_ratio && (p.aspect_ratio < 0.55 || p.aspect_ratio > 0.8)) {
+        return false;
+      }
+      return Boolean(p.file_path);
+    });
+
+    const sorted = [...valid].sort((a, b) => {
+      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
+      if (countDiff !== 0) return countDiff;
+      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+    });
+
+    const curated: MovieImage[] = [];
+    const seen = new Set<string>();
+
+    if (selectedPoster) {
+      const current = rawPosters.find((p) => p.file_path === selectedPoster);
+      if (current) {
+        curated.push(current);
+        seen.add(current.file_path);
+      }
+    }
+
+    for (const p of sorted) {
+      if (!seen.has(p.file_path)) {
+        seen.add(p.file_path);
+        curated.push(p);
+      }
+      if (curated.length >= 30) break;
+    }
+
+    return curated;
+  }, [rawPosters, selectedPoster]);
+
+  const posterShelves = useMemo(() => {
+    const chunkSize = 5;
+    const shelves: MovieImage[][] = [];
+    for (let i = 0; i < postersList.length; i += chunkSize) {
+      shelves.push(postersList.slice(i, i + chunkSize));
+    }
+    return shelves;
+  }, [postersList]);
+
   if (loading) {
     return (
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
@@ -102,7 +148,6 @@ function MovieDetailContent() {
   const backdropUrl = getBackdropUrl(movie.backdrop_path, "original");
   const posterUrl = getPosterUrl(selectedPoster, "w500");
   const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "—";
-  const postersList = movie.images?.posters || [];
   const hasMultiplePosters = postersList.length > 1;
 
   const topCast = (movie.credits?.cast || []).slice(0, 15);
@@ -499,52 +544,72 @@ function MovieDetailContent() {
       </main>
 
       {isPosterPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-zinc-800/80 flex items-center justify-end">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+                CHANGE ARTWORK
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsPosterPickerOpen(false)}
                 aria-label="Close"
-                className="text-zinc-400 hover:text-white p-1 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-              {postersList.map((poster, idx) => {
-                const url = getPosterUrl(poster.file_path, "w342");
-                const isSelected = selectedPoster === poster.file_path;
+            <div className="p-4 sm:p-8 pt-16 sm:pt-24 md:pt-28 pb-24 sm:pb-32 overflow-y-auto overflow-x-hidden">
+              {posterShelves.map((shelf, shelfIdx) => {
+                const baseZ = shelfIdx + 1;
                 return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPoster(poster.file_path);
-                      setIsPosterPickerOpen(false);
-                    }}
-                    className={`relative aspect-[2/3] rounded-xl overflow-hidden border-2 transition-all cursor-pointer group ${
-                      isSelected
-                        ? "border-[#a8dadc] shadow-[0_0_15px_rgba(168,218,220,0.3)]"
-                        : "border-zinc-800 hover:border-zinc-600"
+                  <div
+                    key={shelfIdx}
+                    className={`relative flex items-center justify-center -space-x-4 sm:-space-x-6 md:-space-x-8 ${
+                      shelfIdx > 0 ? "-mt-20 sm:-mt-28 md:-mt-36" : ""
                     }`}
                   >
-                    {url && (
-                      <Image
-                        src={url}
-                        alt="Poster option"
-                        fill
-                        sizes="200px"
-                        className="object-cover"
-                      />
-                    )}
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </button>
+                    {shelf.map((poster) => {
+                      const url = getPosterUrl(poster.file_path, "w342");
+                      const isSelected = selectedPoster === poster.file_path;
+                      return (
+                        <div
+                          key={poster.file_path}
+                          style={{ zIndex: baseZ }}
+                          className="relative shrink-0 transition-all duration-300 ease-out hover:!z-50 hover:-translate-y-16 sm:hover:-translate-y-24 md:hover:-translate-y-28 hover:scale-105 group/card"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPoster(poster.file_path);
+                              setIsPosterPickerOpen(false);
+                            }}
+                            className={`relative block w-28 sm:w-36 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border-2 transition-all cursor-pointer shadow-2xl shadow-black/80 group-hover/card:shadow-[0_25px_45px_rgba(0,0,0,0.95)] ${
+                              isSelected
+                                ? "border-[#a8dadc] shadow-[0_0_20px_rgba(168,218,220,0.4)]"
+                                : "border-zinc-800 group-hover/card:border-[#a8dadc]"
+                            }`}
+                          >
+                            {url && (
+                              <Image
+                                src={url}
+                                alt="Poster option"
+                                fill
+                                sizes="(max-width: 640px) 112px, 176px"
+                                className="object-cover"
+                              />
+                            )}
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-20">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 );
               })}
             </div>

@@ -122,6 +122,9 @@ export interface MovieCrew {
 export interface MovieImage {
   file_path: string;
   vote_average: number;
+  vote_count?: number;
+  aspect_ratio?: number;
+  iso_639_1?: string | null;
   width?: number;
   height?: number;
 }

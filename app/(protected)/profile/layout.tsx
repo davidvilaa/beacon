@@ -17,7 +17,6 @@ import {
   BookCopy,
 } from "lucide-react";
 import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
-import Loading from "@/components/ui/Loading";
 
 export default function ProfileLayout({
   children,
@@ -69,70 +68,70 @@ export default function ProfileLayout({
     return <LinkIcon className={className} />;
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 w-full max-w-5xl mx-auto p-12 flex items-center justify-center min-h-[50vh]">
-        <Loading />
-      </div>
-    );
-  }
-
-  if (!profile) return null;
-
   const profileTabs = [
-    { label: "General", href: "/profile", icon: LayoutGrid, exact: true },
-    { label: "Películas", href: "/profile/movies", icon: Film },
+    { label: "Overview", href: "/profile", icon: LayoutGrid, exact: true },
+    { label: "Movies", href: "/profile/movies", icon: Film },
     { label: "Series", href: "/profile/series", icon: Tv },
     { label: "Anime", href: "/profile/anime", icon: Sparkles },
-    { label: "Videojuegos", href: "/profile/games", icon: Gamepad2 },
+    { label: "Games", href: "/profile/games", icon: Gamepad2 },
   ];
 
   return (
     <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-8 border-b border-zinc-800">
-        <div className="shrink-0">
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt="Avatar"
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-zinc-800 shadow-xl"
-            />
-          ) : (
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-900 flex items-center justify-center border-2 border-zinc-800 shadow-xl">
-              <UserCircle className="w-14 h-14 text-zinc-700" />
-            </div>
-          )}
+      {loading ? (
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-8 border-b border-zinc-800 animate-pulse">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-800/80 shrink-0" />
+          <div className="space-y-3 flex-1 pt-2">
+            <div className="h-7 w-48 bg-zinc-800 rounded" />
+            <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+          </div>
         </div>
+      ) : profile ? (
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-8 border-b border-zinc-800">
+          <div className="shrink-0">
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-zinc-800 shadow-xl"
+              />
+            ) : (
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-900 flex items-center justify-center border-2 border-zinc-800 shadow-xl">
+                <UserCircle className="w-14 h-14 text-zinc-700" />
+              </div>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-2 flex-1 pt-1">
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
-            {profile.username || "Usuario"}
-          </h1>
+          <div className="flex flex-col gap-2 flex-1 pt-1">
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
+              {profile.username || "User"}
+            </h1>
 
-          {profile.social_links && profile.social_links.length > 0 && (
-            <div className="flex flex-wrap gap-3.5 items-center mt-0.5">
-              {profile.social_links.map((link: any, i: number) => (
-                <a
-                  key={i}
-                  href={getSocialUrl(link.platform, link.value)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors"
-                >
-                  {renderSocialIcon(link.platform, "w-3.5 h-3.5")}
-                  <span>{link.value.replace(/^https?:\/\/(www\.)?/, "")}</span>
-                </a>
-              ))}
-            </div>
-          )}
+            {profile.social_links && profile.social_links.length > 0 && (
+              <div className="flex flex-wrap gap-3.5 items-center mt-0.5">
+                {profile.social_links.map((link: any, i: number) => (
+                  <a
+                    key={i}
+                    href={getSocialUrl(link.platform, link.value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors"
+                  >
+                    {renderSocialIcon(link.platform, "w-3.5 h-3.5")}
+                    <span>{link.value.replace(/^https?:\/\/(www\.)?/, "")}</span>
+                  </a>
+                ))}
+              </div>
+            )}
 
-          {profile.bio && (
-            <p className="text-zinc-400 mt-2 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap max-w-2xl">
-              {profile.bio}
-            </p>
-          )}
+            {profile.bio && (
+              <p className="text-zinc-400 mt-2 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap max-w-2xl">
+                {profile.bio}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <nav className="flex items-center gap-2 overflow-x-auto pt-4 pb-2 border-b border-zinc-800/60 scrollbar-none">
         {profileTabs.map((tab) => {

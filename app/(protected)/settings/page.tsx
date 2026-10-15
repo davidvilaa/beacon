@@ -12,10 +12,10 @@ import { PrimaryButton } from "@/components/ui/Button";
 import Loading from "@/components/ui/Loading";
 
 const PLATFORMS = [
-  { id: 'github', label: 'GitHub', placeholder: 'Nombre de usuario', icon: <FaGithub className="w-4 h-4" /> },
-  { id: 'twitter', label: 'X (Twitter)', placeholder: 'Nombre de usuario', icon: <FaXTwitter className="w-4 h-4" /> },
-  { id: 'instagram', label: 'Instagram', placeholder: 'Nombre de usuario', icon: <FaInstagram className="w-4 h-4" /> },
-  { id: 'custom', label: 'Otros', placeholder: 'https://tu-web.com', icon: <LinkIcon className="w-4 h-4" /> },
+  { id: 'github', label: 'GitHub', placeholder: 'Username', icon: <FaGithub className="w-4 h-4" /> },
+  { id: 'twitter', label: 'X (Twitter)', placeholder: 'Username', icon: <FaXTwitter className="w-4 h-4" /> },
+  { id: 'instagram', label: 'Instagram', placeholder: 'Username', icon: <FaInstagram className="w-4 h-4" /> },
+  { id: 'custom', label: 'Other', placeholder: 'https://your-website.com', icon: <LinkIcon className="w-4 h-4" /> },
 ];
 
 export default function Settings() {
@@ -78,12 +78,12 @@ export default function Settings() {
     setSaving(true);
 
     if (username.length < 3 || username.length > 20) {
-      addToast("El usuario debe tener entre 3 y 20 caracteres", "error");
+      addToast("Username must be between 3 and 20 characters", "error");
       setSaving(false);
       return;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      addToast("El usuario solo permite letras, números y barra baja", "error");
+      addToast("Username can only contain letters, numbers, and underscores", "error");
       setSaving(false);
       return;
     }
@@ -101,7 +101,7 @@ export default function Settings() {
         const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
         finalAvatarUrl = publicUrl;
       } else {
-        addToast("Error subiendo la foto", "error");
+        addToast("Error uploading photo", "error");
         setSaving(false);
         return;
       }
@@ -122,10 +122,10 @@ export default function Settings() {
     setSaving(false);
     
     if (error) {
-      addToast("Error al actualizar perfil", "error");
+      addToast("Error updating profile", "error");
     } else {
       setSocialLinks(cleanLinks);
-      addToast("Perfil guardado correctamente", "success");
+      addToast("Profile saved successfully", "success");
     }
   };
 
@@ -158,7 +158,7 @@ export default function Settings() {
       <div className="w-full max-w-2xl p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />
-          <p className="text-zinc-400 mt-1">Ajustes de perfil</p>
+          <p className="text-zinc-400 mt-1">Profile settings</p>
         </div>
 
         <hr className="border-zinc-700/60 mb-8" />
@@ -188,13 +188,13 @@ export default function Settings() {
               onClick={() => fileInputRef.current?.click()}
               className="mt-3 text-sm text-zinc-400 hover:text-white transition-colors"
             >
-              Cambiar foto
+              Change photo
             </button>
           </div>
           <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Nombre de usuario</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Username</label>
                 <input
                   type="text"
                   maxLength={20}
@@ -204,18 +204,18 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Biografía</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Bio</label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Cuéntanos un poco sobre ti..."
+                  placeholder="Tell us a bit about yourself..."
                   className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none resize-none h-24"
                   maxLength={300}
                 />
               </div>
               <div>
                 <div className="flex justify-between items-end mb-2">
-                  <label className="block text-sm font-medium text-zinc-400">Redes sociales</label>
+                  <label className="block text-sm font-medium text-zinc-400">Social links</label>
                   <span className="text-xs text-zinc-600">
                     {socialLinks.length}/10
                   </span>
@@ -234,7 +234,7 @@ export default function Settings() {
                         type="text"
                         value={link.value}
                         disabled={!link.platform}
-                        placeholder={!link.platform ? "Elige plataforma..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
+                        placeholder={!link.platform ? "Choose platform..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
                         onChange={(e) => handleLinkChange(index, 'value', e.target.value)}
                         className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       />
@@ -255,7 +255,7 @@ export default function Settings() {
                       className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#a8dadc] rounded-md hover:bg-[#a8dadc]/10 transition-colors w-max"
                     >
                       <Plus className="w-4 h-4" />
-                      Añadir enlace
+                      Add link
                     </button>
                   )}
                 </div>
@@ -270,7 +270,7 @@ export default function Settings() {
                 disabled={saving}
                 className="w-full py-2.5"
               >
-                {saving ? "Guardando..." : "Guardar cambios"}
+                {saving ? "Saving..." : "Save changes"}
               </PrimaryButton>
             </div>
           </div>

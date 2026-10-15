@@ -27,12 +27,12 @@ export default function Login() {
 
     if (error) {
       const msg = error.message.toLowerCase().includes("invalid login credentials")
-        ? "Credenciales incorrectas. Comprueba tu e-mail y contraseña."
+        ? "Invalid credentials. Please check your email and password."
         : error.message;
       addToast(msg, "error");
       setLoading(false);
     } else {
-      addToast("Has iniciado sesión con éxito", "success");
+      addToast("Signed in successfully", "success");
       router.push("/");
     }
   };
@@ -42,7 +42,7 @@ export default function Login() {
       <div className="w-full max-w-md p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />
-          <p className="text-zinc-400 mt-1">Iniciar sesión</p>
+          <p className="text-zinc-400 mt-1">Sign in</p>
         </div>
         
         <hr className="border-zinc-700/60 mb-6" />
@@ -50,7 +50,7 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">e-mail</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -60,7 +60,7 @@ export default function Login() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">contraseña</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Password</label>
               <input
                 type="password"
                 value={password}
@@ -77,7 +77,7 @@ export default function Login() {
               disabled={loading}
               className="w-full py-3"
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Signing in..." : "Sign in"}
             </PrimaryButton>
           </div>
         </form>
@@ -85,7 +85,7 @@ export default function Login() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          ¿no tienes cuenta? <Link href="/register" className="text-[#a8dadc] hover:underline">Regístrate</Link>
+          Don&apos;t have an account? <Link href="/register" className="text-[#a8dadc] hover:underline">Sign up</Link>
         </div>
       </div>
     </div>

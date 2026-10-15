@@ -29,7 +29,7 @@ export default function Register() {
   };
 
   const strength = getPasswordStrength(password);
-  const strengthLabels = ["", "Muy débil", "Débil", "Aceptable", "Fuerte", "Muy fuerte"];
+  const strengthLabels = ["", "Very weak", "Weak", "Fair", "Strong", "Very strong"];
   const strengthColors = ["bg-zinc-800", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500", "bg-emerald-500"];
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -37,34 +37,34 @@ export default function Register() {
     const errs: string[] = [];
 
     if (username.length < 3 || username.length > 20) {
-      errs.push("El usuario debe tener entre 3 y 20 caracteres.");
+      errs.push("Username must be between 3 and 20 characters.");
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      errs.push("El usuario solo puede contener letras, números y barra baja.");
+      errs.push("Username can only contain letters, numbers, and underscores.");
     }
 
     if (email.length > 254) {
-      errs.push("El correo es demasiado largo.");
+      errs.push("Email is too long.");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errs.push("El formato del correo no es válido.");
+      errs.push("Invalid email format.");
     }
 
     if (password.length < 6 || password.length > 30) {
-      errs.push("La contraseña debe tener entre 6 y 30 caracteres.");
+      errs.push("Password must be between 6 and 30 characters.");
     }
     if (!/[a-zA-Z]/.test(password)) {
-      errs.push("La contraseña debe incluir al menos una letra.");
+      errs.push("Password must contain at least one letter.");
     }
     if (!/[0-9]/.test(password)) {
-      errs.push("La contraseña debe incluir al menos un número.");
+      errs.push("Password must contain at least one number.");
     }
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errs.push("La contraseña debe incluir al menos un carácter especial.");
+      errs.push("Password must contain at least one special character.");
     }
     
     if (strength < 4) {
-      errs.push("La contraseña debe ser al menos 'Fuerte'.");
+      errs.push("Password strength must be at least 'Strong'.");
     }
 
     if (errs.length > 0) {
@@ -85,7 +85,7 @@ export default function Register() {
       addToast(error.message, "error");
       setLoading(false);
     } else {
-      addToast("Cuenta creada correctamente", "success");
+      addToast("Account created successfully", "success");
       router.push("/");
     }
   };
@@ -95,7 +95,7 @@ export default function Register() {
       <div className="w-full max-w-md p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />
-          <p className="text-zinc-400 mt-1">Crear cuenta</p>
+          <p className="text-zinc-400 mt-1">Create account</p>
         </div>
         
         <hr className="border-zinc-700/60 mb-6" />
@@ -103,7 +103,7 @@ export default function Register() {
         <form onSubmit={handleRegister} autoComplete="off">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">usuario</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Username</label>
               <input
                 type="text"
                 name="username"
@@ -117,7 +117,7 @@ export default function Register() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">e-mail</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
               <input
                 type="email"
                 name="email"
@@ -131,7 +131,7 @@ export default function Register() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1">contraseña</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Password</label>
               <input
                 type="password"
                 name="new-password"
@@ -164,7 +164,7 @@ export default function Register() {
               disabled={loading}
               className="w-full py-2.5"
             >
-              {loading ? "Cargando..." : "Registrarse"}
+              {loading ? "Signing up..." : "Sign up"}
             </PrimaryButton>
           </div>
         </form>
@@ -172,7 +172,7 @@ export default function Register() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          ¿ya tienes cuenta? <Link href="/login" className="text-[#a8dadc] hover:underline">Entra aquí</Link>
+          Already have an account? <Link href="/login" className="text-[#a8dadc] hover:underline">Sign in</Link>
         </div>
       </div>
     </div>

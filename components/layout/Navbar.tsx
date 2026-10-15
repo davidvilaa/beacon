@@ -101,7 +101,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Buscar"
+              aria-label="Search"
               className="p-1.5 text-zinc-400 hover:text-[#a8dadc] transition-colors rounded-full hover:bg-zinc-800 cursor-pointer"
             >
               <Search className="w-4 h-4" />
@@ -112,7 +112,7 @@ export default function Navbar() {
                 <Link href="/profile">
                   <button className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors overflow-hidden border border-zinc-700 cursor-pointer">
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <UserCircle className="h-5 w-5 text-zinc-400" />
                     )}
@@ -123,19 +123,19 @@ export default function Navbar() {
                   <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
                     <Link href="/profile" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
                       <CircleUserRound className="w-4 h-4" />
-                      Perfil
+                      Profile
                     </Link>
                     <hr className="border-zinc-700/60 mx-6" />
                     <Link href="/settings" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
                       <Settings2 className="w-4 h-4" />
-                      Ajustes
+                      Settings
                     </Link>
                     <button 
                       onClick={async () => await supabase.auth.signOut()} 
                       className="px-4 py-3 text-sm font-medium text-red-400 hover:bg-zinc-800 hover:text-red-300 transition-colors text-left flex items-center gap-2 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
-                      Cerrar sesión
+                      Sign out
                     </button>
                   </div>
                 </div>
@@ -144,12 +144,12 @@ export default function Navbar() {
               <div className="flex items-center gap-2">
                 <Link href="/login">
                   <SecondaryButton className="py-1.5 px-3.5">
-                    Entrar
+                    Sign in
                   </SecondaryButton>
                 </Link>
                 <Link href="/register">
                   <PrimaryButton className="py-1.5 px-3.5">
-                    Registrarse
+                    Sign up
                   </PrimaryButton>
                 </Link>
               </div>

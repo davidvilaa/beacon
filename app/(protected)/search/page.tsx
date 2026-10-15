@@ -23,12 +23,12 @@ interface SearchMovieItem extends Movie {
 }
 
 const allModules = [
-  { id: "movies", title: "Películas", icon: Film },
+  { id: "movies", title: "Movies", icon: Film },
   { id: "series", title: "Series", icon: Tv },
   { id: "anime", title: "Anime", icon: Sparkles },
-  { id: "games", title: "Videojuegos", icon: Gamepad2 },
+  { id: "games", title: "Games", icon: Gamepad2 },
   { id: "manga", title: "Manga", icon: BookOpen },
-  { id: "comics", title: "Cómics", icon: BookCopy },
+  { id: "comics", title: "Comics", icon: BookCopy },
 ];
 
 function getPageNumbers(current: number, total: number): (number | string)[] {
@@ -116,7 +116,7 @@ function SearchContent() {
   return (
     <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
       <p className="text-sm italic text-zinc-400 mb-8">
-        resultados para{" "}
+        results for{" "}
         <span className="text-[#a8dadc] not-italic font-medium">
           &ldquo;{query.toLowerCase()}&rdquo;
         </span>
@@ -125,7 +125,7 @@ function SearchContent() {
       <section className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Módulos
+            Modules
           </h2>
         </div>
 
@@ -156,7 +156,7 @@ function SearchContent() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Resultados
+            Results
           </h2>
         </div>
 
@@ -230,7 +230,7 @@ function SearchContent() {
                     </div>
 
                     <p className="text-xs text-zinc-400 line-clamp-3 sm:line-clamp-4 leading-relaxed">
-                      {movie.overview || "Sin descripción disponible."}
+                      {movie.overview || "No overview available."}
                     </p>
                   </div>
                 </Link>
@@ -247,7 +247,7 @@ function SearchContent() {
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              aria-label="Página anterior"
+              aria-label="Previous page"
               className="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -288,7 +288,7 @@ function SearchContent() {
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              aria-label="Página siguiente"
+              aria-label="Next page"
               className="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />

@@ -26,7 +26,7 @@ export default function Home() {
         <div className="fixed inset-0 -z-10">
           <Image 
             src={bgImage} 
-            alt="Fondo de Beacon"
+            alt="Beacon background"
             fill
             priority
             quality={100}
@@ -41,10 +41,10 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md py-8 text-center text-xs text-zinc-500 mt-auto">
-        <p>© {currentYear} Beacon. Para uso personal.</p>
+        <p>© {currentYear} Beacon. For personal use.</p>
         <div className="mt-3 flex justify-center gap-6">
-          <a href="#" className="hover:text-zinc-300 transition-colors">Términos legales</a>
-          <a href="#" className="hover:text-zinc-300 transition-colors">Privacidad y movidas</a>
+          <a href="#" className="hover:text-zinc-300 transition-colors">Terms of service</a>
+          <a href="#" className="hover:text-zinc-300 transition-colors">Privacy policy</a>
         </div>
       </footer>
     </div>

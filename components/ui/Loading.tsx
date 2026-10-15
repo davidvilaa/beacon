@@ -1,5 +1,5 @@
 export default function Loading({
-  text = "Cargando...",
+  text = "Loading...",
   className = "",
 }: {
   text?: string;

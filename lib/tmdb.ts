@@ -58,7 +58,7 @@ async function fetchFromTmdb<T>(
   });
 
   if (!url.searchParams.has("language")) {
-    url.searchParams.set("language", "es-ES");
+    url.searchParams.set("language", "en-US");
   }
 
   const headers: HeadersInit = {
@@ -149,5 +149,6 @@ export async function getMovieDetails(
 ): Promise<MovieDetails> {
   return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
     append_to_response: "credits,images",
+    include_image_language: "en,null",
   });
 }

@@ -7,35 +7,35 @@ export default function ProfileGeneralPage() {
   const activeModules = [
     {
       id: "movies",
-      title: "Películas",
+      title: "Movies",
       icon: Film,
       href: "/profile/movies",
-      stats: "0 vistas · 0 en watchlist",
-      desc: "Tu diario de cine, notas y listas personalizadas.",
+      stats: "0 watched · 0 on watchlist",
+      desc: "Your cinema diary, ratings, and custom lists.",
     },
     {
       id: "series",
       title: "Series",
       icon: Tv,
       href: "/profile/series",
-      stats: "0 seguidas",
-      desc: "Control de episodios y temporadas al día.",
+      stats: "0 tracked",
+      desc: "Track episodes and seasons up to date.",
     },
     {
       id: "anime",
       title: "Anime",
       icon: Sparkles,
       href: "/profile/anime",
-      stats: "0 vistos",
-      desc: "Registro de animes en emisión y completados.",
+      stats: "0 watched",
+      desc: "Log seasonal and completed anime.",
     },
     {
       id: "games",
-      title: "Videojuegos",
+      title: "Games",
       icon: Gamepad2,
       href: "/profile/games",
-      stats: "0 completados",
-      desc: "Backlog y biblioteca de juegos terminados.",
+      stats: "0 completed",
+      desc: "Backlog and library of finished games.",
     },
   ];
 
@@ -44,10 +44,10 @@ export default function ProfileGeneralPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Tus módulos activos
+            Active modules
           </h2>
           <span className="text-xs text-zinc-600">
-            {activeModules.length} instalados
+            {activeModules.length} installed
           </span>
         </div>
 
@@ -79,7 +79,7 @@ export default function ProfileGeneralPage() {
                 </div>
 
                 <div className="flex items-center gap-1 text-xs text-[#a8dadc] font-medium mt-4 pt-3 border-t border-zinc-800/60 opacity-80 group-hover:opacity-100">
-                  <span>Abrir módulo</span>
+                  <span>Open module</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
@@ -91,14 +91,14 @@ export default function ProfileGeneralPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Actividad reciente
+            Recent activity
           </h2>
         </div>
 
         <div className="p-8 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 text-center flex flex-col items-center justify-center">
           <Clock className="w-8 h-8 text-zinc-700 mb-2" />
           <p className="text-xs text-zinc-500">
-            No tienes actividad reciente en tus módulos.
+            No recent activity in your modules.
           </p>
         </div>
       </section>

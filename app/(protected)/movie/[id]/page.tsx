@@ -400,7 +400,7 @@ function MovieDetailContent() {
                                 alt={actor.name}
                                 fill
                                 sizes="56px"
-                                className="object-cover transition-transform group-hover:scale-105"
+                                className="object-cover"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500 font-bold">
@@ -446,7 +446,7 @@ function MovieDetailContent() {
                                 alt={person.name}
                                 fill
                                 sizes="56px"
-                                className="object-cover transition-transform group-hover:scale-105"
+                                className="object-cover"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500 font-bold">

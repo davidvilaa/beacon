@@ -183,7 +183,7 @@ function SearchContent() {
               const posterUrl = getPosterUrl(movie.poster_path, "w342");
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
-                : "—";
+                : "-";
 
               return (
                 <Link
@@ -211,7 +211,7 @@ function SearchContent() {
                     <div className="flex items-center justify-between gap-3 mb-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <Film className="w-4 h-4 text-[#a8dadc] shrink-0" />
-                        <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
+                        <h3 className="text-sm sm:text-base font-semibold text-zinc-100 truncate">
                           {movie.title}
                         </h3>
                       </div>
@@ -223,7 +223,7 @@ function SearchContent() {
                             <span>{movie.vote_average.toFixed(1)}</span>
                           </span>
                         )}
-                        <span className="text-zinc-500 font-mono">
+                        <span className="text-zinc-500 font-mono inline-block w-[4ch] text-center">
                           {releaseYear}
                         </span>
                       </div>

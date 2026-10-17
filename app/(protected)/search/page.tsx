@@ -142,7 +142,7 @@ function SearchContent() {
                 aria-label={mod.title}
                 className={`w-14 h-14 rounded-md border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 ${
                   isSelected
-                    ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc] shadow-[0_0_20px_rgba(168,218,220,0.25)]"
+                    ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc]"
                     : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900"
                 }`}
               >
@@ -275,7 +275,7 @@ function SearchContent() {
                   onClick={() => handlePageChange(pageNum)}
                   className={`w-8 h-8 rounded-md text-xs font-medium transition-all cursor-pointer active:scale-95 ${
                     isActive
-                      ? "bg-[#a8dadc] text-zinc-950 font-bold border border-[#a8dadc] shadow-sm shadow-[#a8dadc]/20"
+                      ? "bg-[#a8dadc] text-zinc-950 font-bold border border-[#a8dadc]"
                       : "border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
                   }`}
                 >

@@ -15,6 +15,7 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -24,17 +25,35 @@ export default function Navbar() {
         searchInputRef.current?.focus();
       }, 200);
       return () => clearTimeout(timer);
+    } else {
+      setSearchQuery("");
     }
   }, [isSearchOpen]);
 
   useEffect(() => {
+    if (!isSearchOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isSearchOpen) {
+      if (e.key === "Escape") {
         setIsSearchOpen(false);
       }
     };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchOpen(false);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [isSearchOpen]);
 
   useEffect(() => {
@@ -81,6 +100,7 @@ export default function Navbar() {
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsSearchOpen(false);
+      setSearchQuery("");
     }
   };
 
@@ -158,7 +178,7 @@ export default function Navbar() {
         </div>
 
         <div 
-          className="absolute top-0 bottom-0 w-[2px] bg-[#a8dadc] shadow-[0_0_12px_#a8dadc] transition-all duration-300 ease-in-out pointer-events-none z-30"
+          className="absolute top-0 bottom-0 w-[2px] bg-[#a8dadc] transition-all duration-300 ease-in-out pointer-events-none z-30"
           style={{
             left: isSearchOpen ? "0%" : "calc(100% - 2px)",
             opacity: isSearchOpen ? 1 : 0,
@@ -166,6 +186,7 @@ export default function Navbar() {
         />
 
         <div
+          ref={searchContainerRef}
           className={`absolute inset-0 px-6 flex items-center transition-all duration-300 ease-in-out z-20 ${
             isSearchOpen 
               ? "pointer-events-auto opacity-100" 
@@ -188,7 +209,7 @@ export default function Navbar() {
                 }
               }}
               placeholder="..."
-              className="w-full bg-transparent text-zinc-100/80 text-lg sm:text-xl italic tracking-wider uppercase focus:outline-none placeholder:text-zinc-600 font-[family-name:var(--font-geist-sans)]"
+              className="w-full bg-transparent text-zinc-100/80 text-lg sm:text-xl tracking-wider uppercase focus:outline-none placeholder:text-zinc-600 font-[family-name:var(--font-geist-sans)]"
             />
             <button
               onClick={() => {

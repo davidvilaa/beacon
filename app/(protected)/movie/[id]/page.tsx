@@ -373,7 +373,7 @@ function MovieDetailContent() {
                 </div>
 
                 <span
-                  className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out shadow-[0_0_8px_rgba(168,218,220,0.6)]"
+                  className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out"
                   style={{
                     left: `${indicatorStyle.left}px`,
                     width: `${indicatorStyle.width}px`,
@@ -587,7 +587,7 @@ function MovieDetailContent() {
                             }}
                             className={`relative block w-28 sm:w-36 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border-2 transition-all cursor-pointer shadow-2xl shadow-black/80 group-hover/card:shadow-[0_25px_45px_rgba(0,0,0,0.95)] ${
                               isSelected
-                                ? "border-[#a8dadc] shadow-[0_0_20px_rgba(168,218,220,0.4)]"
+                                ? "border-[#a8dadc]"
                                 : "border-zinc-800 group-hover/card:border-[#a8dadc]"
                             }`}
                           >

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense, useMemo } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import {
   Clock,
   Calendar,
   Film,
-  ArrowLeft,
   Bookmark,
   Eye,
   Heart,
@@ -48,13 +47,14 @@ function MovieDetailContent() {
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
+    let ignore = false;
+
     async function fetchMovie() {
       try {
         const res = await fetch(`/api/movies/${id}`);
         if (res.ok) {
           const data: MovieDetails = await res.json();
-          setMovie(data);
-          setSelectedPoster(data.poster_path);
+          if (ignore) return;
 
           const validBackdrops = (data.images?.backdrops || []).filter(
             (b) =>
@@ -74,24 +74,34 @@ function MovieDetailContent() {
             topBackdrops.unshift(data.backdrop_path);
           }
 
+          let chosenBackdrop = data.backdrop_path;
           if (topBackdrops.length > 0) {
-            const randomChosen =
+            chosenBackdrop =
               topBackdrops[Math.floor(Math.random() * topBackdrops.length)];
-            setSelectedBackdrop(randomChosen);
-          } else {
-            setSelectedBackdrop(data.backdrop_path);
           }
+
+          setSelectedBackdrop(chosenBackdrop);
+          setSelectedPoster(data.poster_path);
+          setMovie(data);
         }
       } catch (err) {
-        console.error(err);
+        if (!ignore) {
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
 
     if (id) {
       fetchMovie();
     }
+
+    return () => {
+      ignore = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -104,51 +114,45 @@ function MovieDetailContent() {
     }
   }, [activeTab, movie]);
 
-  const rawPosters = movie?.images?.posters || [];
-  const postersList = useMemo(() => {
-    const valid = rawPosters.filter((p) => {
-      if (p.aspect_ratio && (p.aspect_ratio < 0.55 || p.aspect_ratio > 0.8)) {
-        return false;
-      }
-      return Boolean(p.file_path);
-    });
+  const [dedupedPosters, setDedupedPosters] = useState<MovieImage[] | null>(null);
+  const [loadingPosters, setLoadingPosters] = useState(false);
 
-    const sorted = [...valid].sort((a, b) => {
-      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
-      if (countDiff !== 0) return countDiff;
-      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
-    });
+  useEffect(() => {
+    setDedupedPosters(null);
+  }, [id]);
 
-    const curated: MovieImage[] = [];
-    const seen = new Set<string>();
+  useEffect(() => {
+    if (!id || !isPosterPickerOpen || dedupedPosters) return;
 
-    if (selectedPoster) {
-      const current = rawPosters.find((p) => p.file_path === selectedPoster);
-      if (current) {
-        curated.push(current);
-        seen.add(current.file_path);
+    let ignore = false;
+
+    async function fetchPosters() {
+      try {
+        setLoadingPosters(true);
+        const res = await fetch(`/api/movies/${id}/posters`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.posters?.length) {
+            setDedupedPosters(data.posters);
+          }
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error(err);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingPosters(false);
+        }
       }
     }
 
-    for (const p of sorted) {
-      if (!seen.has(p.file_path)) {
-        seen.add(p.file_path);
-        curated.push(p);
-      }
-      if (curated.length >= 30) break;
-    }
+    fetchPosters();
 
-    return curated;
-  }, [rawPosters, selectedPoster]);
-
-  const posterShelves = useMemo(() => {
-    const chunkSize = 5;
-    const shelves: MovieImage[][] = [];
-    for (let i = 0; i < postersList.length; i += chunkSize) {
-      shelves.push(postersList.slice(i, i + chunkSize));
-    }
-    return shelves;
-  }, [postersList]);
+    return () => {
+      ignore = true;
+    };
+  }, [id, isPosterPickerOpen, dedupedPosters]);
 
   if (loading) {
     return (
@@ -172,13 +176,10 @@ function MovieDetailContent() {
     );
   }
 
-  const backdropUrl = getBackdropUrl(
-    selectedBackdrop || movie.backdrop_path,
-    "original"
-  );
+  const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
   const posterUrl = getPosterUrl(selectedPoster, "w500");
   const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "—";
-  const hasMultiplePosters = postersList.length > 1;
+  const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
 
   const topCast = (movie.credits?.cast || []).slice(0, 15);
   const priorityJobs = [
@@ -234,20 +235,9 @@ function MovieDetailContent() {
       )}
 
       <main className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-6 sm:pt-8">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className={`inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors cursor-pointer mb-6 sm:mb-8 ${
-            backdropUrl ? "text-zinc-300" : ""
-          }`}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
-
         <div
           className={`flex flex-col md:flex-row gap-8 items-start ${
-            backdropUrl ? "mt-52 sm:mt-68 md:mt-84 lg:mt-[410px]" : ""
+            backdropUrl ? "mt-64 sm:mt-80 md:mt-96 lg:mt-[460px]" : ""
           }`}
         >
           <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
@@ -618,58 +608,49 @@ function MovieDetailContent() {
               </button>
             </div>
 
-            <div className="p-4 sm:p-8 pt-16 sm:pt-24 md:pt-28 pb-24 sm:pb-32 overflow-y-auto overflow-x-hidden">
-              {posterShelves.map((shelf, shelfIdx) => {
-                const baseZ = shelfIdx + 1;
-                return (
-                  <div
-                    key={shelfIdx}
-                    className={`relative flex items-center justify-center -space-x-4 sm:-space-x-6 md:-space-x-8 ${
-                      shelfIdx > 0 ? "-mt-20 sm:-mt-28 md:-mt-36" : ""
-                    }`}
-                  >
-                    {shelf.map((poster) => {
-                      const url = getPosterUrl(poster.file_path, "w342");
-                      const isSelected = selectedPoster === poster.file_path;
-                      return (
-                        <div
-                          key={poster.file_path}
-                          style={{ zIndex: baseZ }}
-                          className="relative shrink-0 transition-all duration-300 ease-out hover:!z-50 hover:-translate-y-16 sm:hover:-translate-y-24 md:hover:-translate-y-28 hover:scale-105 group/card"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedPoster(poster.file_path);
-                              setIsPosterPickerOpen(false);
-                            }}
-                            className={`relative block w-28 sm:w-36 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border-2 transition-all cursor-pointer shadow-2xl shadow-black/80 group-hover/card:shadow-[0_25px_45px_rgba(0,0,0,0.95)] ${
-                              isSelected
-                                ? "border-[#a8dadc]"
-                                : "border-zinc-800 group-hover/card:border-[#a8dadc]"
-                            }`}
-                          >
-                            {url && (
-                              <Image
-                                src={url}
-                                alt="Poster option"
-                                fill
-                                sizes="(max-width: 640px) 112px, 176px"
-                                className="object-cover"
-                              />
-                            )}
-                            {isSelected && (
-                              <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-20">
-                                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                              </div>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+            <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
+              {loadingPosters || !dedupedPosters ? (
+                <div className="flex items-center justify-center py-24">
+                  <Loading />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                  {dedupedPosters.map((poster) => {
+                    const url = getPosterUrl(poster.file_path, "w342");
+                    const isSelected = selectedPoster === poster.file_path;
+                    return (
+                      <button
+                        key={poster.file_path}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPoster(poster.file_path);
+                          setIsPosterPickerOpen(false);
+                        }}
+                        className={`relative aspect-[2/3] w-full rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-[#a8dadc]"
+                            : "border-zinc-800 hover:border-zinc-600 hover:opacity-80"
+                        }`}
+                      >
+                        {url && (
+                          <Image
+                            src={url}
+                            alt="Poster option"
+                            fill
+                            sizes="(max-width: 640px) 150px, (max-width: 1024px) 180px, 200px"
+                            className="object-cover"
+                          />
+                        )}
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

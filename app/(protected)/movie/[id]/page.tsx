@@ -168,30 +168,57 @@ function MovieDetailContent() {
   return (
     <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
       {backdropUrl && (
-        <div className="absolute top-0 left-0 right-0 h-96 sm:h-[480px] -z-10 overflow-hidden pointer-events-none">
-          <Image
-            src={backdropUrl}
-            alt={movie.title}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-top opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-zinc-900/80 to-zinc-900" />
+        <div className="absolute top-0 left-0 right-0 h-[300px] sm:h-[380px] md:h-[440px] lg:h-[480px] overflow-hidden pointer-events-none select-none -z-0">
+          <div
+            className="relative mx-auto w-full max-w-[1360px] h-full"
+            style={{
+              maskImage:
+                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 12%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 12%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
+            }}
+          >
+            <div
+              className="relative w-full h-full"
+              style={{
+                maskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 72%, rgba(0,0,0,0.15) 88%, rgba(0,0,0,0) 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 72%, rgba(0,0,0,0.15) 88%, rgba(0,0,0,0) 100%)",
+              }}
+            >
+              <Image
+                src={backdropUrl}
+                alt={movie.title}
+                fill
+                priority
+                sizes="(max-width: 1400px) 100vw, 1400px"
+                className="object-cover object-top opacity-70 sm:opacity-80"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/70 via-transparent to-transparent pointer-events-none" />
+          </div>
         </div>
       )}
 
-      <main className="w-full max-w-5xl mx-auto px-6 pt-6 sm:pt-10">
+      <main className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-6 sm:pt-8">
         <button
           type="button"
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors mb-8 cursor-pointer"
+          className={`inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors mb-6 sm:mb-8 cursor-pointer ${
+            backdropUrl ? "text-zinc-300" : ""
+          }`}
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
         </button>
 
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div
+          className={`flex flex-col md:flex-row gap-8 items-start ${
+            backdropUrl ? "mt-36 sm:mt-48 md:mt-64 lg:mt-72" : ""
+          }`}
+        >
           <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
             <div
               onClick={

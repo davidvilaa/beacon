@@ -34,6 +34,7 @@ function MovieDetailContent() {
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
+  const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
@@ -54,6 +55,32 @@ function MovieDetailContent() {
           const data: MovieDetails = await res.json();
           setMovie(data);
           setSelectedPoster(data.poster_path);
+
+          const validBackdrops = (data.images?.backdrops || []).filter(
+            (b) =>
+              Boolean(b.file_path) &&
+              (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
+          );
+
+          const sortedBackdrops = [...validBackdrops].sort(
+            (a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0)
+          );
+
+          const topBackdrops = sortedBackdrops
+            .slice(0, 15)
+            .map((b) => b.file_path);
+
+          if (data.backdrop_path && !topBackdrops.includes(data.backdrop_path)) {
+            topBackdrops.unshift(data.backdrop_path);
+          }
+
+          if (topBackdrops.length > 0) {
+            const randomChosen =
+              topBackdrops[Math.floor(Math.random() * topBackdrops.length)];
+            setSelectedBackdrop(randomChosen);
+          } else {
+            setSelectedBackdrop(data.backdrop_path);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -145,7 +172,10 @@ function MovieDetailContent() {
     );
   }
 
-  const backdropUrl = getBackdropUrl(movie.backdrop_path, "original");
+  const backdropUrl = getBackdropUrl(
+    selectedBackdrop || movie.backdrop_path,
+    "original"
+  );
   const posterUrl = getPosterUrl(selectedPoster, "w500");
   const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "—";
   const hasMultiplePosters = postersList.length > 1;
@@ -168,23 +198,23 @@ function MovieDetailContent() {
   return (
     <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
       {backdropUrl && (
-        <div className="absolute top-0 left-0 right-0 h-[300px] sm:h-[380px] md:h-[440px] lg:h-[480px] overflow-hidden pointer-events-none select-none -z-0">
+        <div className="absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden pointer-events-none select-none -z-0">
           <div
-            className="relative mx-auto w-full max-w-[1360px] h-full"
+            className="relative mx-auto w-full max-w-[1550px] h-full"
             style={{
               maskImage:
-                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 12%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
+                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 2%, rgba(0,0,0,0.12) 5%, rgba(0,0,0,0.30) 9%, rgba(0,0,0,0.60) 13%, rgba(0,0,0,0.88) 17%, rgba(0,0,0,1) 21%, rgba(0,0,0,1) 79%, rgba(0,0,0,0.88) 83%, rgba(0,0,0,0.60) 87%, rgba(0,0,0,0.30) 91%, rgba(0,0,0,0.12) 95%, rgba(0,0,0,0.03) 98%, rgba(0,0,0,0) 100%)",
               WebkitMaskImage:
-                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 12%, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
+                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 2%, rgba(0,0,0,0.12) 5%, rgba(0,0,0,0.30) 9%, rgba(0,0,0,0.60) 13%, rgba(0,0,0,0.88) 17%, rgba(0,0,0,1) 21%, rgba(0,0,0,1) 79%, rgba(0,0,0,0.88) 83%, rgba(0,0,0,0.60) 87%, rgba(0,0,0,0.30) 91%, rgba(0,0,0,0.12) 95%, rgba(0,0,0,0.03) 98%, rgba(0,0,0,0) 100%)",
             }}
           >
             <div
               className="relative w-full h-full"
               style={{
                 maskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 72%, rgba(0,0,0,0.15) 88%, rgba(0,0,0,0) 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.6) 72%, rgba(0,0,0,0.15) 88%, rgba(0,0,0,0) 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
               }}
             >
               <Image
@@ -192,13 +222,14 @@ function MovieDetailContent() {
                 alt={movie.title}
                 fill
                 priority
-                sizes="(max-width: 1400px) 100vw, 1400px"
-                className="object-cover object-top opacity-70 sm:opacity-80"
+                sizes="(max-width: 1550px) 100vw, 1550px"
+                className="object-cover object-top opacity-95 sm:opacity-100"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/70 via-transparent to-transparent pointer-events-none" />
           </div>
+
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-zinc-950/60 to-transparent pointer-events-none" />
         </div>
       )}
 
@@ -206,7 +237,7 @@ function MovieDetailContent() {
         <button
           type="button"
           onClick={() => router.back()}
-          className={`inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors mb-6 sm:mb-8 cursor-pointer ${
+          className={`inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-zinc-400 hover:text-[#a8dadc] transition-colors cursor-pointer mb-6 sm:mb-8 ${
             backdropUrl ? "text-zinc-300" : ""
           }`}
         >
@@ -216,7 +247,7 @@ function MovieDetailContent() {
 
         <div
           className={`flex flex-col md:flex-row gap-8 items-start ${
-            backdropUrl ? "mt-36 sm:mt-48 md:mt-64 lg:mt-72" : ""
+            backdropUrl ? "mt-52 sm:mt-68 md:mt-84 lg:mt-[410px]" : ""
           }`}
         >
           <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">

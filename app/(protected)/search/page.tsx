@@ -114,7 +114,7 @@ function SearchContent() {
     : movies;
 
   return (
-    <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
       <p className="text-sm italic text-zinc-400 mb-8">
         results for{" "}
         <span className="text-[#a8dadc] not-italic font-medium">
@@ -304,7 +304,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex items-center justify-center min-h-[40vh]">
+        <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[40vh]">
           <Loading />
         </div>
       }

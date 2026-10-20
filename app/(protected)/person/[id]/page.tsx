@@ -1,0 +1,468 @@
+"use client";
+
+import { useEffect, useState, useMemo, Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Star,
+  Film,
+  User,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
+import Loading from "@/components/ui/Loading";
+
+interface DisplayedCredit extends PersonCredit {
+  asRole: string;
+}
+
+function PersonDetailContent() {
+  const params = useParams();
+  const id = params?.id as string;
+  const router = useRouter();
+
+  const [person, setPerson] = useState<PersonDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+
+    async function fetchPerson() {
+      try {
+        const res = await fetch(`/api/person/${id}`);
+        if (res.ok) {
+          const data: PersonDetails = await res.json();
+          if (!ignore) {
+            setPerson(data);
+          }
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error(err);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    if (id) {
+      fetchPerson();
+    }
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  const rawCast = useMemo(() => person?.combined_credits?.cast || [], [person]);
+  const rawCrew = useMemo(() => person?.combined_credits?.crew || [], [person]);
+
+  const categorizedCredits = useMemo(() => {
+    const actingMap = new Map<string, DisplayedCredit>();
+    const voiceMap = new Map<string, DisplayedCredit>();
+    const crewMap = new Map<string, DisplayedCredit>();
+    const allMap = new Map<string, DisplayedCredit>();
+
+    rawCast.forEach((item) => {
+      const isVoice = /\(voice/i.test(item.character || "");
+      const role = item.character?.trim() || "Actor";
+      const key = `${item.media_type}-${item.id}`;
+
+      if (isVoice) {
+        if (!voiceMap.has(key)) {
+          voiceMap.set(key, { ...item, asRole: role });
+        } else {
+          const existing = voiceMap.get(key)!;
+          if (role && !existing.asRole.split(", ").includes(role)) {
+            existing.asRole += `, ${role}`;
+          }
+        }
+      } else {
+        if (!actingMap.has(key)) {
+          actingMap.set(key, { ...item, asRole: role });
+        } else {
+          const existing = actingMap.get(key)!;
+          if (role && !existing.asRole.split(", ").includes(role)) {
+            existing.asRole += `, ${role}`;
+          }
+        }
+      }
+
+      if (!allMap.has(key)) {
+        allMap.set(key, { ...item, asRole: role });
+      } else {
+        const existing = allMap.get(key)!;
+        if (role && !existing.asRole.split(", ").includes(role)) {
+          existing.asRole += `, ${role}`;
+        }
+      }
+    });
+
+    rawCrew.forEach((item) => {
+      const key = `${item.media_type}-${item.id}`;
+      const role = item.job?.trim() || item.department?.trim() || "Crew";
+
+      if (!crewMap.has(key)) {
+        crewMap.set(key, { ...item, asRole: role });
+      } else {
+        const existing = crewMap.get(key)!;
+        if (role && !existing.asRole.split(", ").includes(role)) {
+          existing.asRole += `, ${role}`;
+        }
+      }
+
+      if (!allMap.has(key)) {
+        allMap.set(key, { ...item, asRole: role });
+      } else {
+        const existing = allMap.get(key)!;
+        if (role && !existing.asRole.split(", ").includes(role)) {
+          existing.asRole += `, ${role}`;
+        }
+      }
+    });
+
+    return {
+      all: Array.from(allMap.values()),
+      acting: Array.from(actingMap.values()),
+      voice: Array.from(voiceMap.values()),
+      crew: Array.from(crewMap.values()),
+    };
+  }, [rawCast, rawCrew]);
+
+  const availableTabs = useMemo(() => {
+    const list: { id: string; label: string; count: number }[] = [
+      { id: "all", label: "All Roles", count: categorizedCredits.all.length },
+    ];
+
+    if (categorizedCredits.acting.length > 0) {
+      list.push({
+        id: "acting",
+        label: "Acting",
+        count: categorizedCredits.acting.length,
+      });
+    }
+
+    if (categorizedCredits.voice.length > 0) {
+      list.push({
+        id: "voice",
+        label: "Voice Acting",
+        count: categorizedCredits.voice.length,
+      });
+    }
+
+    if (categorizedCredits.crew.length > 0) {
+      list.push({
+        id: "crew",
+        label: "Crew",
+        count: categorizedCredits.crew.length,
+      });
+    }
+
+    return list;
+  }, [categorizedCredits]);
+
+  const displayedCredits = useMemo(() => {
+    let list: DisplayedCredit[] = [];
+
+    switch (selectedRole) {
+      case "acting":
+        list = categorizedCredits.acting;
+        break;
+      case "voice":
+        list = categorizedCredits.voice;
+        break;
+      case "crew":
+        list = categorizedCredits.crew;
+        break;
+      default:
+        list = categorizedCredits.all;
+        break;
+    }
+
+    if (mediaFilter !== "all") {
+      list = list.filter((item) => item.media_type === mediaFilter);
+    }
+
+    return [...list].sort((a, b) => {
+      const dateA = a.release_date || a.first_air_date || "";
+      const dateB = b.release_date || b.first_air_date || "";
+
+      if (!dateA && !dateB) return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return dateB.localeCompare(dateA);
+    });
+  }, [selectedRole, mediaFilter, categorizedCredits]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
+        <Loading />
+      </div>
+    );
+  }
+
+  if (!person) {
+    return (
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 text-center">
+        <p className="text-zinc-400 mb-4">Person could not be found.</p>
+        <button
+          onClick={() => router.back()}
+          className="text-xs text-[#a8dadc] hover:underline cursor-pointer"
+        >
+          ← Go back
+        </button>
+      </div>
+    );
+  }
+
+  const profileUrl = getPosterUrl(person.profile_path, "w500");
+  const bio = person.biography || "";
+  const isBioLong = bio.length > 400;
+
+  return (
+    <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        <aside className="w-full lg:w-80 shrink-0 space-y-5">
+          <div className="relative aspect-[2/3] w-56 sm:w-64 lg:w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl">
+            {profileUrl ? (
+              <Image
+                src={profileUrl}
+                alt={person.name}
+                fill
+                priority
+                sizes="(max-width: 1024px) 256px, 320px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
+                <User className="w-20 h-20 mb-2 stroke-[1.5]" />
+                <span className="text-xs uppercase tracking-wider font-bold text-zinc-600">
+                  No Photo
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800">
+              Biography
+            </h3>
+            {bio ? (
+              <div>
+                <p
+                  className={`text-xs text-zinc-400 leading-relaxed whitespace-pre-wrap ${
+                    !isBioExpanded && isBioLong ? "line-clamp-6" : ""
+                  }`}
+                >
+                  {bio}
+                </p>
+                {isBioLong && (
+                  <button
+                    type="button"
+                    onClick={() => setIsBioExpanded(!isBioExpanded)}
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-[#a8dadc] hover:underline cursor-pointer"
+                  >
+                    <span>{isBioExpanded ? "Show less" : "Read more"}</span>
+                    {isBioExpanded ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-500 italic">
+                We don&apos;t have a biography for {person.name} yet.
+              </p>
+            )}
+          </div>
+        </aside>
+
+        <section className="flex-1 min-w-0 space-y-6 w-full">
+          <div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+              {person.name}
+            </h1>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-zinc-800/80">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="relative">
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  aria-label="Filter by role"
+                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
+                >
+                  {availableTabs.map((tab) => (
+                    <option key={tab.id} value={tab.id} className="bg-zinc-900 text-zinc-200">
+                      {tab.label} ({tab.count})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              <div className="relative">
+                <select
+                  value={mediaFilter}
+                  onChange={(e) => setMediaFilter(e.target.value as "all" | "movie" | "tv")}
+                  aria-label="Filter by media format"
+                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
+                >
+                  <option value="all" className="bg-zinc-900 text-zinc-200">All Formats</option>
+                  <option value="movie" className="bg-zinc-900 text-zinc-200">Movies</option>
+                  <option value="tv" className="bg-zinc-900 text-zinc-200">Series</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            <span className="text-xs text-zinc-500 font-medium">
+              {displayedCredits.length} {displayedCredits.length === 1 ? "title" : "titles"}
+            </span>
+          </div>
+
+          <div className="pt-2">
+            {displayedCredits.length === 0 ? (
+              <div className="py-20 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 text-center">
+                <Film className="w-10 h-10 text-zinc-700 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-zinc-400">
+                  No works found for this filter.
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Try selecting &quot;All Roles&quot; or changing the media filter.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {displayedCredits.map((credit, idx) => {
+                  const posterUrl = getPosterUrl(credit.poster_path, "w500");
+                  const title = credit.title || credit.name || "Untitled";
+                  const year =
+                    (credit.release_date || credit.first_air_date)?.slice(
+                      0,
+                      4
+                    ) || "";
+
+                  const isMovie = credit.media_type === "movie";
+                  const cardClass =
+                    "group flex flex-col cursor-pointer";
+
+                  const cardContent = (
+                    <>
+                      <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-all">
+                        {posterUrl ? (
+                          <Image
+                            src={posterUrl}
+                            alt={title}
+                            fill
+                            sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
+                            className="object-cover group-hover:opacity-90 transition-opacity"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
+                            <Film className="w-8 h-8 text-zinc-700 mb-1" />
+                            <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
+                              {title}
+                            </span>
+                          </div>
+                        )}
+
+                        {credit.media_type === "tv" && (
+                          <div className="absolute top-2 left-2">
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
+                              TV
+                            </span>
+                          </div>
+                        )}
+
+                        {credit.vote_average > 0 && (
+                          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-200 border border-zinc-800 text-[10px] font-semibold">
+                            <Star className="w-3 h-3 text-[#a8dadc] fill-[#a8dadc]" />
+                            <span>{credit.vote_average.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-2 space-y-0.5 px-0.5">
+                        <div className="flex items-baseline justify-between gap-1.5">
+                          <h4
+                            className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate"
+                            title={title}
+                          >
+                            {title}
+                          </h4>
+                          {year && (
+                            <span className="text-[10px] font-mono text-zinc-500 shrink-0">
+                              {year}
+                            </span>
+                          )}
+                        </div>
+
+                        {credit.asRole && (
+                          <p
+                            className="text-[11px] text-zinc-400 truncate"
+                            title={`as ${credit.asRole}`}
+                          >
+                            as <span className="text-zinc-300">{credit.asRole}</span>
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  );
+
+                  if (isMovie) {
+                    return (
+                      <Link
+                        key={`${credit.media_type}-${credit.id}-${idx}`}
+                        href={`/movie/${credit.id}`}
+                        className={cardClass}
+                      >
+                        {cardContent}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={`${credit.media_type}-${credit.id}-${idx}`}
+                      className={cardClass}
+                    >
+                      {cardContent}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+export default function PersonPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      }
+    >
+      <PersonDetailContent />
+    </Suspense>
+  );
+}

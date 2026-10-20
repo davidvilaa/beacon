@@ -77,7 +77,7 @@ export default function ProfileLayout({
   ];
 
   return (
-    <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
       {loading ? (
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-8 border-b border-zinc-800 animate-pulse">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-800/80 shrink-0" />

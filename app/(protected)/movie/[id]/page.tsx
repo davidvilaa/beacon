@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   Clock,
@@ -156,7 +157,7 @@ function MovieDetailContent() {
 
   if (loading) {
     return (
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
         <Loading />
       </div>
     );
@@ -164,7 +165,7 @@ function MovieDetailContent() {
 
   if (!movie) {
     return (
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 text-center">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 text-center">
         <p className="text-zinc-400 mb-4">Movie could not be found.</p>
         <button
           onClick={() => router.back()}
@@ -234,7 +235,7 @@ function MovieDetailContent() {
         </div>
       )}
 
-      <main className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-6 sm:pt-8">
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-6 sm:pt-8">
         <div
           className={`flex flex-col md:flex-row gap-8 items-start ${
             backdropUrl ? "mt-64 sm:mt-80 md:mt-96 lg:mt-[460px]" : ""
@@ -437,9 +438,10 @@ function MovieDetailContent() {
                         ? getPosterUrl(actor.profile_path, "w185")
                         : null;
                       return (
-                        <div
+                        <Link
                           key={actor.id}
-                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden"
+                          href={`/person/${actor.id}`}
+                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden cursor-pointer"
                         >
                           <div className="relative w-14 h-14 rounded-full overflow-hidden bg-zinc-800 shrink-0 border-r border-zinc-800">
                             {actorPhoto ? (
@@ -464,7 +466,7 @@ function MovieDetailContent() {
                               {actor.character}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })
                   ) : (
@@ -483,9 +485,10 @@ function MovieDetailContent() {
                         ? getPosterUrl(person.profile_path, "w185")
                         : null;
                       return (
-                        <div
+                        <Link
                           key={`${person.id}-${person.job}-${index}`}
-                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden"
+                          href={`/person/${person.id}`}
+                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden cursor-pointer"
                         >
                           <div className="relative w-14 h-14 rounded-full overflow-hidden bg-zinc-800 shrink-0 border-r border-zinc-800">
                             {photo ? (
@@ -510,7 +513,7 @@ function MovieDetailContent() {
                               {person.job}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })
                   ) : (
@@ -663,7 +666,7 @@ export default function MovieDetailPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
+        <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
           <Loading />
         </div>
       }

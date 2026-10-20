@@ -147,11 +147,64 @@ export interface MovieDetails extends Movie {
   };
 }
 
+export interface PersonCredit {
+  id: number;
+  title?: string;
+  name?: string;
+  character?: string;
+  job?: string;
+  department?: string;
+  jobs?: string[];
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average: number;
+  vote_count: number;
+  media_type: "movie" | "tv";
+  popularity: number;
+  genre_ids?: number[];
+  overview?: string;
+}
+
+export interface PersonDetails {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  gender: number;
+  known_for_department: string;
+  place_of_birth: string | null;
+  popularity: number;
+  profile_path: string | null;
+  also_known_as?: string[];
+  external_ids?: {
+    imdb_id?: string | null;
+    instagram_id?: string | null;
+    twitter_id?: string | null;
+    facebook_id?: string | null;
+    wikidata_id?: string | null;
+  };
+  combined_credits?: {
+    cast: PersonCredit[];
+    crew: PersonCredit[];
+  };
+}
+
 export async function getMovieDetails(
   id: string | number
 ): Promise<MovieDetails> {
   return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
     append_to_response: "credits,images",
     include_image_language: "en,null",
+  });
+}
+
+export async function getPersonDetails(
+  id: string | number
+): Promise<PersonDetails> {
+  return fetchFromTmdb<PersonDetails>(`/person/${id}`, {
+    append_to_response: "combined_credits,external_ids",
   });
 }

@@ -11,7 +11,6 @@ import {
   Gamepad2,
   BookOpen,
   BookCopy,
-  Star,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -165,16 +164,18 @@ function SearchContent() {
             Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 sm:h-36 rounded-xl bg-zinc-900/40 border border-zinc-800/60 animate-pulse flex items-start p-3 sm:p-4 gap-4"
+                className="h-44 sm:h-48 md:h-52 rounded-xl bg-zinc-900/30 border border-zinc-800/60 animate-pulse flex items-stretch overflow-hidden"
               >
-                <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-lg bg-zinc-800/60 shrink-0" />
-                <div className="flex-1 space-y-2.5 py-1">
-                  <div className="flex items-center justify-between">
-                    <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
-                    <div className="h-3 bg-zinc-800/40 rounded w-12" />
+                <div className="h-full aspect-[2/3] bg-zinc-800/60 shrink-0 border-r border-zinc-800/60" />
+                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
+                      <div className="h-3 bg-zinc-800/40 rounded w-10" />
+                    </div>
+                    <div className="h-3 bg-zinc-800/30 rounded w-full" />
+                    <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
                   </div>
-                  <div className="h-3 bg-zinc-800/30 rounded w-full" />
-                  <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
                 </div>
               </div>
             ))
@@ -189,49 +190,48 @@ function SearchContent() {
                 <Link
                   key={movie.id}
                   href={`/movie/${movie.id}`}
-                  className="group flex items-start gap-4 p-3 sm:p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/70 hover:border-[#a8dadc]/50 transition-all duration-200 cursor-pointer block"
+                  className="group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-zinc-700 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52"
                 >
-                  <div className="relative w-20 h-28 sm:w-24 sm:h-36 rounded-lg overflow-hidden bg-zinc-900 border border-zinc-800 shrink-0">
+                  <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
                     {posterUrl ? (
                       <Image
                         src={posterUrl}
                         alt={movie.title}
                         fill
-                        sizes="(max-width: 640px) 80px, 96px"
+                        sizes="(max-width: 640px) 120px, (max-width: 768px) 130px, 140px"
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-zinc-900">
-                        <Film className="w-6 h-6 text-zinc-700" />
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 p-2 text-center">
+                        <Film className="w-6 h-6 text-zinc-700 mb-1" />
+                        <span className="text-[10px] text-zinc-600 font-semibold line-clamp-2">
+                          {movie.title}
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 py-0.5">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Film className="w-4 h-4 text-[#a8dadc] shrink-0" />
-                        <h3 className="text-sm sm:text-base font-semibold text-zinc-100 truncate">
-                          {movie.title}
-                        </h3>
-                      </div>
+                  <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
+                    <div>
+                      <div className="flex items-start justify-between gap-3 mb-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Film className="w-4 h-4 text-[#a8dadc] shrink-0" />
+                          <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
+                            {movie.title}
+                          </h3>
+                        </div>
 
-                      <div className="flex items-center gap-3 shrink-0 text-xs text-zinc-400">
-                        {movie.vote_average > 0 && (
-                          <span className="flex items-center gap-1 font-medium text-zinc-200">
-                            <Star className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" />
-                            <span>{movie.vote_average.toFixed(1)}</span>
+                        <div className="flex items-center shrink-0 text-xs text-zinc-500 font-mono">
+                          <span className="inline-block w-[4ch] text-center">
+                            {releaseYear}
                           </span>
-                        )}
-                        <span className="text-zinc-500 font-mono inline-block w-[4ch] text-center">
-                          {releaseYear}
-                        </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <p className="text-xs text-zinc-400 line-clamp-3 sm:line-clamp-4 leading-relaxed">
-                      {movie.overview || "No overview available."}
-                    </p>
+                      <p className="text-xs text-zinc-400 line-clamp-4 sm:line-clamp-5 leading-relaxed">
+                        {movie.overview || "No overview available."}
+                      </p>
+                    </div>
                   </div>
                 </Link>
               );

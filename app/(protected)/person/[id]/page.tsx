@@ -5,13 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
-  Star,
   Film,
   User,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
+import { isExcludedTmdbMedia } from "@/config/content-filters";
 import Loading from "@/components/ui/Loading";
 
 interface DisplayedCredit extends PersonCredit {
@@ -26,7 +26,8 @@ function PersonDetailContent() {
   const [person, setPerson] = useState<PersonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<string>("all");
-  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("movie");
+  const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
   const [isBioExpanded, setIsBioExpanded] = useState(false);
 
   useEffect(() => {
@@ -72,6 +73,7 @@ function PersonDetailContent() {
     const allMap = new Map<string, DisplayedCredit>();
 
     rawCast.forEach((item) => {
+      if (isExcludedTmdbMedia(item)) return;
       const isVoice = /\(voice/i.test(item.character || "");
       const role = item.character?.trim() || "Actor";
       const key = `${item.media_type}-${item.id}`;
@@ -107,6 +109,7 @@ function PersonDetailContent() {
     });
 
     rawCrew.forEach((item) => {
+      if (isExcludedTmdbMedia(item)) return;
       const key = `${item.media_type}-${item.id}`;
       const role = item.job?.trim() || item.department?.trim() || "Crew";
 
@@ -192,16 +195,33 @@ function PersonDetailContent() {
     }
 
     return [...list].sort((a, b) => {
+      if (sortBy === "popularity") {
+        const votesA = a.vote_count ?? 0;
+        const votesB = b.vote_count ?? 0;
+        if (votesB !== votesA) return votesB - votesA;
+        return (b.popularity ?? 0) - (a.popularity ?? 0);
+      }
+
       const dateA = a.release_date || a.first_air_date || "";
       const dateB = b.release_date || b.first_air_date || "";
 
-      if (!dateA && !dateB) return (b.vote_count ?? 0) - (a.vote_count ?? 0);
-      if (!dateA) return 1;
-      if (!dateB) return -1;
+      if (sortBy === "newest") {
+        if (!dateA && !dateB) return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateB.localeCompare(dateA);
+      }
 
-      return dateB.localeCompare(dateA);
+      if (sortBy === "oldest") {
+        if (!dateA && !dateB) return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateA.localeCompare(dateB);
+      }
+
+      return 0;
     });
-  }, [selectedRole, mediaFilter, categorizedCredits]);
+  }, [selectedRole, mediaFilter, sortBy, categorizedCredits]);
 
   if (loading) {
     return (
@@ -232,60 +252,62 @@ function PersonDetailContent() {
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-        <aside className="w-full lg:w-80 shrink-0 space-y-5">
-          <div className="relative aspect-[2/3] w-56 sm:w-64 lg:w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-xl">
-            {profileUrl ? (
-              <Image
-                src={profileUrl}
-                alt={person.name}
-                fill
-                priority
-                sizes="(max-width: 1024px) 256px, 320px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
-                <User className="w-20 h-20 mb-2 stroke-[1.5]" />
-                <span className="text-xs uppercase tracking-wider font-bold text-zinc-600">
-                  No Photo
-                </span>
-              </div>
-            )}
-          </div>
+        <aside className="w-full lg:w-80 shrink-0">
+          <div className="w-56 sm:w-64 lg:w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800 shadow-xl">
+            <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800">
+              {profileUrl ? (
+                <Image
+                  src={profileUrl}
+                  alt={person.name}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 256px, 320px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
+                  <User className="w-20 h-20 mb-2 stroke-[1.5]" />
+                  <span className="text-xs uppercase tracking-wider font-bold text-zinc-600">
+                    No Photo
+                  </span>
+                </div>
+              )}
+            </div>
 
-          <div className="p-5 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800">
-              Biography
-            </h3>
-            {bio ? (
-              <div>
-                <p
-                  className={`text-xs text-zinc-400 leading-relaxed whitespace-pre-wrap ${
-                    !isBioExpanded && isBioLong ? "line-clamp-6" : ""
-                  }`}
-                >
-                  {bio}
-                </p>
-                {isBioLong && (
-                  <button
-                    type="button"
-                    onClick={() => setIsBioExpanded(!isBioExpanded)}
-                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-[#a8dadc] hover:underline cursor-pointer"
+            <div className="p-5 space-y-2.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800">
+                Biography
+              </h3>
+              {bio ? (
+                <div>
+                  <p
+                    className={`text-xs text-zinc-400 leading-relaxed whitespace-pre-wrap ${
+                      !isBioExpanded && isBioLong ? "line-clamp-6" : ""
+                    }`}
                   >
-                    <span>{isBioExpanded ? "Show less" : "Read more"}</span>
-                    {isBioExpanded ? (
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-zinc-500 italic">
-                We don&apos;t have a biography for {person.name} yet.
-              </p>
-            )}
+                    {bio}
+                  </p>
+                  {isBioLong && (
+                    <button
+                      type="button"
+                      onClick={() => setIsBioExpanded(!isBioExpanded)}
+                      className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-[#a8dadc] hover:underline cursor-pointer"
+                    >
+                      <span>{isBioExpanded ? "Show less" : "Read more"}</span>
+                      {isBioExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 italic">
+                  We don&apos;t have a biography for {person.name} yet.
+                </p>
+              )}
+            </div>
           </div>
         </aside>
 
@@ -321,9 +343,23 @@ function PersonDetailContent() {
                   aria-label="Filter by media format"
                   className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
                 >
-                  <option value="all" className="bg-zinc-900 text-zinc-200">All Formats</option>
                   <option value="movie" className="bg-zinc-900 text-zinc-200">Movies</option>
                   <option value="tv" className="bg-zinc-900 text-zinc-200">Series</option>
+                  <option value="all" className="bg-zinc-900 text-zinc-200">All Formats</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "popularity" | "newest" | "oldest")}
+                  aria-label="Sort by"
+                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
+                >
+                  <option value="popularity" className="bg-zinc-900 text-zinc-200">Most Popular</option>
+                  <option value="newest" className="bg-zinc-900 text-zinc-200">Newest</option>
+                  <option value="oldest" className="bg-zinc-900 text-zinc-200">Oldest</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -350,19 +386,14 @@ function PersonDetailContent() {
                 {displayedCredits.map((credit, idx) => {
                   const posterUrl = getPosterUrl(credit.poster_path, "w500");
                   const title = credit.title || credit.name || "Untitled";
-                  const year =
-                    (credit.release_date || credit.first_air_date)?.slice(
-                      0,
-                      4
-                    ) || "";
 
                   const isMovie = credit.media_type === "movie";
                   const cardClass =
-                    "group flex flex-col cursor-pointer";
+                    "group flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 transition-all cursor-pointer";
 
                   const cardContent = (
                     <>
-                      <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-zinc-700 transition-all">
+                      <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800/80 overflow-hidden">
                         {posterUrl ? (
                           <Image
                             src={posterUrl}
@@ -387,38 +418,15 @@ function PersonDetailContent() {
                             </span>
                           </div>
                         )}
-
-                        {credit.vote_average > 0 && (
-                          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-200 border border-zinc-800 text-[10px] font-semibold">
-                            <Star className="w-3 h-3 text-[#a8dadc] fill-[#a8dadc]" />
-                            <span>{credit.vote_average.toFixed(1)}</span>
-                          </div>
-                        )}
                       </div>
 
-                      <div className="mt-2 space-y-0.5 px-0.5">
-                        <div className="flex items-baseline justify-between gap-1.5">
-                          <h4
-                            className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate"
-                            title={title}
-                          >
-                            {title}
-                          </h4>
-                          {year && (
-                            <span className="text-[10px] font-mono text-zinc-500 shrink-0">
-                              {year}
-                            </span>
-                          )}
-                        </div>
-
-                        {credit.asRole && (
-                          <p
-                            className="text-[11px] text-zinc-400 truncate"
-                            title={`as ${credit.asRole}`}
-                          >
-                            as <span className="text-zinc-300">{credit.asRole}</span>
-                          </p>
-                        )}
+                      <div className="py-2.5 px-3 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center">
+                        <p
+                          className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors truncate"
+                          title={`${title}${credit.asRole ? ` (as ${credit.asRole})` : ""}`}
+                        >
+                          as <span className="text-zinc-200 font-medium">{credit.asRole || "Actor"}</span>
+                        </p>
                       </div>
                     </>
                   );

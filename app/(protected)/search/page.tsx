@@ -190,7 +190,7 @@ function SearchContent() {
                 <Link
                   key={movie.id}
                   href={`/movie/${movie.id}`}
-                  className="group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-zinc-700 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52"
+                  className="group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52"
                 >
                   <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
                     {posterUrl ? (

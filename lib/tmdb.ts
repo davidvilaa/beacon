@@ -1,3 +1,5 @@
+import { isExcludedTmdbMedia } from "@/config/content-filters";
+
 export interface Movie {
   id: number;
   title: string;
@@ -97,11 +99,20 @@ export async function searchMovies(
     };
   }
 
-  return fetchFromTmdb<TmdbPaginatedResponse<Movie>>("/search/movie", {
+  const data = await fetchFromTmdb<TmdbPaginatedResponse<Movie>>("/search/movie", {
     query: query.trim(),
     page,
     include_adult: "false",
   });
+
+  const filtered = (data.results || []).filter(
+    (movie) => !isExcludedTmdbMedia(movie)
+  );
+
+  return {
+    ...data,
+    results: filtered,
+  };
 }
 
 export interface MovieCast {
@@ -204,7 +215,19 @@ export async function getMovieDetails(
 export async function getPersonDetails(
   id: string | number
 ): Promise<PersonDetails> {
-  return fetchFromTmdb<PersonDetails>(`/person/${id}`, {
+  const data = await fetchFromTmdb<PersonDetails>(`/person/${id}`, {
     append_to_response: "combined_credits,external_ids",
   });
+
+  if (data?.combined_credits) {
+    const cast = (data.combined_credits.cast || []).filter(
+      (credit) => !isExcludedTmdbMedia(credit)
+    );
+    const crew = (data.combined_credits.crew || []).filter(
+      (credit) => !isExcludedTmdbMedia(credit)
+    );
+    data.combined_credits = { cast, crew };
+  }
+
+  return data;
 }

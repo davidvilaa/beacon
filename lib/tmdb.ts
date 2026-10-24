@@ -619,3 +619,117 @@ export async function getCompanyDetails(
   company.works = enrichedWorks;
   return company;
 }
+
+export interface TvEpisode {
+  id: number;
+  name: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  air_date: string | null;
+  runtime: number | null;
+  still_path: string | null;
+  vote_average: number;
+  vote_count: number;
+}
+
+export interface TvSeasonSummary {
+  id: number;
+  season_number: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  air_date: string | null;
+  episode_count: number;
+  vote_average?: number;
+}
+
+export interface TvSeasonDetails extends TvSeasonSummary {
+  episodes: TvEpisode[];
+  credits?: {
+    cast: MovieCast[];
+    crew: MovieCrew[];
+  };
+  images?: {
+    posters: MovieImage[];
+  };
+}
+
+export interface TvDetails {
+  id: number;
+  name: string;
+  original_name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date: string;
+  last_air_date?: string;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  status: string;
+  tagline: string | null;
+  vote_average: number;
+  vote_count: number;
+  genres: { id: number; name: string }[];
+  original_language?: string;
+  created_by?: {
+    id: number;
+    name: string;
+    profile_path: string | null;
+  }[];
+  networks?: {
+    id: number;
+    name: string;
+    logo_path: string | null;
+    origin_country: string;
+  }[];
+  production_companies?: ProductionCompany[];
+  seasons: TvSeasonSummary[];
+  credits?: {
+    cast: MovieCast[];
+    crew: MovieCrew[];
+  };
+  aggregate_credits?: {
+    cast: (MovieCast & { roles?: { character: string; episode_count: number }[] })[];
+    crew: MovieCrew[];
+  };
+  images?: {
+    backdrops: MovieImage[];
+    posters: MovieImage[];
+  };
+  initialSeason?: TvSeasonDetails;
+}
+
+export async function getTvDetails(
+  id: string | number,
+  initialSeasonNumber: number = 1
+): Promise<TvDetails> {
+  const data = await fetchFromTmdb<TvDetails>(`/tv/${id}`, {
+    append_to_response: "images,credits,aggregate_credits,external_ids",
+  });
+
+  const availableSeasons = (data.seasons || []).filter((s) => s.season_number > 0);
+  const targetSeasonNum =
+    availableSeasons.find((s) => s.season_number === initialSeasonNumber)?.season_number ??
+    availableSeasons[0]?.season_number ??
+    1;
+
+  try {
+    const seasonData = await getTvSeasonDetails(id, targetSeasonNum);
+    data.initialSeason = seasonData;
+  } catch {
+    data.initialSeason = undefined;
+  }
+
+  return data;
+}
+
+export async function getTvSeasonDetails(
+  tvId: string | number,
+  seasonNumber: number
+): Promise<TvSeasonDetails> {
+  const season = await fetchFromTmdb<TvSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`, {
+    append_to_response: "credits,images",
+  });
+  return season;
+}

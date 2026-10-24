@@ -291,27 +291,15 @@ function CompanyDetailContent() {
                     </>
                   );
 
-                  if (isMovie) {
-                    return (
-                      <Link
-                        key={`${work.media_type}-${work.id}-${idx}`}
-                        href={`/movie/${work.id}`}
-                        title={title}
-                        className={cardClass}
-                      >
-                        {cardContent}
-                      </Link>
-                    );
-                  }
-
                   return (
-                    <div
+                    <Link
                       key={`${work.media_type}-${work.id}-${idx}`}
+                      href={isMovie ? `/movie/${work.id}` : `/tv/${work.id}`}
                       title={title}
                       className={cardClass}
                     >
                       {cardContent}
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

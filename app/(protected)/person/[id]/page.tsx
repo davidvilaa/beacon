@@ -399,25 +399,14 @@ function PersonDetailContent() {
                     </>
                   );
 
-                  if (isMovie) {
-                    return (
-                      <Link
-                        key={`${credit.media_type}-${credit.id}-${idx}`}
-                        href={`/movie/${credit.id}`}
-                        className={cardClass}
-                      >
-                        {cardContent}
-                      </Link>
-                    );
-                  }
-
                   return (
-                    <div
+                    <Link
                       key={`${credit.media_type}-${credit.id}-${idx}`}
+                      href={isMovie ? `/movie/${credit.id}` : `/tv/${credit.id}`}
                       className={cardClass}
                     >
                       {cardContent}
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

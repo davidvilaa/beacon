@@ -239,25 +239,14 @@ function SearchContent() {
                 </>
               );
 
-              if (isMovie) {
-                return (
-                  <Link
-                    key={`${movie.moduleType || "media"}-${movie.id}`}
-                    href={`/movie/${movie.id}`}
-                    className={cardClass}
-                  >
-                    {cardContent}
-                  </Link>
-                );
-              }
-
               return (
-                <div
+                <Link
                   key={`${movie.moduleType || "media"}-${movie.id}`}
+                  href={isMovie ? `/movie/${movie.id}` : `/tv/${movie.id}`}
                   className={cardClass}
                 >
                   {cardContent}
-                </div>
+                </Link>
               );
             })
           ) : (

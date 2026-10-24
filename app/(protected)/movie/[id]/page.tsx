@@ -17,10 +17,14 @@ import {
   User,
   Plus,
   Heart,
+  Star,
+  ImageIcon,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/Toast";
 
 function formatRuntime(minutes: number | null): string {
   if (!minutes) return "—";
@@ -52,6 +56,64 @@ function formatFullDate(dateStr?: string | null): string {
   const mIndex = parseInt(month, 10) - 1;
   const monthName = MONTHS[mIndex] || month;
   return `${monthName} ${parseInt(day, 10)}, ${year}`;
+}
+
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (val: number) => void;
+}) {
+  const [hoverValue, setHoverValue] = useState<number | null>(null);
+  const displayValue = hoverValue !== null ? hoverValue : value;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className="flex items-center gap-1"
+        onMouseLeave={() => setHoverValue(null)}
+      >
+        {[1, 2, 3, 4, 5].map((star) => {
+          const isFull = displayValue >= star;
+          const isHalf = !isFull && displayValue >= star - 0.5;
+
+          return (
+            <div key={star} className="relative w-5 h-5 select-none cursor-pointer">
+              <Star className="w-5 h-5 text-zinc-700 stroke-[1.5]" />
+
+              {isFull && (
+                <div className="absolute inset-0">
+                  <Star className="w-5 h-5 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                </div>
+              )}
+
+              {isHalf && (
+                <div className="absolute inset-0 overflow-hidden w-1/2">
+                  <Star className="w-5 h-5 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                </div>
+              )}
+
+              <div
+                className="absolute left-0 top-0 bottom-0 w-1/2 z-10"
+                onMouseEnter={() => setHoverValue(star - 0.5)}
+                onClick={() => onChange(value === star - 0.5 ? 0 : star - 0.5)}
+              />
+
+              <div
+                className="absolute right-0 top-0 bottom-0 w-1/2 z-10"
+                onMouseEnter={() => setHoverValue(star)}
+                onClick={() => onChange(value === star ? 0 : star)}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <span className="text-[11px] font-semibold text-zinc-400 min-h-[16px]">
+        {displayValue > 0 ? `${displayValue.toFixed(1)} / 5.0` : "No rating"}
+      </span>
+    </div>
+  );
 }
 
 interface CrewSectionConfig {
@@ -180,13 +242,142 @@ function MovieDetailContent() {
   const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
+  const supabase = createClient();
+  const { addToast } = useToast();
+
   const [movieStatus, setMovieStatus] = useState<"watched" | "watchlist" | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
 
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
+  const [rating, setRating] = useState<number>(0);
+  const [review, setReview] = useState<string>("");
+  const [hasSpoilers, setHasSpoilers] = useState(false);
+  const [watchedDate, setWatchedDate] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+
   const isWatched = movieStatus === "watched";
   const isWatchlisted = movieStatus === "watchlist";
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchUserLog() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !id) return;
+
+        const { data } = await supabase
+          .from("user_movies")
+          .select("*")
+          .eq("movie_id", id)
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
+        if (ignore || !data) return;
+
+        setMovieStatus(data.status);
+        setIsFavorite(Boolean(data.is_favorite));
+        setRating(data.rating ? Number(data.rating) : 0);
+        setReview(data.review || "");
+        setHasSpoilers(Boolean(data.has_spoilers));
+        setWatchedDate(data.watched_date || "");
+        if (data.custom_poster_path) setSelectedPoster(data.custom_poster_path);
+        if (data.custom_backdrop_path) setSelectedBackdrop(data.custom_backdrop_path);
+      } catch (err) {
+      }
+    }
+    fetchUserLog();
+    return () => {
+      ignore = true;
+    };
+  }, [id, supabase]);
+
+  const handleQuickAction = async (newStatus: "watched" | "watchlist" | null, newFavorite: boolean) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !movie) return;
+
+      await supabase.from("movies").upsert({
+        id: movie.id,
+        title: movie.title,
+        overview: movie.overview,
+        poster_path: movie.poster_path,
+        backdrop_path: movie.backdrop_path,
+      });
+
+      await supabase.from("user_movies").upsert(
+        {
+          user_id: session.user.id,
+          movie_id: movie.id,
+          status: newStatus,
+          is_favorite: newFavorite,
+          custom_poster_path: selectedPoster,
+          custom_backdrop_path: selectedBackdrop,
+        },
+        { onConflict: "user_id,movie_id" }
+      );
+    } catch (err) {
+    }
+  };
+
+  const handleSaveReview = async () => {
+    try {
+      setIsSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        addToast("Please log in to save your review", "error");
+        setIsSaving(false);
+        return;
+      }
+
+      if (!movie) return;
+
+      const { error: movieError } = await supabase.from("movies").upsert({
+        id: movie.id,
+        title: movie.title,
+        overview: movie.overview,
+        poster_path: movie.poster_path,
+        backdrop_path: movie.backdrop_path,
+      });
+
+      if (movieError) {
+        addToast("Error saving movie data", "error");
+        setIsSaving(false);
+        return;
+      }
+
+      const { error: userMovieError } = await supabase.from("user_movies").upsert(
+        {
+          user_id: session.user.id,
+          movie_id: movie.id,
+          status: movieStatus,
+          is_favorite: isFavorite,
+          rating: rating > 0 ? rating : null,
+          review: review.trim() || null,
+          has_spoilers: hasSpoilers,
+          custom_poster_path: selectedPoster,
+          custom_backdrop_path: selectedBackdrop,
+          watched_date: watchedDate || null,
+        },
+        { onConflict: "user_id,movie_id" }
+      );
+
+      if (userMovieError) {
+        addToast("Failed to save review", "error");
+        setIsSaving(false);
+        return;
+      }
+
+      addToast("Review saved successfully!", "success");
+      setIsLogModalOpen(false);
+    } catch (err) {
+      addToast("An unexpected error occurred", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -531,6 +722,7 @@ function MovieDetailContent() {
               <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
                 <button
                   type="button"
+                  onClick={() => setIsLogModalOpen(true)}
                   title="Log movie"
                   className="flex-1 flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
                 >
@@ -560,7 +752,9 @@ function MovieDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setMovieStatus((prev) => (prev === "watched" ? null : "watched"));
+                      const next = movieStatus === "watched" ? null : "watched";
+                      setMovieStatus(next);
+                      handleQuickAction(next, isFavorite);
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -579,7 +773,9 @@ function MovieDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setMovieStatus((prev) => (prev === "watchlist" ? null : "watchlist"));
+                      const next = movieStatus === "watchlist" ? null : "watchlist";
+                      setMovieStatus(next);
+                      handleQuickAction(next, isFavorite);
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -598,7 +794,9 @@ function MovieDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsFavorite((prev) => !prev);
+                      const next = !isFavorite;
+                      setIsFavorite(next);
+                      handleQuickAction(movieStatus, next);
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -1107,6 +1305,241 @@ function MovieDetailContent() {
                   })}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBackdropPickerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+                CHANGE BANNER
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsBackdropPickerOpen(false)}
+                aria-label="Close"
+                className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                {(movie.images?.backdrops || []).slice(0, 30).map((b) => {
+                  const url = getBackdropUrl(b.file_path, "w780");
+                  const isSelected = selectedBackdrop === b.file_path;
+                  return (
+                    <button
+                      key={b.file_path}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBackdrop(b.file_path);
+                        setIsBackdropPickerOpen(false);
+                      }}
+                      className={`relative aspect-[16/9] w-full rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-[#a8dadc]"
+                          : "border-zinc-800 hover:border-zinc-600 hover:opacity-80"
+                      }`}
+                    >
+                      {url && (
+                        <Image
+                          src={url}
+                          alt="Banner option"
+                          fill
+                          sizes="(max-width: 640px) 100vw, 300px"
+                          className="object-cover"
+                        />
+                      )}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isLogModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+            <div className="relative h-32 sm:h-40 w-full bg-zinc-900 overflow-hidden group">
+              {backdropUrl ? (
+                <Image
+                  src={backdropUrl}
+                  alt="Movie banner"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-900" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/20" />
+
+              <button
+                type="button"
+                onClick={() => setIsBackdropPickerOpen(true)}
+                className="absolute bottom-2.5 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/90 border border-zinc-700/60 text-[11px] font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer backdrop-blur-sm"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>Change banner</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsLogModalOpen(false)}
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 sm:px-6 pb-6">
+              <div className="flex gap-4 sm:gap-5 items-start -mt-12 sm:-mt-16 relative z-10 mb-5">
+                <div className="flex flex-col items-center gap-3 shrink-0">
+                  <div
+                    onClick={() => setIsPosterPickerOpen(true)}
+                    className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl group cursor-pointer"
+                  >
+                    {posterUrl ? (
+                      <Image
+                        src={posterUrl}
+                        alt={movie.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                        <Film className="w-8 h-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center">
+                      <ImageIcon className="w-4 h-4 mb-0.5" />
+                      <span className="text-[10px] font-medium leading-tight">Change poster</span>
+                    </div>
+                  </div>
+
+                  <StarRating value={rating} onChange={setRating} />
+                </div>
+
+                <div className="flex-1 min-w-0 pt-12 sm:pt-16">
+                  <h2 className="text-lg sm:text-xl font-black text-zinc-100 tracking-tight leading-tight truncate">
+                    {movie.title}
+                  </h2>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                    {movie.release_date ? new Date(movie.release_date).getFullYear() : "—"}
+                  </p>
+
+                  <div className="flex items-center gap-2 mt-3.5">
+                    <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                    <input
+                      type="date"
+                      value={watchedDate}
+                      onChange={(e) => setWatchedDate(e.target.value)}
+                      className="bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:border-[#a8dadc] transition-colors cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setWatchedDate(new Date().toISOString().split("T")[0])}
+                      className="text-[11px] text-[#a8dadc] hover:underline cursor-pointer font-medium"
+                    >
+                      Today
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setMovieStatus((prev) => (prev === "watched" ? null : "watched"))}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                          movieStatus === "watched"
+                            ? "bg-[#a8dadc] text-zinc-950 shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-200"
+                        }`}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Watched</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setMovieStatus((prev) => (prev === "watchlist" ? null : "watchlist"))}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                          movieStatus === "watchlist"
+                            ? "bg-[#a8dadc] text-zinc-950 shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-200"
+                        }`}
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                        <span>Watchlist</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFavorite((prev) => !prev)}
+                      title={isFavorite ? "Remove from favorites" : "Mark as favorite"}
+                      className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                        isFavorite
+                          ? "border-[#a8dadc]/60 bg-[#a8dadc]/15 text-[#a8dadc]"
+                          : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-[#a8dadc] hover:border-zinc-700"
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite ? "fill-[#a8dadc]" : ""}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <textarea
+                  value={review}
+                  onChange={(e) => setReview(e.target.value)}
+                  placeholder="Write a review or thoughts on this movie... (optional)"
+                  rows={4}
+                  className="w-full bg-zinc-900/90 border border-zinc-800 rounded-xl p-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-[#a8dadc] transition-colors resize-none leading-relaxed"
+                />
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-400 hover:text-zinc-300">
+                    <input
+                      type="checkbox"
+                      checked={hasSpoilers}
+                      onChange={(e) => setHasSpoilers(e.target.checked)}
+                      className="rounded border-zinc-700 bg-zinc-900 text-[#a8dadc] focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-[#a8dadc] cursor-pointer"
+                    />
+                    <span>Review contains spoilers</span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsLogModalOpen(false)}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveReview}
+                      disabled={isSaving}
+                      className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#a8dadc]/90 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isSaving ? "Saving..." : "Save review"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

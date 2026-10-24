@@ -112,6 +112,7 @@ create table public.user_series (
   id uuid not null default gen_random_uuid() primary key,
   user_id uuid not null references public.users(id) on delete cascade,
   series_id bigint not null references public.series(id) on delete cascade,
+  season_number integer not null default 1,
   status text not null default 'plan_to_watch' check (status in ('watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch')),
   is_favorite boolean not null default false,
   favorite_order smallint null check (favorite_order >= 1 and favorite_order <= 4),
@@ -121,9 +122,10 @@ create table public.user_series (
   custom_poster_path text null,
   custom_backdrop_path text null,
   last_watched_episode integer null default 0,
+  watched_date date null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint user_series_user_series_unique unique (user_id, series_id)
+  constraint user_series_user_season_unique unique (user_id, series_id, season_number)
 );
 
 create unique index user_series_user_favorite_order_idx
@@ -132,6 +134,7 @@ create unique index user_series_user_favorite_order_idx
 
 create index idx_user_series_user_id on public.user_series (user_id);
 create index idx_user_series_series_id on public.user_series (series_id);
+create index idx_user_series_season on public.user_series (series_id, season_number);
 
 alter table public.user_series enable row level security;
 

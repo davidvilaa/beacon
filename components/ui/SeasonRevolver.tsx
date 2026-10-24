@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { TvSeasonSummary } from "@/lib/tmdb";
 
@@ -18,7 +18,8 @@ export default function SeasonRevolver({
   className = "",
 }: SeasonRevolverProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const dragStartYRef = useRef<number | null>(null);
+  const hasDraggedRef = useRef<boolean>(false);
 
   const sortedSeasons = useMemo(() => {
     const regular = (seasons || [])
@@ -45,39 +46,33 @@ export default function SeasonRevolver({
     [currentIndex, sortedSeasons, onSelectSeason]
   );
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (Math.abs(e.deltaY) < 15) return;
-    if (e.deltaY > 0) {
-      handleStep("down");
-    } else {
-      handleStep("up");
-    }
-  };
-
   const handlePointerDown = (e: React.PointerEvent) => {
-    setDragStartY(e.clientY);
-    if (containerRef.current) {
-      containerRef.current.setPointerCapture(e.pointerId);
-    }
+    dragStartYRef.current = e.clientY;
+    hasDraggedRef.current = false;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartY === null) return;
-    const currentDelta = e.clientY - dragStartY;
+    if (dragStartYRef.current === null) return;
+    const currentDelta = e.clientY - dragStartYRef.current;
 
-    if (currentDelta > 26) {
+    if (Math.abs(currentDelta) > 5) {
+      hasDraggedRef.current = true;
+    }
+
+    if (currentDelta > 28) {
       handleStep("up");
-      setDragStartY(e.clientY);
-    } else if (currentDelta < -26) {
+      dragStartYRef.current = e.clientY;
+    } else if (currentDelta < -28) {
       handleStep("down");
-      setDragStartY(e.clientY);
+      dragStartYRef.current = e.clientY;
     }
   };
 
   const handlePointerUp = () => {
-    setDragStartY(null);
+    dragStartYRef.current = null;
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 60);
   };
 
   if (!sortedSeasons || sortedSeasons.length === 0) {
@@ -85,10 +80,7 @@ export default function SeasonRevolver({
   }
 
   return (
-    <div
-      className={`flex flex-col items-center select-none ${className}`}
-      onWheel={handleWheel}
-    >
+    <div className={`flex flex-col items-center select-none ${className}`}>
       <button
         type="button"
         onClick={() => handleStep("up")}
@@ -108,9 +100,6 @@ export default function SeasonRevolver({
         className="relative w-16 sm:w-20 h-[210px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
         style={{ perspective: "500px" }}
       >
-        <div className="absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-zinc-950/90 to-transparent pointer-events-none z-20" />
-        <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-zinc-950/90 to-transparent pointer-events-none z-20" />
-
         <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-10" />
 
         <div
@@ -122,10 +111,10 @@ export default function SeasonRevolver({
             const isVisible = Math.abs(diff) <= 2;
             if (!isVisible) return null;
 
-            const translateY = diff * 38;
-            const rotateX = diff * -16;
-            const scale = diff === 0 ? 1.05 : Math.abs(diff) === 1 ? 0.92 : 0.8;
-            const opacity = diff === 0 ? 1 : Math.abs(diff) === 1 ? 0.85 : 0.35;
+            const translateY = diff * 42;
+            const rotateX = diff * -12;
+            const scale = diff === 0 ? 1.05 : Math.abs(diff) === 1 ? 0.96 : 0.82;
+            const opacity = diff === 0 ? 1 : Math.abs(diff) === 1 ? 0.85 : 0.4;
 
             const isSelected = diff === 0;
             const label =
@@ -137,12 +126,17 @@ export default function SeasonRevolver({
               <button
                 key={s.id || s.season_number}
                 type="button"
-                onClick={() => onSelectSeason(s.season_number)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!hasDraggedRef.current) {
+                    onSelectSeason(s.season_number);
+                  }
+                }}
                 title={s.name}
-                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-300 ${
+                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-300 z-20 ${
                   isSelected
-                    ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default z-20"
-                    : "text-zinc-300 font-bold text-xs sm:text-sm tracking-wider hover:text-white hover:bg-zinc-800/50 cursor-pointer z-10"
+                    ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
+                    : "text-zinc-300 font-bold text-xs sm:text-sm tracking-wider hover:text-white hover:bg-zinc-800/80 hover:border-zinc-700/60 border border-transparent cursor-pointer"
                 }`}
                 style={{
                   transform: `translateY(${translateY}px) rotateX(${rotateX}deg) scale(${scale})`,

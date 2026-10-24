@@ -712,7 +712,7 @@ function MovieDetailContent() {
                       {sectionCrew.map((section) => (
                         <div
                           key={section.key}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
                         >
                           <div className="w-36 sm:w-44 shrink-0">
                             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
@@ -746,7 +746,7 @@ function MovieDetailContent() {
 
               {activeTab === "details" && (
                 <div className="divide-y divide-zinc-700/80">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         {movie.production_companies && movie.production_companies.length === 1 ? "Studio" : "Studios"}
@@ -764,7 +764,7 @@ function MovieDetailContent() {
                               {company.name}
                             </span>
                             {company.origin_country && (
-                              <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                              <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
                                 {company.origin_country}
                               </span>
                             )}
@@ -776,16 +776,16 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Original title
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default max-w-full">
                         <span
-                          className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
+                          className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate"
                           title={movie.original_title || "—"}
                         >
                           {movie.original_title || "—"}
@@ -794,45 +794,45 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Status
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                           {movie.status || "—"}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Original language
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs font-bold uppercase text-zinc-200">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                        <span className="text-xs font-bold uppercase text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                           {movie.original_language?.toUpperCase() || "—"}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Budget
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                           {movie.budget && movie.budget > 0
                             ? `$${movie.budget.toLocaleString("en-US")}`
                             : "Not available"}
@@ -841,15 +841,15 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Revenue
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                           {movie.revenue && movie.revenue > 0
                             ? `$${movie.revenue.toLocaleString("en-US")}`
                             : "Not available"}
@@ -858,7 +858,7 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Genres
@@ -869,9 +869,9 @@ function MovieDetailContent() {
                         movie.genres.map((g) => (
                           <div
                             key={g.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
                           >
-                            <span className="text-xs font-medium text-zinc-200">
+                            <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                               {g.name}
                             </span>
                           </div>
@@ -891,7 +891,7 @@ function MovieDetailContent() {
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
                         >
                           <div className="w-32 sm:w-36 shrink-0">
                             <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
@@ -903,7 +903,7 @@ function MovieDetailContent() {
                             {group.countries.map((c) => (
                               <div
                                 key={c.code}
-                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
+                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default overflow-hidden min-w-0"
                               >
                                 <img
                                   src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
@@ -915,13 +915,13 @@ function MovieDetailContent() {
                                 />
                                 <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
                                   <span
-                                    className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
+                                    className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate max-w-[140px] sm:max-w-[180px]"
                                     title={c.country}
                                   >
                                     {c.country}
                                   </span>
                                   {c.certification && (
-                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
                                       {c.certification}
                                     </span>
                                   )}

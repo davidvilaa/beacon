@@ -530,14 +530,9 @@ function TvDetailContent() {
               Series
             </p>
 
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
-                {tv.name}
-              </h1>
-              <span className="text-lg sm:text-xl font-bold text-zinc-500">
-                {currentSeasonSummary?.name || `Season ${activeSeason}`}
-              </span>
-            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+              {tv.name}
+            </h1>
 
             {tv.original_name && tv.original_name !== tv.name && (
               <p className="text-sm text-zinc-500 italic mt-1">
@@ -698,7 +693,7 @@ function TvDetailContent() {
                         {sectionCrew.map((sec) => (
                           <div
                             key={sec.label}
-                            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
                           >
                             <div className="w-36 sm:w-44 shrink-0">
                               <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
@@ -729,7 +724,7 @@ function TvDetailContent() {
 
                 {activeTab === "details" && (
                   <div className="divide-y divide-zinc-700/80">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Platforms
@@ -740,13 +735,13 @@ function TvDetailContent() {
                           tv.networks.map((net) => (
                             <div
                               key={net.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
                             >
-                              <span className="text-xs font-medium text-zinc-200">
+                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                                 {net.name}
                               </span>
                               {net.origin_country && (
-                                <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
                                   {net.origin_country}
                                 </span>
                               )}
@@ -758,7 +753,7 @@ function TvDetailContent() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Studios
@@ -776,7 +771,7 @@ function TvDetailContent() {
                                 {company.name}
                               </span>
                               {company.origin_country && (
-                                <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
                                   {company.origin_country}
                                 </span>
                               )}
@@ -788,67 +783,67 @@ function TvDetailContent() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Original title
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200 truncate">
+                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default max-w-full">
+                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
                             {tv.original_name || "—"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Status
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                             {tv.status || "—"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Original language
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                          <span className="text-xs font-bold uppercase text-zinc-200">
+                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                          <span className="text-xs font-bold uppercase text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                             {tv.original_language?.toUpperCase() || "—"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Seasons & Episodes
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
+                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                             {tv.number_of_seasons} Seasons • {tv.number_of_episodes} Episodes
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
                       <div className="w-36 sm:w-44 shrink-0">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                           Genres
@@ -859,9 +854,9 @@ function TvDetailContent() {
                           tv.genres.map((g) => (
                             <div
                               key={g.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
                             >
-                              <span className="text-xs font-medium text-zinc-200">
+                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                                 {g.name}
                               </span>
                             </div>

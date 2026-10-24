@@ -1,7 +1,6 @@
 export interface TmdbExclusionItem {
   genre_ids?: number[];
   genres?: { id: number; name: string }[];
-  character?: string;
   media_type?: string;
 }
 
@@ -26,18 +25,6 @@ export const CONTENT_FILTERS = {
   },
 };
 
-export function isSelfRole(character?: string): boolean {
-  if (!character) return false;
-  const c = character.trim().toLowerCase();
-  return (
-    c === "self" ||
-    c.startsWith("self -") ||
-    c.startsWith("self –") ||
-    c.startsWith("self —") ||
-    c.startsWith("self (")
-  );
-}
-
 export function isExcludedTmdbMedia(item: TmdbExclusionItem): boolean {
   const ids: number[] = [];
 
@@ -56,10 +43,6 @@ export function isExcludedTmdbMedia(item: TmdbExclusionItem): boolean {
       CONTENT_FILTERS.tmdb.excludedGenreIds.includes(id)
     );
     if (isGenreExcluded) return true;
-  }
-
-  if (isSelfRole(item.character)) {
-    return true;
   }
 
   return false;

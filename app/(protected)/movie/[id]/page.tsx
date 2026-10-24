@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -26,6 +26,17 @@ function formatRuntime(minutes: number | null): string {
   return `${hours}h ${mins}m`;
 }
 
+const PRIORITY_JOBS = [
+  "Director",
+  "Screenplay",
+  "Writer",
+  "Story",
+  "Director of Photography",
+  "Original Music Composer",
+  "Editor",
+  "Producer",
+];
+
 function MovieDetailContent() {
   const params = useParams();
   const id = params?.id as string;
@@ -41,9 +52,9 @@ function MovieDetailContent() {
   const [isLiked, setIsLiked] = useState(false);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details">(
-    "cast"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "cast" | "staff" | "details" | "releases"
+  >("cast");
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -155,6 +166,67 @@ function MovieDetailContent() {
     };
   }, [id, isPosterPickerOpen, dedupedPosters]);
 
+  const groupedCrew = useMemo(() => {
+    const map = new Map<number, { id: number; name: string; jobs: string[] }>();
+    (movie?.credits?.crew || []).forEach((c) => {
+      if (!c || !c.job || !PRIORITY_JOBS.includes(c.job)) return;
+      if (!map.has(c.id)) {
+        map.set(c.id, { id: c.id, name: c.name, jobs: [c.job] });
+      } else {
+        const existing = map.get(c.id)!;
+        if (!existing.jobs.includes(c.job)) {
+          existing.jobs.push(c.job);
+        }
+      }
+    });
+    return Array.from(map.values()).slice(0, 24);
+  }, [movie]);
+
+  const countryReleases = useMemo(() => {
+    const raw = movie?.release_dates?.results || [];
+    let regionNames: Intl.DisplayNames | null = null;
+    try {
+      regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+    } catch {
+      regionNames = null;
+    }
+
+    const list = raw
+      .map((item) => {
+        let countryName = item.iso_3166_1;
+        try {
+          if (regionNames) {
+            countryName = regionNames.of(item.iso_3166_1) || item.iso_3166_1;
+          }
+        } catch {
+          countryName = item.iso_3166_1;
+        }
+
+        const validDates = (item.release_dates || []).filter((r) => Boolean(r.release_date));
+        if (validDates.length === 0) return null;
+
+        const theatrical =
+          validDates.find((r) => r.type === 3) ||
+          validDates.find((r) => r.type === 2) ||
+          validDates[0];
+
+        const cert =
+          validDates.find((r) => Boolean(r.certification?.trim()))?.certification?.trim() || "";
+
+        const dateStr = theatrical?.release_date ? theatrical.release_date.slice(0, 10) : "";
+
+        return {
+          code: item.iso_3166_1,
+          country: countryName,
+          date: dateStr,
+          certification: cert,
+        };
+      })
+      .filter((item): item is { code: string; country: string; date: string; certification: string } => Boolean(item && item.date));
+
+    return list.sort((a, b) => a.country.localeCompare(b.country));
+  }, [movie]);
+
   if (loading) {
     return (
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
@@ -182,20 +254,7 @@ function MovieDetailContent() {
   const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "—";
   const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
 
-  const topCast = (movie.credits?.cast || []).slice(0, 15);
-  const priorityJobs = [
-    "Director",
-    "Screenplay",
-    "Writer",
-    "Story",
-    "Director of Photography",
-    "Original Music Composer",
-    "Editor",
-    "Producer",
-  ];
-  const staffList = (movie.credits?.crew || [])
-    .filter((c) => priorityJobs.includes(c.job))
-    .slice(0, 15);
+  const topCast = (movie.credits?.cast || []).slice(0, 24);
 
   return (
     <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
@@ -350,19 +409,6 @@ function MovieDetailContent() {
               </span>
             </div>
 
-            {movie.genres && movie.genres.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {movie.genres.map((genre) => (
-                  <span
-                    key={genre.id}
-                    className="text-[10px] sm:text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 border border-zinc-700/60"
-                  >
-                    {genre.name}
-                  </span>
-                ))}
-              </div>
-            )}
-
             <div className="mt-5 space-y-2 max-w-2xl">
               {movie.tagline && (
                 <p className="text-sm italic font-medium text-[#a8dadc]">
@@ -419,6 +465,20 @@ function MovieDetailContent() {
                   >
                     Details
                   </button>
+                  <button
+                    ref={(el) => {
+                      tabRefs.current["releases"] = el;
+                    }}
+                    type="button"
+                    onClick={() => setActiveTab("releases")}
+                    className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
+                      activeTab === "releases"
+                        ? "text-zinc-100"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    Releases
+                  </button>
                 </div>
 
                 <span
@@ -431,46 +491,26 @@ function MovieDetailContent() {
               </div>
 
               {activeTab === "cast" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
                   {topCast.length > 0 ? (
-                    topCast.map((actor) => {
-                      const actorPhoto = actor.profile_path
-                        ? getPosterUrl(actor.profile_path, "w185")
-                        : null;
-                      return (
-                        <Link
-                          key={actor.id}
-                          href={`/person/${actor.id}`}
-                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden cursor-pointer"
-                        >
-                          <div className="relative w-14 h-14 rounded-full overflow-hidden bg-zinc-800 shrink-0 border-r border-zinc-800">
-                            {actorPhoto ? (
-                              <Image
-                                src={actorPhoto}
-                                alt={actor.name}
-                                fill
-                                sizes="56px"
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500 font-bold">
-                                {actor.name.slice(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="pl-3 min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate">
-                              {actor.name}
-                            </p>
-                            <p className="text-[11px] text-zinc-500 truncate">
-                              {actor.character}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })
+                    topCast.map((actor) => (
+                      <Link
+                        key={actor.id}
+                        href={`/person/${actor.id}`}
+                        className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
+                      >
+                        <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                          {actor.name}
+                        </p>
+                        {actor.character && (
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                            as <span className="text-zinc-300 font-medium">{actor.character}</span>
+                          </p>
+                        )}
+                      </Link>
+                    ))
                   ) : (
-                    <p className="text-xs text-zinc-500 py-4">
+                    <p className="text-xs text-zinc-500 py-4 col-span-full">
                       No cast information available.
                     </p>
                   )}
@@ -478,46 +518,24 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "staff" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {staffList.length > 0 ? (
-                    staffList.map((person, index) => {
-                      const photo = person.profile_path
-                        ? getPosterUrl(person.profile_path, "w185")
-                        : null;
-                      return (
-                        <Link
-                          key={`${person.id}-${person.job}-${index}`}
-                          href={`/person/${person.id}`}
-                          className="flex items-center h-14 rounded-full bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/50 hover:bg-zinc-900 transition-all pr-4 pl-0 group overflow-hidden cursor-pointer"
-                        >
-                          <div className="relative w-14 h-14 rounded-full overflow-hidden bg-zinc-800 shrink-0 border-r border-zinc-800">
-                            {photo ? (
-                              <Image
-                                src={photo}
-                                alt={person.name}
-                                fill
-                                sizes="56px"
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs text-zinc-500 font-bold">
-                                {person.name.slice(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="pl-3 min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate">
-                              {person.name}
-                            </p>
-                            <p className="text-[11px] text-zinc-500 truncate">
-                              {person.job}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                  {groupedCrew.length > 0 ? (
+                    groupedCrew.map((person) => (
+                      <Link
+                        key={person.id}
+                        href={`/person/${person.id}`}
+                        className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
+                      >
+                        <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                          {person.name}
+                        </p>
+                        <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                          as <span className="text-zinc-300 font-medium">{person.jobs.join(", ")}</span>
+                        </p>
+                      </Link>
+                    ))
                   ) : (
-                    <p className="text-xs text-zinc-500 py-4">
+                    <p className="text-xs text-zinc-500 py-4 col-span-full">
                       No crew information available.
                     </p>
                   )}
@@ -577,6 +595,17 @@ function MovieDetailContent() {
 
                   <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
                     <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
+                      Genres
+                    </p>
+                    <p className="text-sm font-semibold text-zinc-200">
+                      {movie.genres && movie.genres.length > 0
+                        ? movie.genres.map((g) => g.name).join(", ")
+                        : "—"}
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
                       TMDB Rating
                     </p>
                     <p className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
@@ -587,6 +616,48 @@ function MovieDetailContent() {
                       </span>
                     </p>
                   </div>
+                </div>
+              )}
+
+              {activeTab === "releases" && (
+                <div>
+                  {countryReleases.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                      {countryReleases.map((release) => (
+                        <div
+                          key={release.code}
+                          className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">
+                                {release.code}
+                              </span>
+                              <span
+                                className="text-xs sm:text-sm font-semibold text-zinc-200 truncate"
+                                title={release.country}
+                              >
+                                {release.country}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                              {release.date}
+                            </p>
+                          </div>
+
+                          {release.certification && (
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                              {release.certification}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-zinc-500 py-4">
+                      No release date information available.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

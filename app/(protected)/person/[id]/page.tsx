@@ -11,7 +11,6 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
-import { isExcludedTmdbMedia } from "@/config/content-filters";
 import Loading from "@/components/ui/Loading";
 
 interface DisplayedCredit extends PersonCredit {
@@ -73,7 +72,6 @@ function PersonDetailContent() {
     const allMap = new Map<string, DisplayedCredit>();
 
     rawCast.forEach((item) => {
-      if (isExcludedTmdbMedia(item)) return;
       const isVoice = /\(voice/i.test(item.character || "");
       const role = item.character?.trim() || "Actor";
       const key = `${item.media_type}-${item.id}`;
@@ -109,7 +107,6 @@ function PersonDetailContent() {
     });
 
     rawCrew.forEach((item) => {
-      if (isExcludedTmdbMedia(item)) return;
       const key = `${item.media_type}-${item.id}`;
       const role = item.job?.trim() || item.department?.trim() || "Crew";
 

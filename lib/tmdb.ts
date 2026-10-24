@@ -140,6 +140,20 @@ export interface MovieImage {
   height?: number;
 }
 
+export interface MovieReleaseDateItem {
+  certification: string;
+  descriptors: string[];
+  iso_639_1?: string;
+  note?: string;
+  release_date: string;
+  type: number;
+}
+
+export interface MovieCountryRelease {
+  iso_3166_1: string;
+  release_dates: MovieReleaseDateItem[];
+}
+
 export interface MovieDetails extends Movie {
   tagline: string | null;
   runtime: number | null;
@@ -155,6 +169,9 @@ export interface MovieDetails extends Movie {
   images?: {
     backdrops: MovieImage[];
     posters: MovieImage[];
+  };
+  release_dates?: {
+    results: MovieCountryRelease[];
   };
 }
 
@@ -207,7 +224,7 @@ export async function getMovieDetails(
   id: string | number
 ): Promise<MovieDetails> {
   return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
-    append_to_response: "credits,images",
+    append_to_response: "credits,images,release_dates",
     include_image_language: "en,null",
   });
 }

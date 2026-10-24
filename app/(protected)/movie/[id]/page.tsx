@@ -783,12 +783,14 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <span
-                        className="text-xs sm:text-sm font-medium text-zinc-300 truncate"
-                        title={movie.original_title || "—"}
-                      >
-                        {movie.original_title || "—"}
-                      </span>
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
+                        <span
+                          className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
+                          title={movie.original_title || "—"}
+                        >
+                          {movie.original_title || "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -799,9 +801,11 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
-                        {movie.status || "—"}
-                      </span>
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.status || "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -812,9 +816,11 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <span className="text-xs sm:text-sm font-bold uppercase text-zinc-300">
-                        {movie.original_language?.toUpperCase() || "—"}
-                      </span>
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs font-bold uppercase text-zinc-200">
+                          {movie.original_language?.toUpperCase() || "—"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -825,11 +831,13 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
-                        {movie.budget && movie.budget > 0
-                          ? `$${movie.budget.toLocaleString("en-US")}`
-                          : "Not available"}
-                      </span>
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.budget && movie.budget > 0
+                            ? `$${movie.budget.toLocaleString("en-US")}`
+                            : "Not available"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -840,11 +848,13 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
-                        {movie.revenue && movie.revenue > 0
-                          ? `$${movie.revenue.toLocaleString("en-US")}`
-                          : "Not available"}
-                      </span>
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.revenue && movie.revenue > 0
+                            ? `$${movie.revenue.toLocaleString("en-US")}`
+                            : "Not available"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -854,12 +864,21 @@ function MovieDetailContent() {
                         Genres
                       </span>
                     </div>
-                    <div className="flex-1 flex items-center">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
-                        {movie.genres && movie.genres.length > 0
-                          ? movie.genres.map((g) => g.name).join(", ")
-                          : "—"}
-                      </span>
+                    <div className="flex-1 flex flex-wrap gap-2 items-center">
+                      {movie.genres && movie.genres.length > 0 ? (
+                        movie.genres.map((g) => (
+                          <div
+                            key={g.id}
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                          >
+                            <span className="text-xs font-medium text-zinc-200">
+                              {g.name}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-zinc-500">—</span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -73,11 +73,11 @@ function TvDetailContent() {
   const [seasonCache, setSeasonCache] = useState<Record<number, TvSeasonDetails>>({});
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
 
-  const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
+  const [customPosters, setCustomPosters] = useState<Record<number, string>>({});
   const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
-  const [availablePosters, setAvailablePosters] = useState<MovieImage[] | null>(null);
+  const [availablePosters, setAvailablePosters] = useState<Record<number, MovieImage[]>>({});
   const [loadingPosters, setLoadingPosters] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
@@ -139,9 +139,6 @@ function TvDetailContent() {
 
         if (data.initialSeason) {
           setSeasonCache({ [resolvedSeason]: data.initialSeason });
-          setSelectedPoster(data.initialSeason.poster_path || data.poster_path);
-        } else {
-          setSelectedPoster(data.poster_path);
         }
 
         const validBackdrops = (data.images?.backdrops || []).filter(
@@ -188,14 +185,12 @@ function TvDetailContent() {
 
       setActiveSeason(seasonNum);
       setIsCastExpanded(false);
-      setAvailablePosters(null);
       pickRandomBackdrop();
 
       const newUrl = `/tv/${id}?season=${seasonNum}`;
       window.history.replaceState(null, "", newUrl);
 
       if (seasonCache[seasonNum]) {
-        setSelectedPoster(seasonCache[seasonNum].poster_path || tv?.poster_path || null);
         return;
       }
 
@@ -205,7 +200,6 @@ function TvDetailContent() {
         if (res.ok) {
           const seasonData: TvSeasonDetails = await res.json();
           setSeasonCache((prev) => ({ ...prev, [seasonNum]: seasonData }));
-          setSelectedPoster(seasonData.poster_path || tv?.poster_path || null);
         }
       } catch (err) {
         console.error(err);
@@ -213,11 +207,11 @@ function TvDetailContent() {
         setIsSeasonLoading(false);
       }
     },
-    [activeSeason, id, pickRandomBackdrop, seasonCache, tv?.poster_path]
+    [activeSeason, id, pickRandomBackdrop, seasonCache]
   );
 
   useEffect(() => {
-    if (!id || !isPosterPickerOpen || availablePosters) return;
+    if (!id || !isPosterPickerOpen || availablePosters[activeSeason]) return;
 
     let ignore = false;
 
@@ -228,7 +222,10 @@ function TvDetailContent() {
         if (res.ok) {
           const data = await res.json();
           if (!ignore && data.posters?.length) {
-            setAvailablePosters(data.posters);
+            setAvailablePosters((prev) => ({
+              ...prev,
+              [activeSeason]: data.posters,
+            }));
           }
         }
       } catch (err) {
@@ -369,7 +366,7 @@ function TvDetailContent() {
   }
 
   const posterPath =
-    selectedPoster ||
+    customPosters[activeSeason] ||
     currentSeasonDetails?.poster_path ||
     currentSeasonSummary?.poster_path ||
     tv.poster_path;
@@ -965,21 +962,24 @@ function TvDetailContent() {
             </div>
 
             <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
-              {loadingPosters || !availablePosters ? (
+              {loadingPosters || !availablePosters[activeSeason] ? (
                 <div className="flex items-center justify-center py-24">
                   <Loading />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                  {availablePosters.map((poster) => {
+                  {availablePosters[activeSeason].map((poster) => {
                     const url = getPosterUrl(poster.file_path, "w342");
-                    const isSelected = selectedPoster === poster.file_path;
+                    const isSelected = posterPath === poster.file_path;
                     return (
                       <button
                         key={poster.file_path}
                         type="button"
                         onClick={() => {
-                          setSelectedPoster(poster.file_path);
+                          setCustomPosters((prev) => ({
+                            ...prev,
+                            [activeSeason]: poster.file_path,
+                          }));
                           setIsPosterPickerOpen(false);
                         }}
                         className={`relative aspect-[2/3] w-full rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${

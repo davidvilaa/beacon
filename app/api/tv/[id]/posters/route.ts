@@ -121,24 +121,37 @@ export async function GET(
     const seasonData = seasonRes && seasonRes.ok ? await seasonRes.json() : null;
     const tvData = tvRes && tvRes.ok ? await tvRes.json() : null;
 
-    const seasonPosters: MovieImage[] = seasonData?.posters || [];
-    const tvPosters: MovieImage[] = tvData?.posters || [];
-
-    const combined = [...seasonPosters, ...tvPosters];
-    const seen = new Set<string>();
-    const valid = combined.filter((p) => {
-      if (!p.file_path || seen.has(p.file_path)) return false;
-      seen.add(p.file_path);
-      return !p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8);
-    });
-
-    const sorted = [...valid].sort((a, b) => {
+    const validSeason = (seasonData?.posters || []).filter(
+      (p: MovieImage) =>
+        Boolean(p.file_path) &&
+        (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+    );
+    const sortedSeason = [...validSeason].sort((a, b) => {
       const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
       if (countDiff !== 0) return countDiff;
       return (b.vote_average ?? 0) - (a.vote_average ?? 0);
     });
 
-    const candidates = sorted.slice(0, 35);
+    const validTv = (tvData?.posters || []).filter(
+      (p: MovieImage) =>
+        Boolean(p.file_path) &&
+        (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+    );
+    const sortedTv = [...validTv].sort((a, b) => {
+      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
+      if (countDiff !== 0) return countDiff;
+      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+    });
+
+    const combined = [...sortedSeason, ...sortedTv];
+    const seen = new Set<string>();
+    const prioritized = combined.filter((p) => {
+      if (!p.file_path || seen.has(p.file_path)) return false;
+      seen.add(p.file_path);
+      return true;
+    });
+
+    const candidates = prioritized.slice(0, 45);
     const fingerprints = await Promise.all(
       candidates.map(async (p) => {
         const fp = await getPosterFingerprint(p.file_path);
@@ -161,7 +174,7 @@ export async function GET(
         unique.push(item.poster);
       }
 
-      if (unique.length >= 25) break;
+      if (unique.length >= 30) break;
     }
 
     return NextResponse.json({ posters: unique });

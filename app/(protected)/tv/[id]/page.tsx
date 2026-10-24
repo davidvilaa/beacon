@@ -66,6 +66,7 @@ function TvDetailContent() {
 
   const initialSeasonParam = parseInt(searchParams.get("season") || "1", 10);
   const startingSeason = isNaN(initialSeasonParam) ? 1 : initialSeasonParam;
+  const initialSeasonRef = useRef(startingSeason);
 
   const [tv, setTv] = useState<TvDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -144,7 +145,7 @@ function TvDetailContent() {
     async function fetchTv() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/tv/${id}?season=${startingSeason}`);
+        const res = await fetch(`/api/tv/${id}?season=${initialSeasonRef.current}`);
         if (!res.ok) throw new Error("Failed to load TV show");
 
         const data: TvDetails = await res.json();
@@ -154,7 +155,7 @@ function TvDetailContent() {
 
         const available = (data.seasons || []).filter((s) => s.season_number > 0);
         const resolvedSeason =
-          available.find((s) => s.season_number === startingSeason)?.season_number ??
+          available.find((s) => s.season_number === initialSeasonRef.current)?.season_number ??
           available[0]?.season_number ??
           1;
 
@@ -234,7 +235,14 @@ function TvDetailContent() {
     return () => {
       ignore = true;
     };
-  }, [id, startingSeason]);
+  }, [id]);
+
+  useEffect(() => {
+    const seasonParam = parseInt(searchParams.get("season") || "", 10);
+    if (!isNaN(seasonParam) && seasonParam > 0 && seasonParam !== activeSeason) {
+      setActiveSeason(seasonParam);
+    }
+  }, [searchParams, activeSeason]);
 
   const handleSelectSeason = useCallback(
     async (seasonNum: number) => {

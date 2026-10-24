@@ -549,7 +549,7 @@ function MovieDetailContent() {
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-700">
+            <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{formattedReleaseDate}</span>
@@ -572,7 +572,7 @@ function MovieDetailContent() {
             </div>
 
             <div className="mt-8">
-              <div className="relative border-b border-zinc-700 mb-6">
+              <div className="relative border-b border-zinc-800/60 mb-6">
                 <div className="flex items-center gap-6">
                   <button
                     ref={(el) => {
@@ -692,7 +692,7 @@ function MovieDetailContent() {
               {activeTab === "staff" && (
                 <div>
                   {sectionCrew.length > 0 ? (
-                    <div className="divide-y divide-zinc-800">
+                    <div className="divide-y divide-zinc-700/80">
                       {sectionCrew.map((section) => (
                         <div
                           key={section.key}
@@ -729,7 +729,7 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "details" && (
-                <div className="divide-y divide-zinc-800">
+                <div className="divide-y divide-zinc-700/80">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
@@ -870,7 +870,7 @@ function MovieDetailContent() {
               {activeTab === "releases" && (
                 <div>
                   {releaseDateGroups.length > 0 ? (
-                    <div className="divide-y divide-zinc-800">
+                    <div className="divide-y divide-zinc-700/80">
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}

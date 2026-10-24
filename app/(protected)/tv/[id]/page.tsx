@@ -141,6 +141,18 @@ function TvDetailContent() {
           setSeasonCache({ [resolvedSeason]: data.initialSeason });
         }
 
+        const remaining = available.filter((s) => s.season_number !== resolvedSeason);
+        remaining.forEach((s) => {
+          fetch(`/api/tv/${id}/season/${s.season_number}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((sData) => {
+              if (sData && !ignore) {
+                setSeasonCache((prev) => ({ ...prev, [s.season_number]: sData }));
+              }
+            })
+            .catch(() => {});
+        });
+
         const validBackdrops = (data.images?.backdrops || []).filter(
           (b) =>
             Boolean(b.file_path) &&
@@ -185,7 +197,6 @@ function TvDetailContent() {
 
       setActiveSeason(seasonNum);
       setIsCastExpanded(false);
-      pickRandomBackdrop();
 
       const newUrl = `/tv/${id}?season=${seasonNum}`;
       window.history.replaceState(null, "", newUrl);
@@ -207,7 +218,7 @@ function TvDetailContent() {
         setIsSeasonLoading(false);
       }
     },
-    [activeSeason, id, pickRandomBackdrop, seasonCache]
+    [activeSeason, id, seasonCache]
   );
 
   useEffect(() => {
@@ -259,6 +270,19 @@ function TvDetailContent() {
   const regularSeasons = useMemo(() => {
     return (tv?.seasons || []).filter((s) => s.season_number > 0);
   }, [tv?.seasons]);
+
+  useEffect(() => {
+    if (!regularSeasons || regularSeasons.length === 0) return;
+    regularSeasons.forEach((s) => {
+      if (s.poster_path) {
+        const url = getPosterUrl(s.poster_path, "w500");
+        if (url) {
+          const img = new window.Image();
+          img.src = url;
+        }
+      }
+    });
+  }, [regularSeasons]);
 
   const currentSeasonSummary = useMemo(() => {
     return regularSeasons.find((s) => s.season_number === activeSeason);
@@ -458,7 +482,7 @@ function TvDetailContent() {
                   fill
                   priority
                   sizes="(max-width: 640px) 224px, 288px"
-                  className="object-cover"
+                  className="object-cover transition-opacity duration-300"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700">
@@ -875,13 +899,13 @@ function TvDetailContent() {
 
                 {activeTab === "episodes" && (
                   <div>
-                    {isSeasonLoading ? (
-                      <div className="py-12 flex items-center justify-center">
-                        <Loading />
-                      </div>
-                    ) : currentSeasonDetails?.episodes &&
-                      currentSeasonDetails.episodes.length > 0 ? (
-                      <div className="divide-y divide-zinc-700/80">
+                    {currentSeasonDetails?.episodes &&
+                    currentSeasonDetails.episodes.length > 0 ? (
+                      <div
+                        className={`divide-y divide-zinc-700/80 transition-opacity duration-200 ${
+                          isSeasonLoading ? "opacity-50" : "opacity-100"
+                        }`}
+                      >
                         {currentSeasonDetails.episodes.map((ep) => {
                           const stillUrl = getPosterUrl(ep.still_path, "w500");
                           return (
@@ -918,7 +942,7 @@ function TvDetailContent() {
                                     alt={ep.name}
                                     fill
                                     sizes="(max-width: 640px) 100vw, 192px"
-                                    className="object-cover"
+                                    className="object-cover transition-opacity duration-300"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
@@ -932,6 +956,10 @@ function TvDetailContent() {
                             </div>
                           );
                         })}
+                      </div>
+                    ) : isSeasonLoading ? (
+                      <div className="py-12 flex items-center justify-center">
+                        <Loading />
                       </div>
                     ) : (
                       <p className="text-xs text-zinc-500 py-4">No episode information available.</p>
@@ -994,7 +1022,7 @@ function TvDetailContent() {
                             alt="Poster option"
                             fill
                             sizes="(max-width: 640px) 150px, (max-width: 1024px) 180px, 200px"
-                            className="object-cover"
+                            className="object-cover transition-opacity duration-300"
                           />
                         )}
                         {isSelected && (

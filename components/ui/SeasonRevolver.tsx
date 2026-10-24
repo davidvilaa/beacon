@@ -57,10 +57,10 @@ export default function SeasonRevolver({
       hasDraggedRef.current = true;
     }
 
-    if (currentDelta > 28) {
+    if (currentDelta > 24) {
       handleStep("up");
       dragStartYRef.current = e.clientY;
-    } else if (currentDelta < -28) {
+    } else if (currentDelta < -24) {
       handleStep("down");
       dragStartYRef.current = e.clientY;
     }
@@ -128,7 +128,7 @@ export default function SeasonRevolver({
                   }
                 }}
                 title={s.name}
-                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-300 z-20 ${
+                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-200 ease-out z-20 ${
                   isSelected
                     ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
                     : "text-zinc-300 font-bold text-xs sm:text-sm tracking-wider hover:text-white hover:bg-zinc-800/80 hover:border-zinc-700/60 border border-transparent cursor-pointer"

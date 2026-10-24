@@ -443,7 +443,7 @@ function MovieDetailContent() {
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
+            <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-700">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{formattedReleaseDate}</span>
@@ -466,7 +466,7 @@ function MovieDetailContent() {
             </div>
 
             <div className="mt-8">
-              <div className="relative border-b border-zinc-800/60 mb-6">
+              <div className="relative border-b border-zinc-700 mb-6">
                 <div className="flex items-center gap-6">
                   <button
                     ref={(el) => {
@@ -639,10 +639,10 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "details" && (
-                <div className="divide-y divide-zinc-700/80">
+                <div className="divide-y divide-zinc-800">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Original title
                       </span>
                     </div>
@@ -660,7 +660,7 @@ function MovieDetailContent() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Status
                       </span>
                     </div>
@@ -675,13 +675,13 @@ function MovieDetailContent() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Original language
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs font-mono font-bold uppercase text-zinc-200">
+                        <span className="text-xs font-bold uppercase text-zinc-200">
                           {movie.original_language?.toUpperCase() || "—"}
                         </span>
                       </div>
@@ -690,7 +690,7 @@ function MovieDetailContent() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Budget
                       </span>
                     </div>
@@ -707,7 +707,7 @@ function MovieDetailContent() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Revenue
                       </span>
                     </div>
@@ -724,7 +724,7 @@ function MovieDetailContent() {
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
                         Genres
                       </span>
                     </div>
@@ -751,14 +751,14 @@ function MovieDetailContent() {
               {activeTab === "releases" && (
                 <div>
                   {releaseDateGroups.length > 0 ? (
-                    <div className="divide-y divide-zinc-700/80">
+                    <div className="divide-y divide-zinc-800">
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}
                           className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
                         >
                           <div className="w-32 sm:w-36 shrink-0">
-                            <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
                               {group.formattedDate}
                             </span>
                           </div>

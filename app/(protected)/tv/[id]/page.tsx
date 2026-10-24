@@ -15,6 +15,7 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  User,
 } from "lucide-react";
 import {
   TvDetails,
@@ -670,22 +671,42 @@ function TvDetailContent() {
                     {displayedCast.length > 0 ? (
                       <>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                          {displayedCast.map((actor) => (
-                            <Link
-                              key={`${actor.id}-${actor.character}`}
-                              href={`/person/${actor.id}`}
-                              className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
-                            >
-                              <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
-                                {actor.name}
-                              </p>
-                              {actor.character && (
-                                <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                                  as <span className="text-zinc-300 font-medium">{actor.character}</span>
-                                </p>
-                              )}
-                            </Link>
-                          ))}
+                          {displayedCast.map((actor) => {
+                            const profileUrl = actor.profile_path
+                              ? getPosterUrl(actor.profile_path, "w185")
+                              : null;
+                            return (
+                              <Link
+                                key={`${actor.id}-${actor.character}`}
+                                href={`/person/${actor.id}`}
+                                className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
+                              >
+                                <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                                  {profileUrl ? (
+                                    <Image
+                                      src={profileUrl}
+                                      alt={actor.name}
+                                      fill
+                                      sizes="48px"
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <User className="w-4 h-4 text-zinc-500" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
+                                  <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
+                                    {actor.name}
+                                  </p>
+                                  {actor.character && (
+                                    <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                                      as <span className="text-zinc-300 font-medium">{actor.character}</span>
+                                    </p>
+                                  )}
+                                </div>
+                              </Link>
+                            );
+                          })}
                         </div>
 
                         {allCastLength > 12 && (

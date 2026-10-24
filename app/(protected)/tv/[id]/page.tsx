@@ -84,12 +84,16 @@ function TvDetailContent() {
   const [availablePosters, setAvailablePosters] = useState<Record<number, MovieImage[]>>({});
   const [loadingPosters, setLoadingPosters] = useState(false);
 
-  const [isWatching, setIsWatching] = useState(false);
-  const [isWatched, setIsWatched] = useState(false);
-  const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [seriesStatus, setSeriesStatus] = useState<
+    "watching" | "watched" | "paused" | "dropped" | "watchlist" | null
+  >(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
+
+  const isWatching = seriesStatus === "watching";
+  const isWatched = seriesStatus === "watched";
+  const isWatchlisted = seriesStatus === "watchlist";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -602,13 +606,7 @@ function TvDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsWatching((prev) => {
-                        if (!prev) {
-                          setIsWatched(false);
-                          setIsWatchlisted(false);
-                        }
-                        return !prev;
-                      });
+                      setSeriesStatus((prev) => (prev === "watching" ? null : "watching"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -627,13 +625,7 @@ function TvDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsWatched((prev) => {
-                        if (!prev) {
-                          setIsWatching(false);
-                          setIsWatchlisted(false);
-                        }
-                        return !prev;
-                      });
+                      setSeriesStatus((prev) => (prev === "watched" ? null : "watched"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -652,13 +644,7 @@ function TvDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsWatchlisted((prev) => {
-                        if (!prev) {
-                          setIsWatching(false);
-                          setIsWatched(false);
-                        }
-                        return !prev;
-                      });
+                      setSeriesStatus((prev) => (prev === "watchlist" ? null : "watchlist"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${

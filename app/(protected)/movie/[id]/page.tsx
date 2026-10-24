@@ -180,11 +180,13 @@ function MovieDetailContent() {
   const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
-  const [isWatched, setIsWatched] = useState(false);
-  const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [movieStatus, setMovieStatus] = useState<"watched" | "watchlist" | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
+
+  const isWatched = movieStatus === "watched";
+  const isWatchlisted = movieStatus === "watchlist";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -558,10 +560,7 @@ function MovieDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsWatched((prev) => {
-                        if (!prev) setIsWatchlisted(false);
-                        return !prev;
-                      });
+                      setMovieStatus((prev) => (prev === "watched" ? null : "watched"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
@@ -580,10 +579,7 @@ function MovieDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsWatchlisted((prev) => {
-                        if (!prev) setIsWatched(false);
-                        return !prev;
-                      });
+                      setMovieStatus((prev) => (prev === "watchlist" ? null : "watchlist"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${

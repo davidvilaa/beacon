@@ -68,9 +68,7 @@ create table public.user_movies (
   id uuid not null default gen_random_uuid() primary key,
   user_id uuid not null references public.users(id) on delete cascade,
   movie_id bigint not null references public.movies(id) on delete cascade,
-  is_watched boolean not null default false,
-  watched_date date null,
-  is_watchlist boolean not null default false,
+  status text null check (status in ('watched', 'watchlist')),
   is_favorite boolean not null default false,
   favorite_order smallint null check (favorite_order >= 1 and favorite_order <= 4),
   rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
@@ -78,6 +76,7 @@ create table public.user_movies (
   has_spoilers boolean not null default false,
   custom_poster_path text null,
   custom_backdrop_path text null,
+  watched_date date null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint user_movies_user_movie_unique unique (user_id, movie_id)
@@ -89,6 +88,7 @@ create unique index user_movies_user_favorite_order_idx
 
 create index idx_user_movies_user_id on public.user_movies (user_id);
 create index idx_user_movies_movie_id on public.user_movies (movie_id);
+create index idx_user_movies_status on public.user_movies (user_id, status);
 
 alter table public.user_movies enable row level security;
 
@@ -113,10 +113,7 @@ create table public.user_series (
   user_id uuid not null references public.users(id) on delete cascade,
   series_id bigint not null references public.series(id) on delete cascade,
   season_number integer not null default 1,
-  status text not null default 'plan_to_watch' check (status in ('watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch')),
-  is_watching boolean not null default false,
-  is_watched boolean not null default false,
-  is_watchlist boolean not null default false,
+  status text null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist')),
   is_favorite boolean not null default false,
   favorite_order smallint null check (favorite_order >= 1 and favorite_order <= 4),
   rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
@@ -138,6 +135,7 @@ create unique index user_series_user_favorite_order_idx
 create index idx_user_series_user_id on public.user_series (user_id);
 create index idx_user_series_series_id on public.user_series (series_id);
 create index idx_user_series_season on public.user_series (series_id, season_number);
+create index idx_user_series_status on public.user_series (user_id, status);
 
 alter table public.user_series enable row level security;
 

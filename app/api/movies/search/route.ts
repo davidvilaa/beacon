@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchMovies } from "@/lib/tmdb";
+import { searchMovies, getBestMoviePoster } from "@/lib/tmdb";
 
 export async function GET(request: Request) {
   try {
@@ -13,10 +13,23 @@ export async function GET(request: Request) {
     const startIndex = ((uiPage - 1) % 2) * 10;
     const rawResults = data.results || [];
     const sliced = rawResults.slice(startIndex, startIndex + 10);
-    const results = sliced.map((movie) => ({
-      ...movie,
-      moduleType: "movies",
-    }));
+
+    const results = await Promise.all(
+      sliced.map(async (movie) => {
+        let poster = movie.poster_path;
+        if (movie.id) {
+          const best = await getBestMoviePoster(movie.id);
+          if (best) {
+            poster = best;
+          }
+        }
+        return {
+          ...movie,
+          poster_path: poster,
+          moduleType: "movies",
+        };
+      })
+    );
 
     const totalPages = Math.min(Math.ceil((data.total_results || 0) / 10), 1000);
 

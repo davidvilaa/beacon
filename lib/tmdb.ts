@@ -255,6 +255,45 @@ export interface PersonDetails {
   };
 }
 
+const posterCache = new Map<number, string>();
+
+export async function getBestMoviePoster(
+  movieId: number | string
+): Promise<string | null> {
+  const numId = typeof movieId === "number" ? movieId : parseInt(movieId, 10);
+  if (numId && posterCache.has(numId)) {
+    return posterCache.get(numId)!;
+  }
+
+  try {
+    const data = await fetchFromTmdb<{ posters?: MovieImage[] }>(
+      `/movie/${movieId}/images`,
+      { include_image_language: "en,null" }
+    );
+    const valid = (data.posters || []).filter(
+      (p) =>
+        Boolean(p.file_path) &&
+        (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+    );
+    const sorted = [...valid].sort((a, b) => {
+      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
+      if (countDiff !== 0) return countDiff;
+      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+    });
+
+    const best = sorted[0]?.file_path || null;
+    if (numId && best) {
+      if (posterCache.size > 2000) {
+        posterCache.clear();
+      }
+      posterCache.set(numId, best);
+    }
+    return best;
+  } catch {
+    return null;
+  }
+}
+
 export async function getCollectionDetails(
   id: string | number
 ): Promise<CollectionDetails | null> {
@@ -277,11 +316,40 @@ export async function getMovieDetails(
     try {
       const coll = await getCollectionDetails(data.belongs_to_collection.id);
       if (coll?.parts) {
-        coll.parts = coll.parts
+        const sortedParts = coll.parts
           .filter((credit) => !isExcludedTmdbMedia(credit))
           .sort((a, b) =>
             (a.release_date || "9999").localeCompare(b.release_date || "9999")
           );
+
+        const enrichedParts = await Promise.all(
+          sortedParts.map(async (part) => {
+            if (part.id === data.id && data.images?.posters) {
+              const valid = data.images.posters.filter(
+                (p) =>
+                  Boolean(p.file_path) &&
+                  (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+              );
+              const sorted = [...valid].sort((a, b) => {
+                const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
+                if (countDiff !== 0) return countDiff;
+                return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+              });
+              return {
+                ...part,
+                poster_path: sorted[0]?.file_path || part.poster_path,
+              };
+            }
+
+            const bestPoster = await getBestMoviePoster(part.id);
+            return {
+              ...part,
+              poster_path: bestPoster || part.poster_path,
+            };
+          })
+        );
+
+        coll.parts = enrichedParts;
         data.collection = coll;
       }
     } catch {

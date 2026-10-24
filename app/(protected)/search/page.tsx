@@ -194,7 +194,7 @@ function SearchContent() {
 
               const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
               const cardClass =
-                "group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
+                "group relative flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
 
               const cardContent = (
                 <>

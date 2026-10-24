@@ -268,7 +268,7 @@ function CompanyDetailContent() {
 
                   const isMovie = work.media_type === "movie";
                   const cardClass =
-                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 transition-all cursor-pointer";
+                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
 
                   const cardContent = (
                     <>
@@ -278,7 +278,7 @@ function CompanyDetailContent() {
                           alt={title}
                           fill
                           sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
-                          className="object-cover group-hover:opacity-90 transition-opacity"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">

@@ -63,6 +63,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `series_id`: bigint references public.series(id) on delete cascade
   - `season_number`: integer not null default 1
   - `status`: text ('watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch')
+  - `is_watching`, `is_watched`, `is_watchlist`: boolean default false
   - `is_favorite`: boolean default false
   - `favorite_order`: smallint (1 to 4 for profile favorite slots)
   - `rating`: numeric(2, 1) (0.5 to 5.0)

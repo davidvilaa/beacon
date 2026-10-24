@@ -10,12 +10,13 @@ import {
   Film,
   Bookmark,
   Eye,
-  ListPlus,
   Check,
   X,
   ChevronDown,
   ChevronUp,
   User,
+  Plus,
+  Heart,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
@@ -180,8 +181,27 @@ function MovieDetailContent() {
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
-  const [isInList, setIsInList] = useState(false);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const quickMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        quickMenuRef.current &&
+        !quickMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsQuickMenuOpen(false);
+      }
+    };
+    if (isQuickMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isQuickMenuOpen]);
 
   const [activeTab, setActiveTab] = useState<
     "cast" | "staff" | "details" | "releases"
@@ -505,49 +525,100 @@ function MovieDetailContent() {
               )}
             </div>
 
-            <div className="w-56 sm:w-full grid grid-cols-3 bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
-              <button
-                type="button"
-                onClick={() => setIsWatched(!isWatched)}
-                title={isWatched ? "Watched" : "Mark as watched"}
-                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
-                  isWatched
-                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                }`}
-              >
-                <Eye className={`w-5 h-5 ${isWatched ? "stroke-[2.5]" : ""}`} />
-              </button>
+            <div ref={quickMenuRef} className="relative w-56 sm:w-full">
+              <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
+                <button
+                  type="button"
+                  title="Log movie"
+                  className="flex-1 flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
+                >
+                  <Plus className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setIsWatchlisted(!isWatchlisted)}
-                title={isWatchlisted ? "On watchlist" : "Add to watchlist"}
-                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
-                  isWatchlisted
-                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                }`}
-              >
-                <Bookmark
-                  className={`w-5 h-5 ${
-                    isWatchlisted ? "fill-[#a8dadc] text-[#a8dadc]" : ""
+                <button
+                  type="button"
+                  onClick={() => setIsQuickMenuOpen((prev) => !prev)}
+                  title="Quick actions"
+                  className={`w-11 sm:w-12 shrink-0 flex items-center justify-center border-l border-zinc-800 transition-colors cursor-pointer ${
+                    isQuickMenuOpen
+                      ? "text-[#a8dadc] bg-zinc-800/70"
+                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                   }`}
-                />
-              </button>
+                >
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isQuickMenuOpen ? "rotate-180 text-[#a8dadc]" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setIsInList(!isInList)}
-                title={isInList ? "In list" : "Add to list"}
-                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
-                  isInList
-                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                }`}
-              >
-                <ListPlus className={`w-5 h-5 ${isInList ? "stroke-[2.5]" : ""}`} />
-              </button>
+              {isQuickMenuOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsWatched((prev) => {
+                        if (!prev) setIsWatchlisted(false);
+                        return !prev;
+                      });
+                      setIsQuickMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
+                      isWatched
+                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Eye className={`w-4 h-4 ${isWatched ? "text-[#a8dadc] stroke-[2.5]" : "text-zinc-400"}`} />
+                      <span>Set as Watched</span>
+                    </div>
+                    {isWatched && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsWatchlisted((prev) => {
+                        if (!prev) setIsWatched(false);
+                        return !prev;
+                      });
+                      setIsQuickMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
+                      isWatchlisted
+                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Bookmark className={`w-4 h-4 ${isWatchlisted ? "text-[#a8dadc] fill-[#a8dadc]" : "text-zinc-400"}`} />
+                      <span>Set as Watchlist</span>
+                    </div>
+                    {isWatchlisted && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFavorite((prev) => !prev);
+                      setIsQuickMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
+                      isFavorite
+                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Heart className={`w-4 h-4 ${isFavorite ? "text-[#a8dadc] fill-[#a8dadc]" : "text-zinc-400"}`} />
+                      <span>Set as Favourite</span>
+                    </div>
+                    {isFavorite && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

@@ -22,6 +22,7 @@ export default function SeasonRevolver({
 }: SeasonRevolverProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartYRef = useRef<number | null>(null);
+  const dragStartTimeRef = useRef<number>(0);
   const hasDraggedRef = useRef<boolean>(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -55,6 +56,7 @@ export default function SeasonRevolver({
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {}
     dragStartYRef.current = e.clientY;
+    dragStartTimeRef.current = Date.now();
     hasDraggedRef.current = false;
     setIsDragging(true);
     setDragOffset(0);
@@ -66,17 +68,22 @@ export default function SeasonRevolver({
       handlePointerUp(e);
       return;
     }
-    let delta = e.clientY - dragStartYRef.current;
-    if (Math.abs(delta) > 4) {
+    const delta = e.clientY - dragStartYRef.current;
+    if (Math.abs(delta) > 5) {
       hasDraggedRef.current = true;
     }
-    if (
-      (currentIndex === 0 && delta > 0) ||
-      (currentIndex === sortedSeasons.length - 1 && delta < 0)
-    ) {
-      delta *= 0.35;
+
+    const maxDragDown = currentIndex * ITEM_HEIGHT;
+    const maxDragUp = (sortedSeasons.length - 1 - currentIndex) * ITEM_HEIGHT;
+
+    let clampedDelta = delta;
+    if (delta > maxDragDown) {
+      clampedDelta = maxDragDown + (delta - maxDragDown) * 0.25;
+    } else if (delta < -maxDragUp) {
+      clampedDelta = -maxDragUp + (delta - (-maxDragUp)) * 0.25;
     }
-    setDragOffset(delta);
+
+    setDragOffset(clampedDelta);
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -88,29 +95,55 @@ export default function SeasonRevolver({
     } catch {}
 
     const delta = e.clientY - dragStartYRef.current;
+    const duration = Math.max(1, Date.now() - dragStartTimeRef.current);
+    const velocity = delta / duration;
+
+    const wasDrag = hasDraggedRef.current && Math.abs(delta) >= 8;
+
     dragStartYRef.current = null;
     setIsDragging(false);
     setDragOffset(0);
 
-    if (Math.abs(delta) >= 18) {
-      if (delta > 0) {
-        handleStep("up");
-      } else {
-        handleStep("down");
+    if (wasDrag) {
+      let stepChange = Math.round(-delta / ITEM_HEIGHT);
+      if (Math.abs(velocity) > 0.5 && Math.abs(stepChange) < 1) {
+        stepChange = Math.sign(-velocity);
+      }
+      const newIndex = Math.max(
+        0,
+        Math.min(sortedSeasons.length - 1, currentIndex + stepChange)
+      );
+      if (newIndex !== currentIndex) {
+        onSelectSeason(sortedSeasons[newIndex].season_number);
+      }
+    } else {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const clickY = e.clientY - rect.top;
+        const diffFromCenter = Math.round((clickY - CONTAINER_HEIGHT / 2) / ITEM_HEIGHT);
+        const clickedIndex = currentIndex + diffFromCenter;
+        if (
+          clickedIndex >= 0 &&
+          clickedIndex < sortedSeasons.length &&
+          clickedIndex !== currentIndex
+        ) {
+          onSelectSeason(sortedSeasons[clickedIndex].season_number);
+        }
       }
     }
 
     setTimeout(() => {
       hasDraggedRef.current = false;
-    }, 50);
+    }, 60);
   };
 
   if (!sortedSeasons || sortedSeasons.length === 0) {
     return null;
   }
 
-  const centerOffset = CONTAINER_HEIGHT / 2 - ITEM_HEIGHT / 2;
-  const trackTranslateY = centerOffset - currentIndex * ITEM_HEIGHT + dragOffset;
+  const effectiveIndex = isDragging
+    ? currentIndex - dragOffset / ITEM_HEIGHT
+    : currentIndex;
 
   return (
     <div className={`flex flex-col items-center select-none ${className}`}>
@@ -132,45 +165,31 @@ export default function SeasonRevolver({
         onPointerCancel={handlePointerUp}
         className="relative w-16 sm:w-20 h-[200px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
         style={{
+          perspective: "450px",
           maskImage:
-            "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+            "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+            "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
         }}
       >
         <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-0" />
 
         <div
-          className="absolute inset-x-0 top-0 flex flex-col w-full z-10"
-          style={{
-            transform: `translateY(${trackTranslateY}px)`,
-            transition: isDragging
-              ? "none"
-              : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)",
-          }}
+          className="relative w-full h-full flex items-center justify-center"
+          style={{ transformStyle: "preserve-3d" }}
         >
           {sortedSeasons.map((s, idx) => {
-            const diff = idx - currentIndex;
-            const isSelected = diff === 0;
+            const diff = idx - effectiveIndex;
+            const isVisible = Math.abs(diff) <= 3.2;
+            if (!isVisible) return null;
+
+            const translateY = diff * 40;
+            const rotateX = -diff * 22;
+            const translateZ = -Math.pow(Math.abs(diff), 1.3) * 16;
+            const scale = Math.max(0.68, 1.08 - Math.abs(diff) * 0.14);
+            const opacity = Math.max(0, Math.min(1, 1 - Math.abs(diff) * 0.32));
+            const isSelected = Math.abs(diff) < 0.4;
             const label = `S${String(s.season_number).padStart(2, "0")}`;
-
-            const scale =
-              diff === 0
-                ? 1.06
-                : Math.abs(diff) === 1
-                ? 0.95
-                : Math.abs(diff) === 2
-                ? 0.82
-                : 0.7;
-
-            const opacity =
-              diff === 0
-                ? 1
-                : Math.abs(diff) === 1
-                ? 0.75
-                : Math.abs(diff) === 2
-                ? 0.4
-                : 0.15;
 
             return (
               <button
@@ -183,17 +202,18 @@ export default function SeasonRevolver({
                   }
                 }}
                 title={s.name}
-                className={`w-full h-10 flex items-center justify-center rounded-md transition-colors ${
+                className={`absolute inset-x-1 h-10 flex items-center justify-center rounded-md pointer-events-auto z-10 ${
                   isSelected
                     ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
                     : "text-zinc-400 font-bold text-xs sm:text-sm tracking-wider hover:text-white cursor-pointer"
                 }`}
                 style={{
-                  transform: `scale(${scale})`,
+                  top: "calc(50% - 20px)",
+                  transform: `translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) scale(${scale})`,
                   opacity,
                   transition: isDragging
                     ? "none"
-                    : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms ease, color 200ms ease",
+                    : "transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 280ms ease, color 200ms ease",
                 }}
               >
                 <span>{label}</span>

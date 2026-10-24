@@ -26,6 +26,30 @@ function formatRuntime(minutes: number | null): string {
   return `${hours}h ${mins}m`;
 }
 
+function formatFullDate(dateStr?: string | null): string {
+  if (!dateStr) return "—";
+  const parts = dateStr.split("-");
+  if (parts.length < 3) return dateStr;
+  const [year, month, day] = parts;
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const mIndex = parseInt(month, 10) - 1;
+  const monthName = MONTHS[mIndex] || month;
+  return `${monthName} ${parseInt(day, 10)}, ${year}`;
+}
+
 const PRIORITY_JOBS = [
   "Director",
   "Screenplay",
@@ -182,7 +206,7 @@ function MovieDetailContent() {
     return Array.from(map.values()).slice(0, 24);
   }, [movie]);
 
-  const countryReleases = useMemo(() => {
+  const releaseDateGroups = useMemo(() => {
     const raw = movie?.release_dates?.results || [];
     let regionNames: Intl.DisplayNames | null = null;
     try {
@@ -191,40 +215,49 @@ function MovieDetailContent() {
       regionNames = null;
     }
 
-    const list = raw
-      .map((item) => {
-        let countryName = item.iso_3166_1;
-        try {
-          if (regionNames) {
-            countryName = regionNames.of(item.iso_3166_1) || item.iso_3166_1;
-          }
-        } catch {
-          countryName = item.iso_3166_1;
+    const map = new Map<string, { code: string; country: string; certification: string }[]>();
+
+    raw.forEach((item) => {
+      let countryName = item.iso_3166_1;
+      try {
+        if (regionNames) {
+          countryName = regionNames.of(item.iso_3166_1) || item.iso_3166_1;
         }
+      } catch {
+        countryName = item.iso_3166_1;
+      }
 
-        const validDates = (item.release_dates || []).filter((r) => Boolean(r.release_date));
-        if (validDates.length === 0) return null;
+      const validDates = (item.release_dates || []).filter((r) => Boolean(r.release_date));
+      if (validDates.length === 0) return;
 
-        const theatrical =
-          validDates.find((r) => r.type === 3) ||
-          validDates.find((r) => r.type === 2) ||
-          validDates[0];
+      const theatrical =
+        validDates.find((r) => r.type === 3) ||
+        validDates.find((r) => r.type === 2) ||
+        validDates[0];
 
-        const cert =
-          validDates.find((r) => Boolean(r.certification?.trim()))?.certification?.trim() || "";
+      const cert =
+        validDates.find((r) => Boolean(r.certification?.trim()))?.certification?.trim() || "";
 
-        const dateStr = theatrical?.release_date ? theatrical.release_date.slice(0, 10) : "";
+      const dateStr = theatrical?.release_date ? theatrical.release_date.slice(0, 10) : "";
+      if (!dateStr) return;
 
-        return {
-          code: item.iso_3166_1,
-          country: countryName,
-          date: dateStr,
-          certification: cert,
-        };
-      })
-      .filter((item): item is { code: string; country: string; date: string; certification: string } => Boolean(item && item.date));
+      if (!map.has(dateStr)) {
+        map.set(dateStr, []);
+      }
+      map.get(dateStr)!.push({
+        code: item.iso_3166_1,
+        country: countryName,
+        certification: cert,
+      });
+    });
 
-    return list.sort((a, b) => a.country.localeCompare(b.country));
+    const groups = Array.from(map.entries()).map(([date, countries]) => ({
+      date,
+      formattedDate: formatFullDate(date),
+      countries: countries.sort((a, b) => a.country.localeCompare(b.country)),
+    }));
+
+    return groups.sort((a, b) => a.date.localeCompare(b.date));
   }, [movie]);
 
   if (loading) {
@@ -251,7 +284,7 @@ function MovieDetailContent() {
 
   const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
   const posterUrl = getPosterUrl(selectedPoster, "w500");
-  const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : "—";
+  const formattedReleaseDate = formatFullDate(movie.release_date);
   const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
 
   const topCast = (movie.credits?.cast || []).slice(0, 24);
@@ -401,7 +434,7 @@ function MovieDetailContent() {
             <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{releaseYear}</span>
+                <span>{formattedReleaseDate}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-zinc-500" />
@@ -518,26 +551,56 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "staff" && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                  {groupedCrew.length > 0 ? (
-                    groupedCrew.map((person) => (
-                      <Link
-                        key={person.id}
-                        href={`/person/${person.id}`}
-                        className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
-                      >
-                        <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
-                          {person.name}
-                        </p>
-                        <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                          as <span className="text-zinc-300 font-medium">{person.jobs.join(", ")}</span>
-                        </p>
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="text-xs text-zinc-500 py-4 col-span-full">
-                      No crew information available.
+                <div className="space-y-8">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
+                      Crew Members
                     </p>
+                    {groupedCrew.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                        {groupedCrew.map((person) => (
+                          <Link
+                            key={person.id}
+                            href={`/person/${person.id}`}
+                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
+                          >
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                              {person.name}
+                            </p>
+                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                              as <span className="text-zinc-300 font-medium">{person.jobs.join(", ")}</span>
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-zinc-500 py-2">
+                        No crew information available.
+                      </p>
+                    )}
+                  </div>
+
+                  {movie.production_companies && movie.production_companies.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
+                        Production Companies
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                        {movie.production_companies.map((company) => (
+                          <div
+                            key={company.id}
+                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 min-w-0"
+                          >
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-200 truncate">
+                              {company.name}
+                            </p>
+                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                              as <span className="text-zinc-300 font-medium">{company.origin_country ? `Studio (${company.origin_country})` : "Studio"}</span>
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -616,40 +679,78 @@ function MovieDetailContent() {
                       </span>
                     </p>
                   </div>
+
+                  {movie.alternative_titles?.titles && movie.alternative_titles.titles.length > 0 && (
+                    <div className="col-span-full p-4 rounded-xl bg-zinc-900/40 border border-zinc-800">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2.5">
+                        Alternative Titles ({movie.alternative_titles.titles.length})
+                      </p>
+                      <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1">
+                        {movie.alternative_titles.titles.map((alt, idx) => (
+                          <span
+                            key={`${alt.iso_3166_1}-${alt.title}-${idx}`}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-300"
+                          >
+                            <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">
+                              {alt.iso_3166_1}
+                            </span>
+                            <span className="font-medium text-zinc-200">{alt.title}</span>
+                            {alt.type && (
+                              <span className="text-[10px] text-zinc-500">({alt.type})</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeTab === "releases" && (
                 <div>
-                  {countryReleases.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                      {countryReleases.map((release) => (
+                  {releaseDateGroups.length > 0 ? (
+                    <div className="space-y-4">
+                      {releaseDateGroups.map((group) => (
                         <div
-                          key={release.code}
-                          className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800"
+                          key={group.date}
+                          className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800"
                         >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">
-                                {release.code}
-                              </span>
-                              <span
-                                className="text-xs sm:text-sm font-semibold text-zinc-200 truncate"
-                                title={release.country}
-                              >
-                                {release.country}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                              {release.date}
-                            </p>
+                          <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-zinc-800/60">
+                            <Calendar className="w-4 h-4 text-[#a8dadc]" />
+                            <h3 className="text-sm font-bold text-zinc-100">
+                              {group.formattedDate}
+                            </h3>
+                            <span className="text-xs text-zinc-500 font-normal">
+                              ({group.countries.length} {group.countries.length === 1 ? "country" : "countries"})
+                            </span>
                           </div>
 
-                          {release.certification && (
-                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
-                              {release.certification}
-                            </span>
-                          )}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                            {group.countries.map((c) => (
+                              <div
+                                key={c.code}
+                                className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-800"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase shrink-0">
+                                    {c.code}
+                                  </span>
+                                  <span
+                                    className="text-xs font-semibold text-zinc-200 truncate"
+                                    title={c.country}
+                                  >
+                                    {c.country}
+                                  </span>
+                                </div>
+
+                                {c.certification && (
+                                  <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                                    {c.certification}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>

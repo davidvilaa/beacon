@@ -154,6 +154,19 @@ export interface MovieCountryRelease {
   release_dates: MovieReleaseDateItem[];
 }
 
+export interface ProductionCompany {
+  id: number;
+  logo_path: string | null;
+  name: string;
+  origin_country: string;
+}
+
+export interface AlternativeTitleItem {
+  iso_3166_1: string;
+  title: string;
+  type: string;
+}
+
 export interface MovieDetails extends Movie {
   tagline: string | null;
   runtime: number | null;
@@ -162,6 +175,7 @@ export interface MovieDetails extends Movie {
   budget?: number;
   revenue?: number;
   original_language?: string;
+  production_companies?: ProductionCompany[];
   credits?: {
     cast: MovieCast[];
     crew: MovieCrew[];
@@ -172,6 +186,9 @@ export interface MovieDetails extends Movie {
   };
   release_dates?: {
     results: MovieCountryRelease[];
+  };
+  alternative_titles?: {
+    titles: AlternativeTitleItem[];
   };
 }
 
@@ -224,7 +241,7 @@ export async function getMovieDetails(
   id: string | number
 ): Promise<MovieDetails> {
   return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
-    append_to_response: "credits,images,release_dates",
+    append_to_response: "credits,images,release_dates,alternative_titles",
     include_image_language: "en,null",
   });
 }

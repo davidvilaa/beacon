@@ -70,6 +70,7 @@ function MovieDetailContent() {
   const [loading, setLoading] = useState(true);
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
+  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
@@ -149,6 +150,10 @@ function MovieDetailContent() {
       });
     }
   }, [activeTab, movie]);
+
+  useEffect(() => {
+    setIsBackdropLoaded(false);
+  }, [selectedBackdrop]);
 
   const [dedupedPosters, setDedupedPosters] = useState<MovieImage[] | null>(null);
   const [loadingPosters, setLoadingPosters] = useState(false);
@@ -317,7 +322,10 @@ function MovieDetailContent() {
                 fill
                 priority
                 sizes="(max-width: 1550px) 100vw, 1550px"
-                className="object-cover object-top opacity-95 sm:opacity-100"
+                onLoad={() => setIsBackdropLoaded(true)}
+                className={`object-cover object-top transition-opacity duration-500 ease-out ${
+                  isBackdropLoaded ? "opacity-95 sm:opacity-100" : "opacity-0"
+                }`}
               />
             </div>
           </div>

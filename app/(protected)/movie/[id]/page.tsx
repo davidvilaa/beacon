@@ -551,6 +551,9 @@ function MovieDetailContent() {
           </div>
 
           <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
+              Movie
+            </p>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
               {movie.title}
             </h1>
@@ -561,11 +564,12 @@ function MovieDetailContent() {
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
+            <div className="flex items-center gap-2.5 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{formattedReleaseDate}</span>
               </span>
+              <span>•</span>
               <span className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{formatRuntime(movie.runtime)}</span>

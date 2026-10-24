@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { TvSeasonSummary } from "@/lib/tmdb";
 
@@ -19,7 +19,6 @@ export default function SeasonRevolver({
 }: SeasonRevolverProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
-  const [accumulatedDelta, setAccumulatedDelta] = useState(0);
 
   const sortedSeasons = useMemo(() => {
     const regular = (seasons || [])
@@ -59,7 +58,6 @@ export default function SeasonRevolver({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setDragStartY(e.clientY);
-    setAccumulatedDelta(0);
     if (containerRef.current) {
       containerRef.current.setPointerCapture(e.pointerId);
     }
@@ -68,22 +66,18 @@ export default function SeasonRevolver({
   const handlePointerMove = (e: React.PointerEvent) => {
     if (dragStartY === null) return;
     const currentDelta = e.clientY - dragStartY;
-    setAccumulatedDelta(currentDelta);
 
-    if (currentDelta > 28) {
+    if (currentDelta > 26) {
       handleStep("up");
       setDragStartY(e.clientY);
-      setAccumulatedDelta(0);
-    } else if (currentDelta < -28) {
+    } else if (currentDelta < -26) {
       handleStep("down");
       setDragStartY(e.clientY);
-      setAccumulatedDelta(0);
     }
   };
 
   const handlePointerUp = () => {
     setDragStartY(null);
-    setAccumulatedDelta(0);
   };
 
   if (!sortedSeasons || sortedSeasons.length === 0) {
@@ -100,9 +94,9 @@ export default function SeasonRevolver({
         onClick={() => handleStep("up")}
         disabled={currentIndex <= 0}
         aria-label="Previous Season"
-        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer mb-1"
+        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mb-1"
       >
-        <ChevronUp className="w-3.5 h-3.5" />
+        <ChevronUp className="w-4 h-4" />
       </button>
 
       <div
@@ -111,13 +105,13 @@ export default function SeasonRevolver({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative w-14 sm:w-16 h-[180px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
-        style={{ perspective: "450px" }}
+        className="relative w-16 sm:w-20 h-[210px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
+        style={{ perspective: "500px" }}
       >
-        <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-20" />
-        <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none z-20" />
+        <div className="absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-zinc-950/90 to-transparent pointer-events-none z-20" />
+        <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-zinc-950/90 to-transparent pointer-events-none z-20" />
 
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-8 rounded-lg border border-[#a8dadc]/40 bg-zinc-800/60 pointer-events-none z-10" />
+        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-10" />
 
         <div
           className="relative w-full h-full flex items-center justify-center"
@@ -125,13 +119,13 @@ export default function SeasonRevolver({
         >
           {sortedSeasons.map((s, idx) => {
             const diff = idx - currentIndex;
-            const isVisible = Math.abs(diff) <= 3;
+            const isVisible = Math.abs(diff) <= 2;
             if (!isVisible) return null;
 
-            const translateY = diff * 32;
-            const rotateX = diff * -24;
-            const scale = Math.max(0.65, 1 - Math.abs(diff) * 0.14);
-            const opacity = Math.max(0, 1 - Math.abs(diff) * 0.38);
+            const translateY = diff * 38;
+            const rotateX = diff * -16;
+            const scale = diff === 0 ? 1.05 : Math.abs(diff) === 1 ? 0.92 : 0.8;
+            const opacity = diff === 0 ? 1 : Math.abs(diff) === 1 ? 0.85 : 0.35;
 
             const isSelected = diff === 0;
             const label =
@@ -145,10 +139,10 @@ export default function SeasonRevolver({
                 type="button"
                 onClick={() => onSelectSeason(s.season_number)}
                 title={s.name}
-                className={`absolute inset-x-0 flex items-center justify-center transition-all duration-300 ${
+                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-300 ${
                   isSelected
-                    ? "text-[#a8dadc] font-black text-xs sm:text-sm tracking-wider cursor-default z-20"
-                    : "text-zinc-400 font-semibold text-xs tracking-wider hover:text-zinc-200 cursor-pointer z-10"
+                    ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default z-20"
+                    : "text-zinc-300 font-bold text-xs sm:text-sm tracking-wider hover:text-white hover:bg-zinc-800/50 cursor-pointer z-10"
                 }`}
                 style={{
                   transform: `translateY(${translateY}px) rotateX(${rotateX}deg) scale(${scale})`,
@@ -167,9 +161,9 @@ export default function SeasonRevolver({
         onClick={() => handleStep("down")}
         disabled={currentIndex >= sortedSeasons.length - 1}
         aria-label="Next Season"
-        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1"
+        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1"
       >
-        <ChevronDown className="w-3.5 h-3.5" />
+        <ChevronDown className="w-4 h-4" />
       </button>
     </div>
   );

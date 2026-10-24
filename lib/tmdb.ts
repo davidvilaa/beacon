@@ -374,7 +374,44 @@ export async function getPersonDetails(
     const crew = (data.combined_credits.crew || []).filter(
       (credit) => !isExcludedTmdbMedia(credit)
     );
-    data.combined_credits = { cast, crew };
+
+    const allCredits = [...cast, ...crew];
+    const uniqueMovies = Array.from(
+      new Map(
+        allCredits
+          .filter((c) => c.media_type === "movie" && c.id && c.poster_path)
+          .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0))
+          .map((c) => [c.id, c])
+      ).values()
+    );
+
+    const targetMovies = uniqueMovies.slice(0, 40);
+    const movieMap = new Map<number, string>();
+    const batchSize = 10;
+
+    for (let i = 0; i < targetMovies.length; i += batchSize) {
+      const chunk = targetMovies.slice(i, i + batchSize);
+      await Promise.all(
+        chunk.map(async (movie) => {
+          const best = await getBestMoviePoster(movie.id);
+          if (best) {
+            movieMap.set(movie.id, best);
+          }
+        })
+      );
+    }
+
+    const enrichCredit = (c: PersonCredit) => {
+      if (c.media_type === "movie" && movieMap.has(c.id)) {
+        return { ...c, poster_path: movieMap.get(c.id)! };
+      }
+      return c;
+    };
+
+    data.combined_credits = {
+      cast: cast.map(enrichCredit),
+      crew: crew.map(enrichCredit),
+    };
   }
 
   return data;

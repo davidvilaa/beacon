@@ -13,7 +13,6 @@ import {
   Heart,
   Check,
   X,
-  Star,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -640,132 +639,72 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "details" && (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0">
-                    <div className="divide-y divide-zinc-800/80">
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Status
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              movie.status === "Released"
-                                ? "bg-emerald-400"
-                                : "bg-[#a8dadc]"
-                            }`}
-                          />
-                          <span className="text-sm font-semibold text-zinc-200">
-                            {movie.status || "—"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Original title
-                        </span>
-                        <span className="text-sm font-semibold text-zinc-200 text-right truncate max-w-[65%]">
-                          {movie.original_title || "—"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Original language
-                        </span>
-                        <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
-                          {movie.original_language || "—"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          TMDB Rating
-                        </span>
-                        <div className="flex items-center gap-1.5 text-sm font-semibold text-zinc-200">
-                          <Star className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" />
-                          <span>{movie.vote_average.toFixed(1)} / 10</span>
-                          <span className="text-xs text-zinc-500 font-normal">
-                            ({movie.vote_count.toLocaleString("en-US")} votes)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="divide-y divide-zinc-800/80">
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Budget
-                        </span>
-                        <span className="text-sm font-semibold text-zinc-200">
-                          {movie.budget && movie.budget > 0
-                            ? `$${movie.budget.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Revenue
-                        </span>
-                        <span className="text-sm font-semibold text-zinc-200">
-                          {movie.revenue && movie.revenue > 0
-                            ? `$${movie.revenue.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-lg transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Genres
-                        </span>
-                        <div className="flex flex-wrap gap-1.5 justify-end max-w-[65%]">
-                          {movie.genres && movie.genres.length > 0 ? (
-                            movie.genres.map((g) => (
-                              <span
-                                key={g.id}
-                                className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60"
-                              >
-                                {g.name}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-sm text-zinc-500">—</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Original title
+                    </p>
+                    <p
+                      className="text-[11px] text-zinc-400 truncate mt-0.5"
+                      title={movie.original_title || "—"}
+                    >
+                      {movie.original_title || "—"}
+                    </p>
                   </div>
 
-                  {movie.alternative_titles?.titles && movie.alternative_titles.titles.length > 0 && (
-                    <div className="mt-8 pt-6 border-t border-zinc-800/80">
-                      <div className="flex items-center justify-between mb-3.5">
-                        <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                          Alternative Titles
-                        </p>
-                        <span className="text-xs font-mono text-zinc-500">
-                          {movie.alternative_titles.titles.length} titles
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1">
-                        {movie.alternative_titles.titles.map((alt, idx) => (
-                          <span
-                            key={`${alt.iso_3166_1}-${alt.title}-${idx}`}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 text-xs text-zinc-300"
-                          >
-                            <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">
-                              {alt.iso_3166_1}
-                            </span>
-                            <span className="font-medium text-zinc-200">{alt.title}</span>
-                            {alt.type && (
-                              <span className="text-[10px] text-zinc-500">({alt.type})</span>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Status
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {movie.status || "—"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Original language
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {movie.original_language?.toUpperCase() || "—"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Budget
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {movie.budget && movie.budget > 0
+                        ? `$${movie.budget.toLocaleString("en-US")}`
+                        : "Not available"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Revenue
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {movie.revenue && movie.revenue > 0
+                        ? `$${movie.revenue.toLocaleString("en-US")}`
+                        : "Not available"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      Genres
+                    </p>
+                    <p
+                      className="text-[11px] text-zinc-400 truncate mt-0.5"
+                      title={movie.genres?.map((g) => g.name).join(", ") || "—"}
+                    >
+                      {movie.genres && movie.genres.length > 0
+                        ? movie.genres.map((g) => g.name).join(", ")
+                        : "—"}
+                    </p>
+                  </div>
                 </div>
               )}
 

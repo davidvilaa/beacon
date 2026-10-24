@@ -46,7 +46,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `movie_id`: bigint references public.movies(id) on delete cascade
   - `status`: text ('watched', 'watchlist')
   - `is_favorite`: boolean default false
-  - `favorite_order`: smallint (1 to 4 for profile favorite slots)
   - `rating`: numeric(2, 1) (0.5 to 5.0)
   - `review`: text
   - `has_spoilers`: boolean default false
@@ -54,7 +53,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `watched_date`: date
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, movie_id)`
-  - Partial unique index: `(user_id, favorite_order) where favorite_order is not null`
 
 - **`public.user_series`**:
   - `id`: uuid primary key default gen_random_uuid()
@@ -63,7 +61,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `season_number`: integer not null default 1
   - `status`: text ('watching', 'watched', 'paused', 'dropped', 'watchlist')
   - `is_favorite`: boolean default false
-  - `favorite_order`: smallint (1 to 4 for profile favorite slots)
   - `rating`: numeric(2, 1) (0.5 to 5.0)
   - `review`: text
   - `has_spoilers`: boolean default false
@@ -72,4 +69,3 @@ Full DDL script is located in `supabase/schema.sql`.
   - `watched_date`: date
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id, season_number)`
-  - Partial unique index: `(user_id, favorite_order) where favorite_order is not null`

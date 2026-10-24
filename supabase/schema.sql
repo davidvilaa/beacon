@@ -70,7 +70,6 @@ create table public.user_movies (
   movie_id bigint not null references public.movies(id) on delete cascade,
   status text null check (status in ('watched', 'watchlist')),
   is_favorite boolean not null default false,
-  favorite_order smallint null check (favorite_order >= 1 and favorite_order <= 4),
   rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
   review text null,
   has_spoilers boolean not null default false,
@@ -82,13 +81,10 @@ create table public.user_movies (
   constraint user_movies_user_movie_unique unique (user_id, movie_id)
 );
 
-create unique index user_movies_user_favorite_order_idx
-  on public.user_movies (user_id, favorite_order)
-  where favorite_order is not null;
-
 create index idx_user_movies_user_id on public.user_movies (user_id);
 create index idx_user_movies_movie_id on public.user_movies (movie_id);
 create index idx_user_movies_status on public.user_movies (user_id, status);
+create index idx_user_movies_favorite on public.user_movies (user_id, is_favorite);
 
 alter table public.user_movies enable row level security;
 
@@ -115,7 +111,6 @@ create table public.user_series (
   season_number integer not null default 1,
   status text null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist')),
   is_favorite boolean not null default false,
-  favorite_order smallint null check (favorite_order >= 1 and favorite_order <= 4),
   rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
   review text null,
   has_spoilers boolean not null default false,
@@ -128,14 +123,11 @@ create table public.user_series (
   constraint user_series_user_season_unique unique (user_id, series_id, season_number)
 );
 
-create unique index user_series_user_favorite_order_idx
-  on public.user_series (user_id, favorite_order)
-  where favorite_order is not null;
-
 create index idx_user_series_user_id on public.user_series (user_id);
 create index idx_user_series_series_id on public.user_series (series_id);
 create index idx_user_series_season on public.user_series (series_id, season_number);
 create index idx_user_series_status on public.user_series (user_id, status);
+create index idx_user_series_favorite on public.user_series (user_id, is_favorite);
 
 alter table public.user_series enable row level security;
 

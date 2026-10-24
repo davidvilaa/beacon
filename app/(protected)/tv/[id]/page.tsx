@@ -874,59 +874,52 @@ function TvDetailContent() {
                       </div>
                     ) : currentSeasonDetails?.episodes &&
                       currentSeasonDetails.episodes.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="divide-y divide-zinc-700/80">
                         {currentSeasonDetails.episodes.map((ep) => {
                           const stillUrl = getPosterUrl(ep.still_path, "w500");
                           return (
                             <div
                               key={ep.id}
-                              className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
                             >
-                              <div className="relative w-full sm:w-44 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+                              <div className="flex-1 min-w-0 pr-0 sm:pr-6">
+                                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200">
+                                  E{String(ep.episode_number).padStart(2, "0")}. {ep.name}
+                                </h4>
+
+                                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
+                                  <span>{formatFullDate(ep.air_date)}</span>
+                                  {ep.runtime ? (
+                                    <>
+                                      <span>•</span>
+                                      <span>{ep.runtime}m</span>
+                                    </>
+                                  ) : null}
+                                </div>
+
+                                {ep.overview && (
+                                  <p className="text-xs text-zinc-400 line-clamp-2 sm:line-clamp-3 mt-2 leading-relaxed">
+                                    {ep.overview}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
                                 {stillUrl ? (
                                   <Image
                                     src={stillUrl}
                                     alt={ep.name}
                                     fill
-                                    sizes="(max-width: 640px) 100vw, 176px"
+                                    sizes="(max-width: 640px) 100vw, 192px"
                                     className="object-cover"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
-                                    <Film className="w-6 h-6 mb-1" />
-                                    <span className="text-[10px] font-semibold">{ep.name}</span>
+                                    <Film className="w-6 h-6 mb-1 text-zinc-700" />
+                                    <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[140px]">
+                                      {ep.name}
+                                    </span>
                                   </div>
-                                )}
-                                <div className="absolute bottom-1.5 left-1.5">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
-                                    E{String(ep.episode_number).padStart(2, "0")}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-3">
-                                  <h4 className="text-sm sm:text-base font-semibold text-zinc-100 truncate">
-                                    {ep.episode_number}. {ep.name}
-                                  </h4>
-                                  <div className="flex items-center gap-2 shrink-0 text-xs text-zinc-400 font-mono">
-                                    {ep.runtime ? <span>{ep.runtime}m</span> : null}
-                                    {ep.vote_average > 0 ? (
-                                      <span className="text-amber-400 font-semibold">
-                                        ★ {ep.vote_average.toFixed(1)}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </div>
-
-                                <p className="text-xs text-zinc-500 mt-0.5">
-                                  {formatFullDate(ep.air_date)}
-                                </p>
-
-                                {ep.overview && (
-                                  <p className="text-xs text-zinc-400 line-clamp-2 mt-1.5 leading-relaxed">
-                                    {ep.overview}
-                                  </p>
                                 )}
                               </div>
                             </div>

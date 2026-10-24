@@ -326,45 +326,37 @@ function PersonDetailContent() {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
               {person.name}
             </h1>
-            <div className="border-b border-zinc-800/80 mt-3" />
           </div>
 
-          <div className="mt-8 mb-6 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <Select
-                value={selectedRole}
-                onChange={(val) => setSelectedRole(val)}
-                options={availableTabs}
-                className="w-36 sm:w-40"
-              />
+          <div className="mt-4 sm:mt-5 pb-3.5 border-b border-zinc-800/80 flex items-center gap-2.5 flex-wrap">
+            <Select
+              value={selectedRole}
+              onChange={(val) => setSelectedRole(val)}
+              options={availableTabs}
+              variant="compact"
+              className="w-36 sm:w-40"
+            />
 
-              <Select
-                value={mediaFilter}
-                onChange={(val) => setMediaFilter(val as "all" | "movie" | "tv")}
-                options={MEDIA_OPTIONS}
-                className="w-36 sm:w-40"
-              />
+            <Select
+              value={mediaFilter}
+              onChange={(val) => setMediaFilter(val as "all" | "movie" | "tv")}
+              options={MEDIA_OPTIONS}
+              variant="compact"
+              className="w-36 sm:w-40"
+            />
 
-              <Select
-                value={sortBy}
-                onChange={(val) => setSortBy(val as "popularity" | "newest" | "oldest")}
-                options={SORT_OPTIONS}
-                className="w-36 sm:w-40"
-              />
-            </div>
+            <Select
+              value={sortBy}
+              onChange={(val) => setSortBy(val as "popularity" | "newest" | "oldest")}
+              options={SORT_OPTIONS}
+              variant="compact"
+              className="w-36 sm:w-40"
+            />
           </div>
 
-          <div className="pt-2">
+          <div className="mt-6">
             {displayedCredits.length === 0 ? (
-              <div className="py-20 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 text-center">
-                <Film className="w-10 h-10 text-zinc-700 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-zinc-400">
-                  No works found for this filter.
-                </p>
-                <p className="text-xs text-zinc-500 mt-1">
-                  Try selecting &quot;All Roles&quot; or changing the media filter.
-                </p>
-              </div>
+              <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
                 {displayedCredits.map((credit, idx) => {

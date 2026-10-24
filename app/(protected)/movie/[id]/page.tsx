@@ -14,6 +14,8 @@ import {
   Check,
   X,
   Star,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
@@ -71,6 +73,7 @@ function MovieDetailContent() {
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
+  const [visibleCastCount, setVisibleCastCount] = useState(12);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
@@ -160,6 +163,7 @@ function MovieDetailContent() {
 
   useEffect(() => {
     setDedupedPosters(null);
+    setVisibleCastCount(12);
   }, [id]);
 
   useEffect(() => {
@@ -292,7 +296,8 @@ function MovieDetailContent() {
   const formattedReleaseDate = formatFullDate(movie.release_date);
   const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
 
-  const topCast = (movie.credits?.cast || []).slice(0, 24);
+  const allCast = movie.credits?.cast || [];
+  const displayedCast = allCast.slice(0, visibleCastCount);
 
   return (
     <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
@@ -532,24 +537,61 @@ function MovieDetailContent() {
               </div>
 
               {activeTab === "cast" && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                  {topCast.length > 0 ? (
-                    topCast.map((actor) => (
-                      <Link
-                        key={actor.id}
-                        href={`/person/${actor.id}`}
-                        className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
-                      >
-                        <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
-                          {actor.name}
-                        </p>
-                        {actor.character && (
-                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                            as <span className="text-zinc-300 font-medium">{actor.character}</span>
-                          </p>
-                        )}
-                      </Link>
-                    ))
+                <div>
+                  {displayedCast.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                        {displayedCast.map((actor) => (
+                          <Link
+                            key={actor.id}
+                            href={`/person/${actor.id}`}
+                            className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
+                          >
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
+                              {actor.name}
+                            </p>
+                            {actor.character && (
+                              <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                                as <span className="text-zinc-300 font-medium">{actor.character}</span>
+                              </p>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+
+                      {allCast.length > 12 && (
+                        <div className="flex items-center justify-center gap-3 mt-5">
+                          {visibleCastCount < allCast.length && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVisibleCastCount((prev) =>
+                                  Math.min(prev + 12, allCast.length)
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+                            >
+                              <span>Show more</span>
+                              <span className="text-zinc-500 font-mono text-[11px]">
+                                ({visibleCastCount}/{allCast.length})
+                              </span>
+                              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                            </button>
+                          )}
+
+                          {visibleCastCount > 12 && (
+                            <button
+                              type="button"
+                              onClick={() => setVisibleCastCount(12)}
+                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+                            >
+                              <span>Show less</span>
+                              <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <p className="text-xs text-zinc-500 py-4 col-span-full">
                       No cast information available.

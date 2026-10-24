@@ -22,11 +22,9 @@ export default function SeasonRevolver({
   const hasDraggedRef = useRef<boolean>(false);
 
   const sortedSeasons = useMemo(() => {
-    const regular = (seasons || [])
+    return (seasons || [])
       .filter((s) => s.season_number > 0)
       .sort((a, b) => a.season_number - b.season_number);
-    const specials = (seasons || []).filter((s) => s.season_number === 0);
-    return [...regular, ...specials];
   }, [seasons]);
 
   const currentIndex = useMemo(() => {
@@ -117,10 +115,7 @@ export default function SeasonRevolver({
             const opacity = diff === 0 ? 1 : Math.abs(diff) === 1 ? 0.85 : 0.4;
 
             const isSelected = diff === 0;
-            const label =
-              s.season_number === 0
-                ? "S00"
-                : `S${String(s.season_number).padStart(2, "0")}`;
+            const label = `S${String(s.season_number).padStart(2, "0")}`;
 
             return (
               <button

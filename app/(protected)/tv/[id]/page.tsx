@@ -256,9 +256,13 @@ function TvDetailContent() {
     }
   }, [activeTab, tv]);
 
+  const regularSeasons = useMemo(() => {
+    return (tv?.seasons || []).filter((s) => s.season_number > 0);
+  }, [tv?.seasons]);
+
   const currentSeasonSummary = useMemo(() => {
-    return (tv?.seasons || []).find((s) => s.season_number === activeSeason);
-  }, [tv?.seasons, activeSeason]);
+    return regularSeasons.find((s) => s.season_number === activeSeason);
+  }, [regularSeasons, activeSeason]);
 
   const currentSeasonDetails = seasonCache[activeSeason];
 
@@ -432,10 +436,10 @@ function TvDetailContent() {
           }`}
         >
           <div className="relative w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
-            {tv.seasons && tv.seasons.length > 0 && (
+            {regularSeasons.length > 0 && (
               <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
                 <SeasonRevolver
-                  seasons={tv.seasons}
+                  seasons={regularSeasons}
                   activeSeason={activeSeason}
                   onSelectSeason={handleSelectSeason}
                 />
@@ -511,10 +515,10 @@ function TvDetailContent() {
               </button>
             </div>
 
-            {tv.seasons && tv.seasons.length > 0 && (
+            {regularSeasons.length > 0 && (
               <div className="sm:hidden flex items-center justify-center mt-3 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
                 <SeasonRevolver
-                  seasons={tv.seasons}
+                  seasons={regularSeasons}
                   activeSeason={activeSeason}
                   onSelectSeason={handleSelectSeason}
                 />

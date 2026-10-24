@@ -711,42 +711,48 @@ function MovieDetailContent() {
               {activeTab === "releases" && (
                 <div>
                   {releaseDateGroups.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="divide-y divide-zinc-800/80">
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}
-                          className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800"
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
                         >
-                          <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-zinc-800/60">
-                            <Calendar className="w-4 h-4 text-[#a8dadc]" />
-                            <h3 className="text-sm font-bold text-zinc-100">
+                          <div className="w-36 shrink-0">
+                            <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                               {group.formattedDate}
-                            </h3>
-                            <span className="text-xs text-zinc-500 font-normal">
-                              ({group.countries.length} {group.countries.length === 1 ? "country" : "countries"})
+                            </span>
+                            <span className="text-[11px] text-zinc-500 block mt-0.5">
+                              {group.countries.length}{" "}
+                              {group.countries.length === 1
+                                ? "country"
+                                : "countries"}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                          <div className="flex-1 flex flex-wrap gap-2 items-center">
                             {group.countries.map((c) => (
                               <div
                                 key={c.code}
-                                className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg bg-zinc-900/70 border border-zinc-800"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 min-w-0"
                               >
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase shrink-0">
-                                    {c.code}
-                                  </span>
-                                  <span
-                                    className="text-xs font-semibold text-zinc-200 truncate"
-                                    title={c.country}
-                                  >
-                                    {c.country}
-                                  </span>
-                                </div>
-
+                                <img
+                                  src={`https://hatscripts.github.io/circle-flags/flags/${c.code.toLowerCase()}.svg`}
+                                  alt=""
+                                  width={14}
+                                  height={14}
+                                  className="w-3.5 h-3.5 rounded-full shrink-0 object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                                <span
+                                  className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
+                                  title={c.country}
+                                >
+                                  {c.country}
+                                </span>
                                 {c.certification && (
-                                  <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
                                     {c.certification}
                                   </span>
                                 )}

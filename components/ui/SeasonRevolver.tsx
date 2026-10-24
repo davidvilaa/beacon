@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { TvSeasonSummary } from "@/lib/tmdb";
 
@@ -33,18 +33,28 @@ export default function SeasonRevolver({
       .sort((a, b) => a.season_number - b.season_number);
   }, [seasons]);
 
-  const currentIndex = useMemo(() => {
+  const activeIndex = useMemo(() => {
     const idx = sortedSeasons.findIndex((s) => s.season_number === activeSeason);
     return idx >= 0 ? idx : 0;
   }, [sortedSeasons, activeSeason]);
+
+  const [currentIndex, setCurrentIndex] = useState(activeIndex);
+
+  useEffect(() => {
+    setCurrentIndex(activeIndex);
+  }, [activeIndex]);
 
   const handleStep = useCallback(
     (direction: "up" | "down") => {
       if (sortedSeasons.length <= 1) return;
       if (direction === "up" && currentIndex > 0) {
-        onSelectSeason(sortedSeasons[currentIndex - 1].season_number);
+        const nextIdx = currentIndex - 1;
+        setCurrentIndex(nextIdx);
+        onSelectSeason(sortedSeasons[nextIdx].season_number);
       } else if (direction === "down" && currentIndex < sortedSeasons.length - 1) {
-        onSelectSeason(sortedSeasons[currentIndex + 1].season_number);
+        const nextIdx = currentIndex + 1;
+        setCurrentIndex(nextIdx);
+        onSelectSeason(sortedSeasons[nextIdx].season_number);
       }
     },
     [currentIndex, sortedSeasons, onSelectSeason]
@@ -99,24 +109,36 @@ export default function SeasonRevolver({
     const velocity = delta / duration;
 
     const wasDrag = hasDraggedRef.current && Math.abs(delta) >= 8;
-
     dragStartYRef.current = null;
-    setIsDragging(false);
-    setDragOffset(0);
 
     if (wasDrag) {
       let stepChange = Math.round(-delta / ITEM_HEIGHT);
-      if (Math.abs(velocity) > 0.5 && Math.abs(stepChange) < 1) {
+      if (Math.abs(velocity) > 0.45 && Math.abs(stepChange) < 1) {
         stepChange = Math.sign(-velocity);
       }
       const newIndex = Math.max(
         0,
         Math.min(sortedSeasons.length - 1, currentIndex + stepChange)
       );
-      if (newIndex !== currentIndex) {
+
+      const currentContinuous = currentIndex - delta / ITEM_HEIGHT;
+      const remainingOffset = (newIndex - currentContinuous) * ITEM_HEIGHT;
+
+      setCurrentIndex(newIndex);
+      setDragOffset(remainingOffset);
+      setIsDragging(false);
+
+      requestAnimationFrame(() => {
+        setDragOffset(0);
+      });
+
+      if (newIndex !== activeIndex) {
         onSelectSeason(sortedSeasons[newIndex].season_number);
       }
     } else {
+      setIsDragging(false);
+      setDragOffset(0);
+
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
         const clickY = e.clientY - rect.top;
@@ -127,6 +149,7 @@ export default function SeasonRevolver({
           clickedIndex < sortedSeasons.length &&
           clickedIndex !== currentIndex
         ) {
+          setCurrentIndex(clickedIndex);
           onSelectSeason(sortedSeasons[clickedIndex].season_number);
         }
       }
@@ -198,6 +221,7 @@ export default function SeasonRevolver({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!hasDraggedRef.current && idx !== currentIndex) {
+                    setCurrentIndex(idx);
                     onSelectSeason(s.season_number);
                   }
                 }}

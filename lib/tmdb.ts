@@ -167,6 +167,22 @@ export interface AlternativeTitleItem {
   type: string;
 }
 
+export interface MovieCollectionItem {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}
+
+export interface CollectionDetails {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: Movie[];
+}
+
 export interface MovieDetails extends Movie {
   tagline: string | null;
   runtime: number | null;
@@ -190,6 +206,8 @@ export interface MovieDetails extends Movie {
   alternative_titles?: {
     titles: AlternativeTitleItem[];
   };
+  belongs_to_collection?: MovieCollectionItem | null;
+  collection?: CollectionDetails | null;
 }
 
 export interface PersonCredit {
@@ -237,13 +255,41 @@ export interface PersonDetails {
   };
 }
 
+export async function getCollectionDetails(
+  id: string | number
+): Promise<CollectionDetails | null> {
+  try {
+    return await fetchFromTmdb<CollectionDetails>(`/collection/${id}`);
+  } catch {
+    return null;
+  }
+}
+
 export async function getMovieDetails(
   id: string | number
 ): Promise<MovieDetails> {
-  return fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
+  const data = await fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
     append_to_response: "credits,images,release_dates,alternative_titles",
     include_image_language: "en,null",
   });
+
+  if (data?.belongs_to_collection?.id) {
+    try {
+      const coll = await getCollectionDetails(data.belongs_to_collection.id);
+      if (coll?.parts) {
+        coll.parts = coll.parts
+          .filter((credit) => !isExcludedTmdbMedia(credit))
+          .sort((a, b) =>
+            (a.release_date || "9999").localeCompare(b.release_date || "9999")
+          );
+        data.collection = coll;
+      }
+    } catch {
+      data.collection = null;
+    }
+  }
+
+  return data;
 }
 
 export async function getPersonDetails(

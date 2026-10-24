@@ -10,3 +10,4 @@
 ## Coding Rules
 - **No Comments**: Strictly do NOT add comments (`//` or `/*`) in the code. Maintain a zero-comments policy across all code modifications.
 - **Dev Server**: Do NOT execute `npm run dev`. The developer runs and controls the development server manually.
+- **Git Commits**: Always commit all changes to the repository after completing each task, feature, or cleanup.

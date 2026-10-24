@@ -12,6 +12,19 @@ import {
 } from "lucide-react";
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
+import Select from "@/components/ui/Select";
+
+const MEDIA_OPTIONS = [
+  { id: "movie", label: "Movies" },
+  { id: "tv", label: "Series" },
+  { id: "all", label: "All Formats" },
+];
+
+const SORT_OPTIONS = [
+  { id: "popularity", label: "Most Popular" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
+];
 
 interface DisplayedCredit extends PersonCredit {
   asRole: string;
@@ -138,15 +151,14 @@ function PersonDetailContent() {
   }, [rawCast, rawCrew]);
 
   const availableTabs = useMemo(() => {
-    const list: { id: string; label: string; count: number }[] = [
-      { id: "all", label: "All Roles", count: categorizedCredits.all.length },
+    const list: { id: string; label: string }[] = [
+      { id: "all", label: "All Roles" },
     ];
 
     if (categorizedCredits.acting.length > 0) {
       list.push({
         id: "acting",
         label: "Acting",
-        count: categorizedCredits.acting.length,
       });
     }
 
@@ -154,7 +166,6 @@ function PersonDetailContent() {
       list.push({
         id: "voice",
         label: "Voice Acting",
-        count: categorizedCredits.voice.length,
       });
     }
 
@@ -162,7 +173,6 @@ function PersonDetailContent() {
       list.push({
         id: "crew",
         label: "Crew",
-        count: categorizedCredits.crew.length,
       });
     }
 
@@ -308,63 +318,40 @@ function PersonDetailContent() {
           </div>
         </aside>
 
-        <section className="flex-1 min-w-0 space-y-6 w-full">
+        <section className="flex-1 min-w-0 w-full">
           <div>
+            <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
+              Starring
+            </p>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
               {person.name}
             </h1>
+            <div className="border-b border-zinc-800/80 mt-3" />
           </div>
 
-          <div className="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-zinc-800/80">
+          <div className="mt-8 mb-6 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="relative">
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  aria-label="Filter by role"
-                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
-                >
-                  {availableTabs.map((tab) => (
-                    <option key={tab.id} value={tab.id} className="bg-zinc-900 text-zinc-200">
-                      {tab.label} ({tab.count})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <Select
+                value={selectedRole}
+                onChange={(val) => setSelectedRole(val)}
+                options={availableTabs}
+                className="w-36 sm:w-40"
+              />
 
-              <div className="relative">
-                <select
-                  value={mediaFilter}
-                  onChange={(e) => setMediaFilter(e.target.value as "all" | "movie" | "tv")}
-                  aria-label="Filter by media format"
-                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
-                >
-                  <option value="movie" className="bg-zinc-900 text-zinc-200">Movies</option>
-                  <option value="tv" className="bg-zinc-900 text-zinc-200">Series</option>
-                  <option value="all" className="bg-zinc-900 text-zinc-200">All Formats</option>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <Select
+                value={mediaFilter}
+                onChange={(val) => setMediaFilter(val as "all" | "movie" | "tv")}
+                options={MEDIA_OPTIONS}
+                className="w-36 sm:w-40"
+              />
 
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "popularity" | "newest" | "oldest")}
-                  aria-label="Sort by"
-                  className="appearance-none bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg pl-3 pr-8 py-2 cursor-pointer transition-colors focus:outline-none focus:border-zinc-600"
-                >
-                  <option value="popularity" className="bg-zinc-900 text-zinc-200">Most Popular</option>
-                  <option value="newest" className="bg-zinc-900 text-zinc-200">Newest</option>
-                  <option value="oldest" className="bg-zinc-900 text-zinc-200">Oldest</option>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <Select
+                value={sortBy}
+                onChange={(val) => setSortBy(val as "popularity" | "newest" | "oldest")}
+                options={SORT_OPTIONS}
+                className="w-36 sm:w-40"
+              />
             </div>
-
-            <span className="text-xs text-zinc-500 font-medium">
-              {displayedCredits.length} {displayedCredits.length === 1 ? "title" : "titles"}
-            </span>
           </div>
 
           <div className="pt-2">

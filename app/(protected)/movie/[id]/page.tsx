@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
+import FranchiseSlider from "@/components/ui/FranchiseSlider";
 
 function formatRuntime(minutes: number | null): string {
   if (!minutes) return "—";
@@ -928,87 +929,15 @@ function MovieDetailContent() {
             {movie.collection?.parts && movie.collection.parts.length > 0 && (
               <div className="mt-12 sm:mt-14">
                 <div className="relative border-b border-zinc-800/60 mb-6 pb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
-                      Franchise
-                    </span>
-                    {movie.collection.name && (
-                      <span className="text-xs text-zinc-400 font-medium">
-                        • {movie.collection.name}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
+                    Franchise
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                  {movie.collection.parts.map((item) => {
-                    const isCurrent = item.id === movie.id;
-                    const posterUrl = getPosterUrl(item.poster_path, "w342");
-                    const year = item.release_date
-                      ? item.release_date.slice(0, 4)
-                      : null;
-
-                    return (
-                      <Link
-                        key={item.id}
-                        href={`/movie/${item.id}`}
-                        className={`group flex flex-col rounded-xl overflow-hidden border transition-all cursor-pointer ${
-                          isCurrent
-                            ? "border-[#a8dadc] bg-zinc-900/80"
-                            : "border-zinc-800/90 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60"
-                        }`}
-                      >
-                        <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800/80 overflow-hidden">
-                          {posterUrl ? (
-                            <Image
-                              src={posterUrl}
-                              alt={item.title}
-                              fill
-                              sizes="(max-width: 640px) 140px, (max-width: 1024px) 160px, 180px"
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
-                              <Film className="w-7 h-7 text-zinc-700 mb-1" />
-                              <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
-                                {item.title}
-                              </span>
-                            </div>
-                          )}
-
-                          {isCurrent && (
-                            <div className="absolute top-2 left-2">
-                              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/90 text-[#a8dadc] border border-[#a8dadc]/40">
-                                Current
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="py-2.5 px-2.5 flex flex-col justify-between flex-1 min-w-0">
-                          <p
-                            className={`text-xs sm:text-sm font-semibold truncate transition-colors ${
-                              isCurrent
-                                ? "text-[#a8dadc]"
-                                : "text-zinc-100 group-hover:text-[#a8dadc]"
-                            }`}
-                            title={item.title}
-                          >
-                            {item.title}
-                          </p>
-                          <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1">
-                            <span>{year || "TBA"}</span>
-                            {item.vote_average > 0 && (
-                              <span className="font-medium text-zinc-300 flex items-center gap-1">
-                                ★ {item.vote_average.toFixed(1)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
+                <FranchiseSlider
+                  parts={movie.collection.parts}
+                  currentMovieId={movie.id}
+                />
               </div>
             )}
           </div>

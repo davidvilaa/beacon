@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { TvSeasonSummary } from "@/lib/tmdb";
 
@@ -11,6 +11,9 @@ interface SeasonRevolverProps {
   className?: string;
 }
 
+const ITEM_HEIGHT = 40;
+const CONTAINER_HEIGHT = 200;
+
 export default function SeasonRevolver({
   seasons,
   activeSeason,
@@ -20,6 +23,8 @@ export default function SeasonRevolver({
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartYRef = useRef<number | null>(null);
   const hasDraggedRef = useRef<boolean>(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const sortedSeasons = useMemo(() => {
     return (seasons || [])
@@ -44,38 +49,68 @@ export default function SeasonRevolver({
     [currentIndex, sortedSeasons, onSelectSeason]
   );
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (sortedSeasons.length <= 1) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
     dragStartYRef.current = e.clientY;
     hasDraggedRef.current = false;
+    setIsDragging(true);
+    setDragOffset(0);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (dragStartYRef.current === null) return;
-    const currentDelta = e.clientY - dragStartYRef.current;
-
-    if (Math.abs(currentDelta) > 5) {
+    if (e.buttons === 0) {
+      handlePointerUp(e);
+      return;
+    }
+    let delta = e.clientY - dragStartYRef.current;
+    if (Math.abs(delta) > 4) {
       hasDraggedRef.current = true;
     }
-
-    if (currentDelta > 24) {
-      handleStep("up");
-      dragStartYRef.current = e.clientY;
-    } else if (currentDelta < -24) {
-      handleStep("down");
-      dragStartYRef.current = e.clientY;
+    if (
+      (currentIndex === 0 && delta > 0) ||
+      (currentIndex === sortedSeasons.length - 1 && delta < 0)
+    ) {
+      delta *= 0.35;
     }
+    setDragOffset(delta);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragStartYRef.current === null) return;
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {}
+
+    const delta = e.clientY - dragStartYRef.current;
     dragStartYRef.current = null;
+    setIsDragging(false);
+    setDragOffset(0);
+
+    if (Math.abs(delta) >= 18) {
+      if (delta > 0) {
+        handleStep("up");
+      } else {
+        handleStep("down");
+      }
+    }
+
     setTimeout(() => {
       hasDraggedRef.current = false;
-    }, 60);
+    }, 50);
   };
 
   if (!sortedSeasons || sortedSeasons.length === 0) {
     return null;
   }
+
+  const centerOffset = CONTAINER_HEIGHT / 2 - ITEM_HEIGHT / 2;
+  const trackTranslateY = centerOffset - currentIndex * ITEM_HEIGHT + dragOffset;
 
   return (
     <div className={`flex flex-col items-center select-none ${className}`}>
@@ -95,27 +130,47 @@ export default function SeasonRevolver({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative w-16 sm:w-20 h-[210px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
-        style={{ perspective: "500px" }}
+        className="relative w-16 sm:w-20 h-[200px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
+        style={{
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)",
+        }}
       >
-        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-9 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-10" />
+        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-0" />
 
         <div
-          className="relative w-full h-full flex items-center justify-center"
-          style={{ transformStyle: "preserve-3d" }}
+          className="absolute inset-x-0 top-0 flex flex-col w-full z-10"
+          style={{
+            transform: `translateY(${trackTranslateY}px)`,
+            transition: isDragging
+              ? "none"
+              : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+          }}
         >
           {sortedSeasons.map((s, idx) => {
             const diff = idx - currentIndex;
-            const isVisible = Math.abs(diff) <= 2;
-            if (!isVisible) return null;
-
-            const translateY = diff * 42;
-            const rotateX = diff * -12;
-            const scale = diff === 0 ? 1.05 : Math.abs(diff) === 1 ? 0.96 : 0.82;
-            const opacity = diff === 0 ? 1 : Math.abs(diff) === 1 ? 0.85 : 0.4;
-
             const isSelected = diff === 0;
             const label = `S${String(s.season_number).padStart(2, "0")}`;
+
+            const scale =
+              diff === 0
+                ? 1.06
+                : Math.abs(diff) === 1
+                ? 0.95
+                : Math.abs(diff) === 2
+                ? 0.82
+                : 0.7;
+
+            const opacity =
+              diff === 0
+                ? 1
+                : Math.abs(diff) === 1
+                ? 0.75
+                : Math.abs(diff) === 2
+                ? 0.4
+                : 0.15;
 
             return (
               <button
@@ -123,19 +178,22 @@ export default function SeasonRevolver({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!hasDraggedRef.current) {
+                  if (!hasDraggedRef.current && idx !== currentIndex) {
                     onSelectSeason(s.season_number);
                   }
                 }}
                 title={s.name}
-                className={`absolute inset-x-1 flex items-center justify-center py-1.5 rounded-md transition-all duration-200 ease-out z-20 ${
+                className={`w-full h-10 flex items-center justify-center rounded-md transition-colors ${
                   isSelected
                     ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
-                    : "text-zinc-300 font-bold text-xs sm:text-sm tracking-wider hover:text-white hover:bg-zinc-800/80 hover:border-zinc-700/60 border border-transparent cursor-pointer"
+                    : "text-zinc-400 font-bold text-xs sm:text-sm tracking-wider hover:text-white cursor-pointer"
                 }`}
                 style={{
-                  transform: `translateY(${translateY}px) rotateX(${rotateX}deg) scale(${scale})`,
+                  transform: `scale(${scale})`,
                   opacity,
+                  transition: isDragging
+                    ? "none"
+                    : "transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 250ms ease, color 200ms ease",
                 }}
               >
                 <span>{label}</span>

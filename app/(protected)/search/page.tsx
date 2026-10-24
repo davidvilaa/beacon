@@ -19,6 +19,7 @@ import Loading from "@/components/ui/Loading";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;
+  media_type?: string;
 }
 
 const allModules = [
@@ -69,8 +70,10 @@ function SearchContent() {
     let isCancelled = false;
     setLoading(true);
 
+    const moduleParam = selectedModule ? `&module=${encodeURIComponent(selectedModule)}` : "";
+
     fetch(
-      `/api/movies/search?q=${encodeURIComponent(query.trim())}&page=${currentPage}`
+      `/api/movies/search?q=${encodeURIComponent(query.trim())}&page=${currentPage}${moduleParam}`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -94,7 +97,7 @@ function SearchContent() {
     return () => {
       isCancelled = true;
     };
-  }, [query, currentPage]);
+  }, [query, currentPage, selectedModule]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage === currentPage || newPage < 1 || newPage > totalPages) return;
@@ -106,11 +109,14 @@ function SearchContent() {
 
   const handleModuleClick = (moduleId: string) => {
     setSelectedModule((prev) => (prev === moduleId ? null : moduleId));
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", "1");
+      router.push(`/search?${params.toString()}`);
+    }
   };
 
-  const filteredMovies = selectedModule
-    ? movies.filter((m) => (m.moduleType || "movies") === selectedModule)
-    : movies;
+  const filteredMovies = movies;
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
@@ -186,12 +192,12 @@ function SearchContent() {
                 ? movie.release_date.slice(0, 4)
                 : "-";
 
-              return (
-                <Link
-                  key={movie.id}
-                  href={`/movie/${movie.id}`}
-                  className="group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52"
-                >
+              const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
+              const cardClass =
+                "group flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
+
+              const cardContent = (
+                <>
                   <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
                     {posterUrl ? (
                       <Image
@@ -230,7 +236,28 @@ function SearchContent() {
                       </p>
                     </div>
                   </div>
-                </Link>
+                </>
+              );
+
+              if (isMovie) {
+                return (
+                  <Link
+                    key={`${movie.moduleType || "media"}-${movie.id}`}
+                    href={`/movie/${movie.id}`}
+                    className={cardClass}
+                  >
+                    {cardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                <div
+                  key={`${movie.moduleType || "media"}-${movie.id}`}
+                  className={cardClass}
+                >
+                  {cardContent}
+                </div>
               );
             })
           ) : (
@@ -238,7 +265,7 @@ function SearchContent() {
           )}
         </div>
 
-        {!loading && totalPages > 1 && (!selectedModule || selectedModule === "movies") && (
+        {!loading && totalPages > 1 && (!selectedModule || selectedModule === "movies" || selectedModule === "series") && (
           <div className="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-zinc-800/60">
             <button
               type="button"

@@ -115,6 +115,96 @@ export async function searchMovies(
   };
 }
 
+export interface TvShow {
+  id: number;
+  name: string;
+  original_name?: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  first_air_date?: string;
+  vote_average: number;
+  vote_count: number;
+  popularity?: number;
+  genre_ids?: number[];
+}
+
+export interface MultiSearchItem {
+  id: number;
+  media_type: "movie" | "tv" | "person";
+  title?: string;
+  name?: string;
+  original_title?: string;
+  original_name?: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average: number;
+  vote_count: number;
+  popularity?: number;
+  genre_ids?: number[];
+}
+
+export async function searchTv(
+  query: string,
+  page: number = 1
+): Promise<TmdbPaginatedResponse<TvShow>> {
+  if (!query.trim()) {
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+
+  const data = await fetchFromTmdb<TmdbPaginatedResponse<TvShow>>("/search/tv", {
+    query: query.trim(),
+    page,
+    include_adult: "false",
+  });
+
+  const filtered = (data.results || []).filter(
+    (tv) => !isExcludedTmdbMedia(tv)
+  );
+
+  return {
+    ...data,
+    results: filtered,
+  };
+}
+
+export async function searchMulti(
+  query: string,
+  page: number = 1
+): Promise<TmdbPaginatedResponse<MultiSearchItem>> {
+  if (!query.trim()) {
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+
+  const data = await fetchFromTmdb<TmdbPaginatedResponse<MultiSearchItem>>("/search/multi", {
+    query: query.trim(),
+    page,
+    include_adult: "false",
+  });
+
+  const filtered = (data.results || []).filter(
+    (item) => item.media_type !== "person" && !isExcludedTmdbMedia(item)
+  );
+
+  return {
+    ...data,
+    results: filtered,
+  };
+}
+
 export interface MovieCast {
   id: number;
   name: string;

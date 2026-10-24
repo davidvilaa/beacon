@@ -15,9 +15,9 @@ import Loading from "@/components/ui/Loading";
 import Select from "@/components/ui/Select";
 
 const MEDIA_OPTIONS = [
+  { id: "all", label: "All Formats" },
   { id: "movie", label: "Movies" },
   { id: "tv", label: "Series" },
-  { id: "all", label: "All Formats" },
 ];
 
 const SORT_OPTIONS = [
@@ -38,7 +38,7 @@ function PersonDetailContent() {
   const [person, setPerson] = useState<PersonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<string>("all");
-  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("movie");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
   const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
   const [isBioExpanded, setIsBioExpanded] = useState(false);
 

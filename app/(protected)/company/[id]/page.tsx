@@ -10,15 +10,15 @@ import Loading from "@/components/ui/Loading";
 import Select, { Option } from "@/components/ui/Select";
 
 const MEDIA_OPTIONS: Option[] = [
-  { id: "all", label: "All Media" },
-  { id: "movie", label: "Movies Only" },
-  { id: "tv", label: "TV Shows Only" },
+  { id: "all", label: "All Formats" },
+  { id: "movie", label: "Movies" },
+  { id: "tv", label: "Series" },
 ];
 
 const SORT_OPTIONS: Option[] = [
-  { id: "popularity", label: "Popularity" },
-  { id: "newest", label: "Release: Newest" },
-  { id: "oldest", label: "Release: Oldest" },
+  { id: "popularity", label: "Most Popular" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
 ];
 
 function CompanyDetailContent() {

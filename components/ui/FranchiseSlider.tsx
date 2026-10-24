@@ -161,13 +161,13 @@ export default function FranchiseSlider({
       </div>
 
       {canScroll && (
-        <div className="flex items-center justify-center gap-2 mt-3 pt-1">
+        <div className="flex items-center justify-center gap-2.5 mt-4 pt-1">
           <button
             type="button"
             onClick={() => handleStep("left")}
             disabled={scrollProgress <= 0.01}
             aria-label="Scroll left"
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -178,7 +178,7 @@ export default function FranchiseSlider({
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className="relative w-36 sm:w-48 h-1.5 bg-zinc-900 border border-zinc-800/80 rounded-full cursor-pointer select-none touch-none"
+            className="relative w-48 sm:w-64 md:w-72 h-2.5 bg-zinc-900 border border-zinc-800/80 rounded-full cursor-pointer select-none touch-none"
           >
             <div
               className={`absolute top-0 bottom-0 rounded-full transition-colors ${
@@ -196,7 +196,7 @@ export default function FranchiseSlider({
             onClick={() => handleStep("right")}
             disabled={scrollProgress >= 0.99}
             aria-label="Scroll right"
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

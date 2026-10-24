@@ -504,7 +504,7 @@ function MovieDetailContent() {
               )}
             </div>
 
-            <div className="w-56 sm:w-full grid grid-cols-3 divide-x divide-zinc-800/80 bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
+            <div className="w-56 sm:w-full grid grid-cols-3 bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
               <button
                 type="button"
                 onClick={() => setIsWatched(!isWatched)}

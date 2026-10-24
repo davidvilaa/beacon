@@ -444,7 +444,7 @@ function MovieDetailContent() {
   const displayedCast = isCastExpanded ? allCast : allCast.slice(0, 12);
 
   return (
-    <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
+    <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-72 sm:pb-80">
       {backdropUrl && (
         <div className="absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden pointer-events-none select-none -z-0">
           <div

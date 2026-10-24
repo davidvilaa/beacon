@@ -18,6 +18,8 @@ import {
   Plus,
   Heart,
   PlayCircle,
+  PauseCircle,
+  XCircle,
 } from "lucide-react";
 import {
   TvDetails,
@@ -91,8 +93,10 @@ function TvDetailContent() {
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
 
-  const isWatching = seriesStatus === "watching";
   const isWatched = seriesStatus === "watched";
+  const isWatching = seriesStatus === "watching";
+  const isPaused = seriesStatus === "paused";
+  const isDropped = seriesStatus === "dropped";
   const isWatchlisted = seriesStatus === "watchlist";
 
   useEffect(() => {
@@ -492,7 +496,7 @@ function TvDetailContent() {
     0;
 
   return (
-    <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
+    <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-72 sm:pb-80">
       {backdropUrl && (
         <div className="absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden pointer-events-none select-none -z-0">
           <div
@@ -606,6 +610,25 @@ function TvDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
+                      setSeriesStatus((prev) => (prev === "watched" ? null : "watched"));
+                      setIsQuickMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
+                      isWatched
+                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Eye className={`w-4 h-4 ${isWatched ? "text-[#a8dadc] stroke-[2.5]" : "text-zinc-400"}`} />
+                      <span>Set as Watched</span>
+                    </div>
+                    {isWatched && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       setSeriesStatus((prev) => (prev === "watching" ? null : "watching"));
                       setIsQuickMenuOpen(false);
                     }}
@@ -625,20 +648,39 @@ function TvDetailContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      setSeriesStatus((prev) => (prev === "watched" ? null : "watched"));
+                      setSeriesStatus((prev) => (prev === "paused" ? null : "paused"));
                       setIsQuickMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
-                      isWatched
+                      isPaused
                         ? "text-[#a8dadc] bg-[#a8dadc]/10"
                         : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Eye className={`w-4 h-4 ${isWatched ? "text-[#a8dadc] stroke-[2.5]" : "text-zinc-400"}`} />
-                      <span>Set as Watched</span>
+                      <PauseCircle className={`w-4 h-4 ${isPaused ? "text-[#a8dadc]" : "text-zinc-400"}`} />
+                      <span>Set as Paused</span>
                     </div>
-                    {isWatched && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                    {isPaused && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSeriesStatus((prev) => (prev === "dropped" ? null : "dropped"));
+                      setIsQuickMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
+                      isDropped
+                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
+                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <XCircle className={`w-4 h-4 ${isDropped ? "text-[#a8dadc]" : "text-zinc-400"}`} />
+                      <span>Set as Dropped</span>
+                    </div>
+                    {isDropped && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
                   </button>
 
                   <button

@@ -10,7 +10,7 @@ import {
   Film,
   Bookmark,
   Eye,
-  Heart,
+  ListPlus,
   Check,
   X,
   ChevronDown,
@@ -179,7 +179,7 @@ function MovieDetailContent() {
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isInList, setIsInList] = useState(false);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
@@ -504,15 +504,15 @@ function MovieDetailContent() {
               )}
             </div>
 
-            <div className="w-56 sm:w-full flex items-center justify-around py-2.5 px-3 bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl shadow-xl">
+            <div className="w-56 sm:w-full grid grid-cols-3 divide-x divide-zinc-800/80 bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
               <button
                 type="button"
                 onClick={() => setIsWatched(!isWatched)}
                 title={isWatched ? "Watched" : "Mark as watched"}
-                className={`p-2 rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
                   isWatched
-                    ? "text-[#a8dadc] bg-[#a8dadc]/15"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
+                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
+                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                 }`}
               >
                 <Eye className={`w-5 h-5 ${isWatched ? "stroke-[2.5]" : ""}`} />
@@ -520,29 +520,12 @@ function MovieDetailContent() {
 
               <button
                 type="button"
-                onClick={() => setIsLiked(!isLiked)}
-                title={isLiked ? "Liked" : "Like"}
-                className={`p-2 rounded-lg transition-all cursor-pointer ${
-                  isLiked
-                    ? "text-rose-400 bg-rose-500/15"
-                    : "text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/60"
-                }`}
-              >
-                <Heart
-                  className={`w-5 h-5 ${
-                    isLiked ? "fill-rose-400 text-rose-400" : ""
-                  }`}
-                />
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setIsWatchlisted(!isWatchlisted)}
                 title={isWatchlisted ? "On watchlist" : "Add to watchlist"}
-                className={`p-2 rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
                   isWatchlisted
-                    ? "text-[#a8dadc] bg-[#a8dadc]/15"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
+                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
+                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                 }`}
               >
                 <Bookmark
@@ -550,6 +533,19 @@ function MovieDetailContent() {
                     isWatchlisted ? "fill-[#a8dadc] text-[#a8dadc]" : ""
                   }`}
                 />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsInList(!isInList)}
+                title={isInList ? "In list" : "Add to list"}
+                className={`flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer ${
+                  isInList
+                    ? "text-[#a8dadc] bg-[#a8dadc]/15 hover:bg-[#a8dadc]/25"
+                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                }`}
+              >
+                <ListPlus className={`w-5 h-5 ${isInList ? "stroke-[2.5]" : ""}`} />
               </button>
             </div>
           </div>

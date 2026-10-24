@@ -222,8 +222,22 @@ function MovieDetailContent() {
               topBackdrops[Math.floor(Math.random() * topBackdrops.length)];
           }
 
+          const validPosters = (data.images?.posters || []).filter(
+            (p) =>
+              Boolean(p.file_path) &&
+              (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+          );
+
+          const sortedPosters = [...validPosters].sort((a, b) => {
+            const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
+            if (countDiff !== 0) return countDiff;
+            return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+          });
+
+          const chosenPoster = sortedPosters[0]?.file_path || data.poster_path;
+
           setSelectedBackdrop(chosenBackdrop);
-          setSelectedPoster(data.poster_path);
+          setSelectedPoster(chosenPoster);
           setIsCastExpanded(false);
           setMovie(data);
         }

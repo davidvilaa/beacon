@@ -17,12 +17,15 @@ export default function FranchiseSlider({
 }: FranchiseSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLDivElement>(null);
   const currentPosterRef = useRef<HTMLAnchorElement>(null);
 
   const [scrollProgress, setScrollProgress] = useState(0);
   const [thumbWidthPercent, setThumbWidthPercent] = useState(30);
   const [canScroll, setCanScroll] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  const dragStartRef = useRef<{ clientX: number; scrollLeft: number } | null>(null);
 
   const updateMetrics = useCallback(() => {
     if (!scrollRef.current) return;
@@ -77,33 +80,57 @@ export default function FranchiseSlider({
     }
   }, [currentMovieId]);
 
-  const updateScrollFromClientX = useCallback((clientX: number) => {
-    if (!trackRef.current || !scrollRef.current) return;
-    const rect = trackRef.current.getBoundingClientRect();
-    if (rect.width <= 0) return;
-
-    const clickX = clientX - rect.left;
-    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-    scrollRef.current.scrollLeft = ratio * maxScroll;
-  }, []);
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleThumbPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!scrollRef.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
-    updateScrollFromClientX(e.clientX);
+    dragStartRef.current = {
+      clientX: e.clientX,
+      scrollLeft: scrollRef.current.scrollLeft,
+    };
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    updateScrollFromClientX(e.clientX);
+  const handleThumbPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || !dragStartRef.current || !trackRef.current || !scrollRef.current) return;
+    const trackRect = trackRef.current.getBoundingClientRect();
+    const trackWidth = trackRect.width;
+    const thumbWidthPx = trackWidth * (thumbWidthPercent / 100);
+    const travelWidth = trackWidth - thumbWidthPx;
+    const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+
+    if (travelWidth > 0 && maxScroll > 0) {
+      const deltaX = e.clientX - dragStartRef.current.clientX;
+      const scrollDelta = deltaX * (maxScroll / travelWidth);
+      scrollRef.current.scrollLeft = dragStartRef.current.scrollLeft + scrollDelta;
+    }
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleThumbPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
+    dragStartRef.current = null;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {}
+  };
+
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!trackRef.current || !scrollRef.current) return;
+    const trackRect = trackRef.current.getBoundingClientRect();
+    const trackWidth = trackRect.width;
+    const thumbWidthPx = trackWidth * (thumbWidthPercent / 100);
+    const travelWidth = trackWidth - thumbWidthPx;
+    const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+
+    if (travelWidth > 0 && maxScroll > 0) {
+      const clickX = e.clientX - trackRect.left;
+      const targetThumbLeft = clickX - thumbWidthPx / 2;
+      const ratio = Math.max(0, Math.min(1, targetThumbLeft / travelWidth));
+      scrollRef.current.scrollTo({
+        left: ratio * maxScroll,
+        behavior: "smooth",
+      });
+    }
   };
 
   const handleStep = (direction: "left" | "right") => {
@@ -174,14 +201,16 @@ export default function FranchiseSlider({
 
           <div
             ref={trackRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
+            onPointerDown={handleTrackPointerDown}
             className="relative w-48 sm:w-64 md:w-72 h-2.5 bg-zinc-900 border border-zinc-800/80 rounded-full cursor-pointer select-none touch-none"
           >
             <div
-              className={`absolute top-0 bottom-0 rounded-full transition-colors ${
+              ref={thumbRef}
+              onPointerDown={handleThumbPointerDown}
+              onPointerMove={handleThumbPointerMove}
+              onPointerUp={handleThumbPointerUp}
+              onPointerCancel={handleThumbPointerUp}
+              className={`absolute top-0 bottom-0 rounded-full transition-colors cursor-grab active:cursor-grabbing ${
                 isDragging ? "bg-[#a8dadc]" : "bg-zinc-600 hover:bg-[#a8dadc]"
               }`}
               style={{

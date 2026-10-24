@@ -51,15 +51,117 @@ function formatFullDate(dateStr?: string | null): string {
   return `${monthName} ${parseInt(day, 10)}, ${year}`;
 }
 
-const PRIORITY_JOBS = [
-  "Director",
-  "Screenplay",
-  "Writer",
-  "Story",
-  "Director of Photography",
-  "Original Music Composer",
-  "Editor",
-  "Producer",
+interface CrewSectionConfig {
+  key: string;
+  singular: string;
+  plural: string;
+  jobs: string[];
+}
+
+const CREW_SECTIONS: CrewSectionConfig[] = [
+  {
+    key: "directors",
+    singular: "Director",
+    plural: "Directors",
+    jobs: ["Director"],
+  },
+  {
+    key: "producers",
+    singular: "Producer",
+    plural: "Producers",
+    jobs: ["Producer", "Co-Producer"],
+  },
+  {
+    key: "exec_producers",
+    singular: "Executive Producer",
+    plural: "Executive Producers",
+    jobs: ["Executive Producer", "Associate Producer"],
+  },
+  {
+    key: "writers",
+    singular: "Writer",
+    plural: "Writers",
+    jobs: [
+      "Screenplay",
+      "Writer",
+      "Story",
+      "Original Story",
+      "Author",
+      "Characters",
+      "Novel",
+      "Adaptation",
+    ],
+  },
+  {
+    key: "casting",
+    singular: "Casting",
+    plural: "Casting",
+    jobs: ["Casting", "Casting Director"],
+  },
+  {
+    key: "editors",
+    singular: "Editor",
+    plural: "Editors",
+    jobs: ["Editor", "Film Editor", "Supervising Film Editor"],
+  },
+  {
+    key: "cinematography",
+    singular: "Cinematography",
+    plural: "Cinematography",
+    jobs: ["Director of Photography", "Cinematography"],
+  },
+  {
+    key: "production_design",
+    singular: "Production Design",
+    plural: "Production Design",
+    jobs: ["Production Design", "Art Direction", "Set Decoration"],
+  },
+  {
+    key: "costume_design",
+    singular: "Costume Design",
+    plural: "Costume Design",
+    jobs: ["Costume Design", "Costume Supervisor"],
+  },
+  {
+    key: "makeup",
+    singular: "Hair & Makeup",
+    plural: "Hair & Makeup",
+    jobs: [
+      "Makeup Artist",
+      "Hair Department Head",
+      "Makeup Department Head",
+      "Key Makeup Artist",
+      "Hairstylist",
+    ],
+  },
+  {
+    key: "music",
+    singular: "Music",
+    plural: "Music",
+    jobs: ["Original Music Composer", "Music", "Music Supervisor"],
+  },
+  {
+    key: "sound",
+    singular: "Sound",
+    plural: "Sound",
+    jobs: [
+      "Sound Designer",
+      "Sound Re-Recording Mixer",
+      "Supervising Sound Editor",
+      "Sound Mixer",
+      "Sound Effects Editor",
+    ],
+  },
+  {
+    key: "vfx",
+    singular: "Visual Effects",
+    plural: "Visual Effects",
+    jobs: [
+      "Visual Effects Supervisor",
+      "Animation Supervisor",
+      "Visual Effects Producer",
+    ],
+  },
 ];
 
 function MovieDetailContent() {
@@ -198,20 +300,24 @@ function MovieDetailContent() {
     };
   }, [id, isPosterPickerOpen, dedupedPosters]);
 
-  const groupedCrew = useMemo(() => {
-    const map = new Map<number, { id: number; name: string; jobs: string[] }>();
-    (movie?.credits?.crew || []).forEach((c) => {
-      if (!c || !c.job || !PRIORITY_JOBS.includes(c.job)) return;
-      if (!map.has(c.id)) {
-        map.set(c.id, { id: c.id, name: c.name, jobs: [c.job] });
-      } else {
-        const existing = map.get(c.id)!;
-        if (!existing.jobs.includes(c.job)) {
-          existing.jobs.push(c.job);
+  const sectionCrew = useMemo(() => {
+    const raw = movie?.credits?.crew || [];
+    return CREW_SECTIONS.map((section) => {
+      const peopleMap = new Map<number, { id: number; name: string }>();
+      raw.forEach((member) => {
+        if (member && member.job && section.jobs.includes(member.job)) {
+          if (!peopleMap.has(member.id)) {
+            peopleMap.set(member.id, { id: member.id, name: member.name });
+          }
         }
-      }
-    });
-    return Array.from(map.values()).slice(0, 24);
+      });
+      const people = Array.from(peopleMap.values());
+      return {
+        key: section.key,
+        label: people.length > 1 ? section.plural : section.singular,
+        people,
+      };
+    }).filter((section) => section.people.length > 0);
   }, [movie]);
 
   const releaseDateGroups = useMemo(() => {
@@ -584,62 +690,75 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "staff" && (
-                <div className="space-y-8">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
-                      Crew Members
-                    </p>
-                    {groupedCrew.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                        {groupedCrew.map((person) => (
-                          <Link
-                            key={person.id}
-                            href={`/person/${person.id}`}
-                            className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
-                          >
-                            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
-                              {person.name}
-                            </p>
-                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                              as <span className="text-zinc-300 font-medium">{person.jobs.join(", ")}</span>
-                            </p>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-zinc-500 py-2">
-                        No crew information available.
-                      </p>
-                    )}
-                  </div>
-
-                  {movie.production_companies && movie.production_companies.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
-                        Production Companies
-                      </p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                        {movie.production_companies.map((company) => (
-                          <div
-                            key={company.id}
-                            className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0"
-                          >
-                            <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                              {company.name}
-                            </p>
-                            <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                              as <span className="text-zinc-300 font-medium">{company.origin_country ? `Studio (${company.origin_country})` : "Studio"}</span>
-                            </p>
+                <div>
+                  {sectionCrew.length > 0 ? (
+                    <div className="divide-y divide-zinc-800">
+                      {sectionCrew.map((section) => (
+                        <div
+                          key={section.key}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                        >
+                          <div className="w-36 sm:w-44 shrink-0">
+                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                              {section.label}
+                            </span>
                           </div>
-                        ))}
-                      </div>
+
+                          <div className="flex-1 flex flex-wrap gap-2 items-center">
+                            {section.people.map((person) => (
+                              <Link
+                                key={person.id}
+                                href={`/person/${person.id}`}
+                                className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
+                              >
+                                <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                                  {person.name}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    <p className="text-xs text-zinc-500 py-4">
+                      No crew information available.
+                    </p>
                   )}
                 </div>
               )}
 
               {activeTab === "details" && (
                 <div className="divide-y divide-zinc-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                        {movie.production_companies && movie.production_companies.length === 1 ? "Studio" : "Studios"}
+                      </span>
+                    </div>
+                    <div className="flex-1 flex flex-wrap gap-2 items-center">
+                      {movie.production_companies && movie.production_companies.length > 0 ? (
+                        movie.production_companies.map((company) => (
+                          <div
+                            key={company.id}
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                          >
+                            <span className="text-xs font-medium text-zinc-200">
+                              {company.name}
+                            </span>
+                            {company.origin_country && (
+                              <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                {company.origin_country}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-zinc-500">—</span>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
                     <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">

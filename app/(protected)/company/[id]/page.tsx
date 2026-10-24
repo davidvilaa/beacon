@@ -133,7 +133,7 @@ function CompanyDetailContent() {
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         <aside className="w-full lg:w-80 shrink-0">
           <div className="w-56 sm:w-64 lg:w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800 shadow-xl">
-            <div className="relative aspect-[2/3] w-full bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-center p-6">
+            <div className={`relative aspect-[2/3] w-full border-b border-zinc-800 flex items-center justify-center p-6 ${logoUrl ? "bg-white" : "bg-zinc-900"}`}>
               {logoUrl ? (
                 <div className="relative w-full h-full flex items-center justify-center">
                   <Image
@@ -166,19 +166,9 @@ function CompanyDetailContent() {
                     <span className="text-zinc-500 block uppercase tracking-wider text-[10px] font-semibold">
                       Origin Country
                     </span>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <img
-                        src={`https://flagcdn.com/w40/${company.origin_country.toLowerCase()}.png`}
-                        alt={company.origin_country}
-                        className="w-4 h-3 object-cover rounded-sm"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <span className="text-zinc-200 font-medium">
-                        {company.origin_country}
-                      </span>
-                    </div>
+                    <p className="text-zinc-200 font-medium mt-1">
+                      {company.origin_country}
+                    </p>
                   </div>
                 )}
 
@@ -275,55 +265,37 @@ function CompanyDetailContent() {
                 {displayedWorks.map((work, idx) => {
                   const posterUrl = getPosterUrl(work.poster_path, "w500");
                   const title = work.title || work.name || "Untitled";
-                  const releaseDate = work.release_date || work.first_air_date || "";
-                  const releaseYear = releaseDate ? releaseDate.split("-")[0] : null;
 
                   const isMovie = work.media_type === "movie";
                   const cardClass =
-                    "group flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 transition-all cursor-pointer";
+                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 transition-all cursor-pointer";
 
                   const cardContent = (
                     <>
-                      <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800/80 overflow-hidden">
-                        {posterUrl ? (
-                          <Image
-                            src={posterUrl}
-                            alt={title}
-                            fill
-                            sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
-                            className="object-cover group-hover:opacity-90 transition-opacity"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
-                            <Film className="w-8 h-8 text-zinc-700 mb-1" />
-                            <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
-                              {title}
-                            </span>
-                          </div>
-                        )}
+                      {posterUrl ? (
+                        <Image
+                          src={posterUrl}
+                          alt={title}
+                          fill
+                          sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
+                          className="object-cover group-hover:opacity-90 transition-opacity"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
+                          <Film className="w-8 h-8 text-zinc-700 mb-1" />
+                          <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
+                            {title}
+                          </span>
+                        </div>
+                      )}
 
-                        {work.media_type === "tv" && (
-                          <div className="absolute top-2 left-2">
-                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
-                              TV
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="py-2.5 px-3 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center">
-                        <p
-                          className="text-xs font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate"
-                          title={title}
-                        >
-                          {title}
-                        </p>
-                        {releaseYear && (
-                          <p className="text-[11px] text-zinc-500 mt-0.5">
-                            {releaseYear}
-                          </p>
-                        )}
-                      </div>
+                      {work.media_type === "tv" && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
+                            TV
+                          </span>
+                        </div>
+                      )}
                     </>
                   );
 
@@ -332,6 +304,7 @@ function CompanyDetailContent() {
                       <Link
                         key={`${work.media_type}-${work.id}-${idx}`}
                         href={`/movie/${work.id}`}
+                        title={title}
                         className={cardClass}
                       >
                         {cardContent}
@@ -342,6 +315,7 @@ function CompanyDetailContent() {
                   return (
                     <div
                       key={`${work.media_type}-${work.id}-${idx}`}
+                      title={title}
                       className={cardClass}
                     >
                       {cardContent}

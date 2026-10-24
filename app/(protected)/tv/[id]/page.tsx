@@ -727,26 +727,12 @@ function TvDetailContent() {
                           Platforms
                         </span>
                       </div>
-                      <div className="flex-1 flex flex-wrap gap-2 items-center">
-                        {tv.networks && tv.networks.length > 0 ? (
-                          tv.networks.map((net) => (
-                            <div
-                              key={net.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
-                            >
-                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                                {net.name}
-                              </span>
-                              {net.origin_country && (
-                                <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
-                                  {net.origin_country}
-                                </span>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-xs text-zinc-500">—</span>
-                        )}
+                      <div className="flex-1 flex items-center">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                          {tv.networks && tv.networks.length > 0
+                            ? tv.networks.map((n) => n.name).join(", ")
+                            : "—"}
+                        </span>
                       </div>
                     </div>
 
@@ -787,11 +773,12 @@ function TvDetailContent() {
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default max-w-full">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
-                            {tv.original_name || "—"}
-                          </span>
-                        </div>
+                        <span
+                          className="text-xs sm:text-sm font-medium text-zinc-300 truncate"
+                          title={tv.original_name || "—"}
+                        >
+                          {tv.original_name || "—"}
+                        </span>
                       </div>
                     </div>
 
@@ -802,11 +789,9 @@ function TvDetailContent() {
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                            {tv.status || "—"}
-                          </span>
-                        </div>
+                        <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                          {tv.status || "—"}
+                        </span>
                       </div>
                     </div>
 
@@ -817,11 +802,9 @@ function TvDetailContent() {
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                          <span className="text-xs font-bold uppercase text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                            {tv.original_language?.toUpperCase() || "—"}
-                          </span>
-                        </div>
+                        <span className="text-xs sm:text-sm font-bold uppercase text-zinc-300">
+                          {tv.original_language?.toUpperCase() || "—"}
+                        </span>
                       </div>
                     </div>
 
@@ -832,11 +815,9 @@ function TvDetailContent() {
                         </span>
                       </div>
                       <div className="flex-1 flex items-center">
-                        <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                          <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                            {tv.number_of_seasons} Seasons • {tv.number_of_episodes} Episodes
-                          </span>
-                        </div>
+                        <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                          {tv.number_of_seasons} Seasons • {tv.number_of_episodes} Episodes
+                        </span>
                       </div>
                     </div>
 
@@ -846,21 +827,12 @@ function TvDetailContent() {
                           Genres
                         </span>
                       </div>
-                      <div className="flex-1 flex flex-wrap gap-2 items-center">
-                        {tv.genres && tv.genres.length > 0 ? (
-                          tv.genres.map((g) => (
-                            <div
-                              key={g.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
-                            >
-                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                                {g.name}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-xs text-zinc-500">—</span>
-                        )}
+                      <div className="flex-1 flex items-center">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                          {tv.genres && tv.genres.length > 0
+                            ? tv.genres.map((g) => g.name).join(", ")
+                            : "—"}
+                        </span>
                       </div>
                     </div>
                   </div>

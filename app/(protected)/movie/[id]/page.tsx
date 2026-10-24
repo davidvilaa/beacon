@@ -783,14 +783,12 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default max-w-full">
-                        <span
-                          className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate"
-                          title={movie.original_title || "—"}
-                        >
-                          {movie.original_title || "—"}
-                        </span>
-                      </div>
+                      <span
+                        className="text-xs sm:text-sm font-medium text-zinc-300 truncate"
+                        title={movie.original_title || "—"}
+                      >
+                        {movie.original_title || "—"}
+                      </span>
                     </div>
                   </div>
 
@@ -801,11 +799,9 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                          {movie.status || "—"}
-                        </span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                        {movie.status || "—"}
+                      </span>
                     </div>
                   </div>
 
@@ -816,11 +812,9 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                        <span className="text-xs font-bold uppercase text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                          {movie.original_language?.toUpperCase() || "—"}
-                        </span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-bold uppercase text-zinc-300">
+                        {movie.original_language?.toUpperCase() || "—"}
+                      </span>
                     </div>
                   </div>
 
@@ -831,13 +825,11 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                          {movie.budget && movie.budget > 0
-                            ? `$${movie.budget.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                        {movie.budget && movie.budget > 0
+                          ? `$${movie.budget.toLocaleString("en-US")}`
+                          : "Not available"}
+                      </span>
                     </div>
                   </div>
 
@@ -848,13 +840,11 @@ function MovieDetailContent() {
                       </span>
                     </div>
                     <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                          {movie.revenue && movie.revenue > 0
-                            ? `$${movie.revenue.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                        {movie.revenue && movie.revenue > 0
+                          ? `$${movie.revenue.toLocaleString("en-US")}`
+                          : "Not available"}
+                      </span>
                     </div>
                   </div>
 
@@ -864,21 +854,12 @@ function MovieDetailContent() {
                         Genres
                       </span>
                     </div>
-                    <div className="flex-1 flex flex-wrap gap-2 items-center">
-                      {movie.genres && movie.genres.length > 0 ? (
-                        movie.genres.map((g) => (
-                          <div
-                            key={g.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default"
-                          >
-                            <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                              {g.name}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-xs text-zinc-500">—</span>
-                      )}
+                    <div className="flex-1 flex items-center">
+                      <span className="text-xs sm:text-sm font-medium text-zinc-300">
+                        {movie.genres && movie.genres.length > 0
+                          ? movie.genres.map((g) => g.name).join(", ")
+                          : "—"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -903,7 +884,7 @@ function MovieDetailContent() {
                             {group.countries.map((c) => (
                               <div
                                 key={c.code}
-                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-default overflow-hidden min-w-0"
+                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
                               >
                                 <img
                                   src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
@@ -915,13 +896,13 @@ function MovieDetailContent() {
                                 />
                                 <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
                                   <span
-                                    className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate max-w-[140px] sm:max-w-[180px]"
+                                    className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
                                     title={c.country}
                                   >
                                     {c.country}
                                   </span>
                                   {c.certification && (
-                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
+                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
                                       {c.certification}
                                     </span>
                                   )}

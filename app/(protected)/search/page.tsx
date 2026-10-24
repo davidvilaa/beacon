@@ -214,12 +214,9 @@ function SearchContent() {
                   <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Film className="w-4 h-4 text-[#a8dadc] shrink-0" />
-                          <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
-                            {movie.title}
-                          </h3>
-                        </div>
+                        <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate min-w-0">
+                          {movie.title}
+                        </h3>
 
                         <div className="flex items-center shrink-0 text-xs text-zinc-500 font-mono">
                           <span className="inline-block w-[4ch] text-center">

@@ -288,14 +288,6 @@ function CompanyDetailContent() {
                           </span>
                         </div>
                       )}
-
-                      {work.media_type === "tv" && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
-                            TV
-                          </span>
-                        </div>
-                      )}
                     </>
                   );
 

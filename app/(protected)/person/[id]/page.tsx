@@ -386,14 +386,6 @@ function PersonDetailContent() {
                             </span>
                           </div>
                         )}
-
-                        {credit.media_type === "tv" && (
-                          <div className="absolute top-2 left-2">
-                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-800">
-                              TV
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="py-2.5 px-3 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center">

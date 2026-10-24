@@ -538,9 +538,9 @@ function MovieDetailContent() {
                       <Link
                         key={actor.id}
                         href={`/person/${actor.id}`}
-                        className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
+                        className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
                       >
-                        <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                        <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
                           {actor.name}
                         </p>
                         {actor.character && (
@@ -570,9 +570,9 @@ function MovieDetailContent() {
                           <Link
                             key={person.id}
                             href={`/person/${person.id}`}
-                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-[#a8dadc]/60 hover:bg-zinc-900 transition-all group cursor-pointer min-w-0"
+                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0"
                           >
-                            <p className="text-xs sm:text-sm font-semibold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate">
                               {person.name}
                             </p>
                             <p className="text-[11px] text-zinc-400 truncate mt-0.5">
@@ -597,9 +597,9 @@ function MovieDetailContent() {
                         {movie.production_companies.map((company) => (
                           <div
                             key={company.id}
-                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 min-w-0"
+                            className="flex flex-col justify-center px-3.5 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0"
                           >
-                            <p className="text-xs sm:text-sm font-semibold text-zinc-200 truncate">
+                            <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
                               {company.name}
                             </p>
                             <p className="text-[11px] text-zinc-400 truncate mt-0.5">

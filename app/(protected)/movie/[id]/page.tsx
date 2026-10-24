@@ -639,71 +639,111 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "details" && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Original title
-                    </p>
-                    <p
-                      className="text-[11px] text-zinc-400 truncate mt-0.5"
-                      title={movie.original_title || "—"}
-                    >
-                      {movie.original_title || "—"}
-                    </p>
+                <div className="divide-y divide-zinc-800/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Original title
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-end items-center">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
+                        <span
+                          className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
+                          title={movie.original_title || "—"}
+                        >
+                          {movie.original_title || "—"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Status
-                    </p>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {movie.status || "—"}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Status
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-end items-center">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.status || "—"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Original language
-                    </p>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {movie.original_language?.toUpperCase() || "—"}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Original language
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-end items-center">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs font-mono font-bold uppercase text-zinc-200">
+                          {movie.original_language?.toUpperCase() || "—"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Budget
-                    </p>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {movie.budget && movie.budget > 0
-                        ? `$${movie.budget.toLocaleString("en-US")}`
-                        : "Not available"}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Budget
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-end items-center">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.budget && movie.budget > 0
+                            ? `$${movie.budget.toLocaleString("en-US")}`
+                            : "Not available"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Revenue
-                    </p>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {movie.revenue && movie.revenue > 0
-                        ? `$${movie.revenue.toLocaleString("en-US")}`
-                        : "Not available"}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Revenue
+                      </span>
+                    </div>
+                    <div className="flex-1 flex justify-end items-center">
+                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                          {movie.revenue && movie.revenue > 0
+                            ? `$${movie.revenue.toLocaleString("en-US")}`
+                            : "Not available"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex flex-col justify-center px-3.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700/80 min-w-0">
-                    <p className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
-                      Genres
-                    </p>
-                    <p
-                      className="text-[11px] text-zinc-400 truncate mt-0.5"
-                      title={movie.genres?.map((g) => g.name).join(", ") || "—"}
-                    >
-                      {movie.genres && movie.genres.length > 0
-                        ? movie.genres.map((g) => g.name).join(", ")
-                        : "—"}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-40 sm:w-48 shrink-0">
+                      <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
+                        Genres
+                      </span>
+                    </div>
+                    <div className="flex-1 flex flex-wrap gap-2 items-center justify-end">
+                      {movie.genres && movie.genres.length > 0 ? (
+                        movie.genres.map((g) => (
+                          <div
+                            key={g.id}
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                          >
+                            <span className="text-xs font-medium text-zinc-200">
+                              {g.name}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-zinc-500">—</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -715,7 +755,7 @@ function MovieDetailContent() {
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
                         >
                           <div className="w-36 shrink-0">
                             <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
@@ -729,33 +769,33 @@ function MovieDetailContent() {
                             </span>
                           </div>
 
-                          <div className="flex-1 flex flex-wrap gap-2 items-center">
+                          <div className="flex-1 flex flex-wrap gap-2 items-center justify-end">
                             {group.countries.map((c) => (
                               <div
                                 key={c.code}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 min-w-0"
+                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
                               >
                                 <img
-                                  src={`https://hatscripts.github.io/circle-flags/flags/${c.code.toLowerCase()}.svg`}
+                                  src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
                                   alt=""
-                                  width={14}
-                                  height={14}
-                                  className="w-3.5 h-3.5 rounded-full shrink-0 object-cover"
+                                  className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-700/60"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none";
                                   }}
                                 />
-                                <span
-                                  className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
-                                  title={c.country}
-                                >
-                                  {c.country}
-                                </span>
-                                {c.certification && (
-                                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
-                                    {c.certification}
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
+                                  <span
+                                    className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
+                                    title={c.country}
+                                  >
+                                    {c.country}
                                   </span>
-                                )}
+                                  {c.certification && (
+                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                      {c.certification}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>

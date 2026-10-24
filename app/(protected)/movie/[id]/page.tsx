@@ -751,11 +751,12 @@ function MovieDetailContent() {
                     <div className="flex-1 flex flex-wrap gap-2 items-center">
                       {movie.production_companies && movie.production_companies.length > 0 ? (
                         movie.production_companies.map((company) => (
-                          <div
+                          <Link
                             key={company.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                            href={`/company/${company.id}`}
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
                           >
-                            <span className="text-xs font-medium text-zinc-200">
+                            <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                               {company.name}
                             </span>
                             {company.origin_country && (
@@ -763,7 +764,7 @@ function MovieDetailContent() {
                                 {company.origin_country}
                               </span>
                             )}
-                          </div>
+                          </Link>
                         ))
                       ) : (
                         <span className="text-xs text-zinc-500">—</span>

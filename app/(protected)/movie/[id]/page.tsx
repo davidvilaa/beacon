@@ -639,14 +639,14 @@ function MovieDetailContent() {
               )}
 
               {activeTab === "details" && (
-                <div className="divide-y divide-zinc-800/80">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                <div className="divide-y divide-zinc-700/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Original title
                       </span>
                     </div>
-                    <div className="flex-1 flex justify-end items-center">
+                    <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
                         <span
                           className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
@@ -658,13 +658,13 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Status
                       </span>
                     </div>
-                    <div className="flex-1 flex justify-end items-center">
+                    <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
                         <span className="text-xs sm:text-sm font-medium text-zinc-200">
                           {movie.status || "—"}
@@ -673,13 +673,13 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Original language
                       </span>
                     </div>
-                    <div className="flex-1 flex justify-end items-center">
+                    <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
                         <span className="text-xs font-mono font-bold uppercase text-zinc-200">
                           {movie.original_language?.toUpperCase() || "—"}
@@ -688,13 +688,13 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Budget
                       </span>
                     </div>
-                    <div className="flex-1 flex justify-end items-center">
+                    <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
                         <span className="text-xs sm:text-sm font-medium text-zinc-200">
                           {movie.budget && movie.budget > 0
@@ -705,13 +705,13 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Revenue
                       </span>
                     </div>
-                    <div className="flex-1 flex justify-end items-center">
+                    <div className="flex-1 flex items-center">
                       <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
                         <span className="text-xs sm:text-sm font-medium text-zinc-200">
                           {movie.revenue && movie.revenue > 0
@@ -722,13 +722,13 @@ function MovieDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
-                    <div className="w-40 sm:w-48 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors">
+                    <div className="w-36 sm:w-44 shrink-0">
                       <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                         Genres
                       </span>
                     </div>
-                    <div className="flex-1 flex flex-wrap gap-2 items-center justify-end">
+                    <div className="flex-1 flex flex-wrap gap-2 items-center">
                       {movie.genres && movie.genres.length > 0 ? (
                         movie.genres.map((g) => (
                           <div
@@ -751,25 +751,19 @@ function MovieDetailContent() {
               {activeTab === "releases" && (
                 <div>
                   {releaseDateGroups.length > 0 ? (
-                    <div className="divide-y divide-zinc-800/80">
+                    <div className="divide-y divide-zinc-700/80">
                       {releaseDateGroups.map((group) => (
                         <div
                           key={group.date}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-900/30 rounded-lg transition-colors"
                         >
-                          <div className="w-36 shrink-0">
+                          <div className="w-32 sm:w-36 shrink-0">
                             <span className="text-xs sm:text-sm font-semibold text-zinc-200 font-mono tracking-tight block">
                               {group.formattedDate}
                             </span>
-                            <span className="text-[11px] text-zinc-500 block mt-0.5">
-                              {group.countries.length}{" "}
-                              {group.countries.length === 1
-                                ? "country"
-                                : "countries"}
-                            </span>
                           </div>
 
-                          <div className="flex-1 flex flex-wrap gap-2 items-center justify-end">
+                          <div className="flex-1 flex flex-wrap gap-2 items-center">
                             {group.countries.map((c) => (
                               <div
                                 key={c.code}

@@ -14,8 +14,6 @@ import {
   Check,
   X,
   Star,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
@@ -73,7 +71,7 @@ function MovieDetailContent() {
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
-  const [visibleCastCount, setVisibleCastCount] = useState(12);
+  const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
 
   const [isWatched, setIsWatched] = useState(false);
@@ -163,7 +161,7 @@ function MovieDetailContent() {
 
   useEffect(() => {
     setDedupedPosters(null);
-    setVisibleCastCount(12);
+    setIsCastExpanded(false);
   }, [id]);
 
   useEffect(() => {
@@ -297,7 +295,7 @@ function MovieDetailContent() {
   const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
 
   const allCast = movie.credits?.cast || [];
-  const displayedCast = allCast.slice(0, visibleCastCount);
+  const displayedCast = isCastExpanded ? allCast : allCast.slice(0, 12);
 
   return (
     <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-20">
@@ -560,35 +558,14 @@ function MovieDetailContent() {
                       </div>
 
                       {allCast.length > 12 && (
-                        <div className="flex items-center justify-center gap-3 mt-5">
-                          {visibleCastCount < allCast.length && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setVisibleCastCount((prev) =>
-                                  Math.min(prev + 12, allCast.length)
-                                )
-                              }
-                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-                            >
-                              <span>Show more</span>
-                              <span className="text-zinc-500 font-mono text-[11px]">
-                                ({visibleCastCount}/{allCast.length})
-                              </span>
-                              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                            </button>
-                          )}
-
-                          {visibleCastCount > 12 && (
-                            <button
-                              type="button"
-                              onClick={() => setVisibleCastCount(12)}
-                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
-                            >
-                              <span>Show less</span>
-                              <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
-                            </button>
-                          )}
+                        <div className="flex justify-start mt-3.5">
+                          <button
+                            type="button"
+                            onClick={() => setIsCastExpanded(!isCastExpanded)}
+                            className="text-xs font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors cursor-pointer"
+                          >
+                            {isCastExpanded ? "less..." : "more..."}
+                          </button>
                         </div>
                       )}
                     </>

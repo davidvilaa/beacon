@@ -14,6 +14,8 @@ import {
   Check,
   X,
   Star,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
@@ -558,13 +560,18 @@ function MovieDetailContent() {
                       </div>
 
                       {allCast.length > 12 && (
-                        <div className="flex justify-start mt-3.5">
+                        <div className="flex justify-start mt-4">
                           <button
                             type="button"
                             onClick={() => setIsCastExpanded(!isCastExpanded)}
-                            className="text-xs font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors cursor-pointer"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
                           >
-                            {isCastExpanded ? "less..." : "more..."}
+                            <span>{isCastExpanded ? "less..." : "more..."}</span>
+                            {isCastExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                            )}
                           </button>
                         </div>
                       )}

@@ -25,30 +25,19 @@ Full DDL script is located in `supabase/schema.sql`.
 - **`public.movies`**:
   - `id`: bigint primary key (TMDB movie ID)
   - `title`: text not null
-  - `original_title`: text
   - `overview`: text
   - `poster_path`: text
   - `backdrop_path`: text
-  - `release_date`: date
-  - `runtime`: integer
-  - `vote_average`: numeric(3, 1)
-  - `vote_count`: integer default 0
-  - `genres`: jsonb default '[]'
   - `created_at`, `updated_at`: timestamptz
 
 - **`public.series`**:
   - `id`: bigint primary key (TMDB series ID)
   - `name`: text not null
-  - `original_name`: text
   - `overview`: text
   - `poster_path`: text
   - `backdrop_path`: text
-  - `first_air_date`, `last_air_date`: date
   - `number_of_seasons`, `number_of_episodes`: integer default 0
   - `status`: text
-  - `vote_average`: numeric(3, 1)
-  - `vote_count`: integer default 0
-  - `genres`: jsonb default '[]'
   - `created_at`, `updated_at`: timestamptz
 
 - **`public.user_movies`**:
@@ -79,7 +68,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `review`: text
   - `has_spoilers`: boolean default false
   - `custom_poster_path`, `custom_backdrop_path`: text
-  - `last_watched_season`, `last_watched_episode`: integer default 0
+  - `last_watched_episode`: integer default 0
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id)`
   - Partial unique index: `(user_id, favorite_order) where favorite_order is not null`

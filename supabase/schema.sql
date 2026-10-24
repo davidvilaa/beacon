@@ -9,15 +9,9 @@ $$ language plpgsql;
 create table if not exists public.movies (
   id bigint not null primary key,
   title text not null,
-  original_title text null,
   overview text null,
   poster_path text null,
   backdrop_path text null,
-  release_date date null,
-  runtime integer null,
-  vote_average numeric(3, 1) null,
-  vote_count integer null default 0,
-  genres jsonb null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -47,18 +41,12 @@ create trigger trigger_movies_updated_at
 create table if not exists public.series (
   id bigint not null primary key,
   name text not null,
-  original_name text null,
   overview text null,
   poster_path text null,
   backdrop_path text null,
-  first_air_date date null,
-  last_air_date date null,
   number_of_seasons integer null default 0,
   number_of_episodes integer null default 0,
   status text null,
-  vote_average numeric(3, 1) null,
-  vote_count integer null default 0,
-  genres jsonb null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -150,7 +138,6 @@ create table if not exists public.user_series (
   has_spoilers boolean not null default false,
   custom_poster_path text null,
   custom_backdrop_path text null,
-  last_watched_season integer null default 0,
   last_watched_episode integer null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

@@ -706,6 +706,7 @@ export async function getTvDetails(
 ): Promise<TvDetails> {
   const data = await fetchFromTmdb<TvDetails>(`/tv/${id}`, {
     append_to_response: "images,credits,aggregate_credits,external_ids",
+    include_image_language: "en,null",
   });
 
   const availableSeasons = (data.seasons || []).filter((s) => s.season_number > 0);

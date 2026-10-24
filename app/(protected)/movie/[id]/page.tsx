@@ -285,7 +285,7 @@ function MovieDetailContent() {
   }, [id]);
 
   useEffect(() => {
-    if (!id || !isPosterPickerOpen || dedupedPosters) return;
+    if (!id || dedupedPosters) return;
 
     let ignore = false;
 
@@ -315,7 +315,7 @@ function MovieDetailContent() {
     return () => {
       ignore = true;
     };
-  }, [id, isPosterPickerOpen, dedupedPosters]);
+  }, [id, dedupedPosters]);
 
   const sectionCrew = useMemo(() => {
     const raw = movie?.credits?.crew || [];

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getMovieDetails, MovieImage } from "@/lib/tmdb";
 import sharp from "sharp";
 
+const moviePosterCache = new Map<string, { posters: MovieImage[]; timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 60 * 24;
+
 interface PosterFingerprint {
   dHash: string;
   aHash: string;
@@ -11,7 +14,7 @@ interface PosterFingerprint {
 async function getPosterFingerprint(filePath: string): Promise<PosterFingerprint | null> {
   try {
     const res = await fetch(`https://image.tmdb.org/t/p/w92${filePath}`, {
-      signal: AbortSignal.timeout(3500),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
@@ -84,6 +87,11 @@ export async function GET(
       return NextResponse.json({ error: "Movie ID is required" }, { status: 400 });
     }
 
+    const cached = moviePosterCache.get(id);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return NextResponse.json({ posters: cached.posters });
+    }
+
     const data = await getMovieDetails(id);
     const rawPosters = data?.images?.posters || [];
 
@@ -124,6 +132,8 @@ export async function GET(
 
       if (unique.length >= 25) break;
     }
+
+    moviePosterCache.set(id, { posters: unique, timestamp: Date.now() });
 
     return NextResponse.json({ posters: unique });
   } catch (error: any) {

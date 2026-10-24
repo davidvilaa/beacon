@@ -92,15 +92,37 @@ function TvDetailContent() {
 
   const topBackdrops = useMemo(() => {
     if (!tv?.images?.backdrops) return [];
-    const valid = tv.images.backdrops.filter(
+    const raw = tv.images.backdrops.filter(
       (b) =>
         Boolean(b.file_path) &&
         (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
     );
-    const sorted = [...valid].sort(
+    const defaultBackdrop = tv.backdrop_path;
+    const highQualityScenic = raw
+      .filter(
+        (b) =>
+          b.file_path !== defaultBackdrop &&
+          (b.width ?? 0) >= 1920 &&
+          (b.iso_639_1 === null || b.iso_639_1 === "en")
+      )
+      .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+
+    if (highQualityScenic.length > 0) {
+      return highQualityScenic.slice(0, 10).map((b) => b.file_path);
+    }
+
+    const withoutDefault = raw
+      .filter((b) => b.file_path !== defaultBackdrop)
+      .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+
+    if (withoutDefault.length > 0) {
+      return withoutDefault.slice(0, 10).map((b) => b.file_path);
+    }
+
+    const sortedAll = [...raw].sort(
       (a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0)
     );
-    const top = sorted.slice(0, 15).map((b) => b.file_path);
+    const top = sortedAll.slice(0, 10).map((b) => b.file_path);
     if (tv.backdrop_path && !top.includes(tv.backdrop_path)) {
       top.unshift(tv.backdrop_path);
     }
@@ -154,22 +176,44 @@ function TvDetailContent() {
             .catch(() => {});
         });
 
+        const defaultBackdrop = data.backdrop_path;
         const validBackdrops = (data.images?.backdrops || []).filter(
           (b) =>
             Boolean(b.file_path) &&
             (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
         );
-        const sortedBackdrops = [...validBackdrops].sort(
-          (a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0)
-        );
-        const top = sortedBackdrops.slice(0, 15).map((b) => b.file_path);
-        if (data.backdrop_path && !top.includes(data.backdrop_path)) {
-          top.unshift(data.backdrop_path);
+
+        const highQualityScenic = validBackdrops
+          .filter(
+            (b) =>
+              b.file_path !== defaultBackdrop &&
+              (b.width ?? 0) >= 1920 &&
+              (b.iso_639_1 === null || b.iso_639_1 === "en")
+          )
+          .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+
+        let candidates = highQualityScenic.slice(0, 10).map((b) => b.file_path);
+
+        if (candidates.length === 0) {
+          const withoutDefault = validBackdrops
+            .filter((b) => b.file_path !== defaultBackdrop)
+            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+          candidates = withoutDefault.slice(0, 10).map((b) => b.file_path);
+        }
+
+        if (candidates.length === 0) {
+          candidates = validBackdrops
+            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0))
+            .slice(0, 10)
+            .map((b) => b.file_path);
+          if (data.backdrop_path && !candidates.includes(data.backdrop_path)) {
+            candidates.unshift(data.backdrop_path);
+          }
         }
 
         let chosenBackdrop = data.backdrop_path;
-        if (top.length > 0) {
-          chosenBackdrop = top[Math.floor(Math.random() * top.length)];
+        if (candidates.length > 0) {
+          chosenBackdrop = candidates[Math.floor(Math.random() * candidates.length)];
         }
         setSelectedBackdrop(chosenBackdrop);
       } catch (err) {
@@ -223,7 +267,7 @@ function TvDetailContent() {
   );
 
   useEffect(() => {
-    if (!id || !isPosterPickerOpen || availablePosters[activeSeason]) return;
+    if (!id || availablePosters[activeSeason]) return;
 
     let ignore = false;
 
@@ -256,7 +300,7 @@ function TvDetailContent() {
     return () => {
       ignore = true;
     };
-  }, [id, activeSeason, isPosterPickerOpen, availablePosters]);
+  }, [id, activeSeason, availablePosters]);
 
   useEffect(() => {
     const currentTabEl = tabRefs.current[activeTab];

@@ -4,6 +4,9 @@ import sharp from "sharp";
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+const tvPosterCache = new Map<string, { posters: MovieImage[]; timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 60 * 24;
+
 interface PosterFingerprint {
   dHash: string;
   aHash: string;
@@ -13,7 +16,7 @@ interface PosterFingerprint {
 async function getPosterFingerprint(filePath: string): Promise<PosterFingerprint | null> {
   try {
     const res = await fetch(`https://image.tmdb.org/t/p/w92${filePath}`, {
-      signal: AbortSignal.timeout(3500),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
@@ -89,6 +92,12 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const season = searchParams.get("season");
 
+    const cacheKey = `${id}:${season || "all"}`;
+    const cached = tvPosterCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return NextResponse.json({ posters: cached.posters });
+    }
+
     const token = process.env.TMDB_ACCESS_TOKEN?.trim();
     const apiKey = process.env.TMDB_API_KEY?.trim();
 
@@ -151,7 +160,7 @@ export async function GET(
       return true;
     });
 
-    const candidates = prioritized.slice(0, 45);
+    const candidates = prioritized.slice(0, 30);
     const fingerprints = await Promise.all(
       candidates.map(async (p) => {
         const fp = await getPosterFingerprint(p.file_path);
@@ -176,6 +185,8 @@ export async function GET(
 
       if (unique.length >= 30) break;
     }
+
+    tvPosterCache.set(cacheKey, { posters: unique, timestamp: Date.now() });
 
     return NextResponse.json({ posters: unique });
   } catch (error: any) {

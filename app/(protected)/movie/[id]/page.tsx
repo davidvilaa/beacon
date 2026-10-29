@@ -7,114 +7,21 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Clock,
   Calendar,
-  Film,
-  Bookmark,
-  Eye,
-  Check,
-  X,
   ChevronDown,
   ChevronUp,
   User,
-  Plus,
-  Heart,
-  Star,
-  ImageIcon,
 } from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
-
-function formatRuntime(minutes: number | null): string {
-  if (!minutes) return "—";
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) return `${mins}m`;
-  return `${hours}h ${mins}m`;
-}
-
-function formatFullDate(dateStr?: string | null): string {
-  if (!dateStr) return "—";
-  const parts = dateStr.split("-");
-  if (parts.length < 3) return dateStr;
-  const [year, month, day] = parts;
-  const MONTHS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const mIndex = parseInt(month, 10) - 1;
-  const monthName = MONTHS[mIndex] || month;
-  return `${monthName} ${parseInt(day, 10)}, ${year}`;
-}
-
-function StarRating({
-  value,
-  onChange,
-}: {
-  value: number;
-  onChange: (val: number) => void;
-}) {
-  const [hoverValue, setHoverValue] = useState<number | null>(null);
-  const displayValue = hoverValue !== null ? hoverValue : value;
-
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className="flex items-center gap-1"
-        onMouseLeave={() => setHoverValue(null)}
-      >
-        {[1, 2, 3, 4, 5].map((star) => {
-          const isFull = displayValue >= star;
-          const isHalf = !isFull && displayValue >= star - 0.5;
-
-          return (
-            <div key={star} className="relative w-5 h-5 select-none cursor-pointer">
-              <Star className="w-5 h-5 text-zinc-700 stroke-[1.5]" />
-
-              {isFull && (
-                <div className="absolute inset-0">
-                  <Star className="w-5 h-5 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                </div>
-              )}
-
-              {isHalf && (
-                <div className="absolute inset-0 overflow-hidden w-1/2">
-                  <Star className="w-5 h-5 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                </div>
-              )}
-
-              <div
-                className="absolute left-0 top-0 bottom-0 w-1/2 z-10"
-                onMouseEnter={() => setHoverValue(star - 0.5)}
-                onClick={() => onChange(value === star - 0.5 ? 0 : star - 0.5)}
-              />
-
-              <div
-                className="absolute right-0 top-0 bottom-0 w-1/2 z-10"
-                onMouseEnter={() => setHoverValue(star)}
-                onClick={() => onChange(value === star ? 0 : star)}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <span className="text-[11px] font-semibold text-zinc-400 min-h-[16px]">
-        {displayValue > 0 ? `${displayValue.toFixed(1)} / 5.0` : "No rating"}
-      </span>
-    </div>
-  );
-}
+import MediaLayout from "@/components/media/MediaLayout";
+import MediaPosterCard from "@/components/media/MediaPosterCard";
+import MediaActionBar, { MediaStatus } from "@/components/media/MediaActionBar";
+import MediaReviewModal from "@/components/media/MediaReviewModal";
+import ArtworkPickerModal from "@/components/media/ArtworkPickerModal";
+import { formatRuntime, formatFullDate } from "@/lib/media-utils";
 
 interface CrewSectionConfig {
   key: string;
@@ -241,25 +148,19 @@ function MovieDetailContent() {
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
+  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   const supabase = createClient();
   const { addToast } = useToast();
 
-  const [movieStatus, setMovieStatus] = useState<"watched" | "watchlist" | null>(null);
+  const [movieStatus, setMovieStatus] = useState<MediaStatus>(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
-  const quickMenuRef = useRef<HTMLDivElement>(null);
-
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
   const [watchedDate, setWatchedDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
-
-  const isWatched = movieStatus === "watched";
-  const isWatchlisted = movieStatus === "watchlist";
 
   useEffect(() => {
     let ignore = false;
@@ -294,7 +195,7 @@ function MovieDetailContent() {
     };
   }, [id, supabase]);
 
-  const handleQuickAction = async (newStatus: "watched" | "watchlist" | null, newFavorite: boolean) => {
+  const handleQuickAction = async (newStatus: MediaStatus, newFavorite: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session || !movie) return;
@@ -348,7 +249,7 @@ function MovieDetailContent() {
         return;
       }
 
-      const { error: userMovieError } = await supabase.from("user_movies").upsert(
+      const { error: logError } = await supabase.from("user_movies").upsert(
         {
           user_id: session.user.id,
           movie_id: movie.id,
@@ -357,48 +258,29 @@ function MovieDetailContent() {
           rating: rating > 0 ? rating : null,
           review: review.trim() || null,
           has_spoilers: hasSpoilers,
+          watched_date: watchedDate || null,
           custom_poster_path: selectedPoster,
           custom_backdrop_path: selectedBackdrop,
-          watched_date: watchedDate || null,
         },
         { onConflict: "user_id,movie_id" }
       );
 
-      if (userMovieError) {
-        addToast("Failed to save review", "error");
+      if (logError) {
+        addToast("Error saving review", "error");
         setIsSaving(false);
         return;
       }
 
-      addToast("Review saved successfully!", "success");
+      addToast("Review saved successfully", "success");
       setIsLogModalOpen(false);
     } catch (err) {
-      addToast("An unexpected error occurred", "error");
+      addToast("Something went wrong", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        quickMenuRef.current &&
-        !quickMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsQuickMenuOpen(false);
-      }
-    };
-    if (isQuickMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isQuickMenuOpen]);
-
-  const [activeTab, setActiveTab] = useState<
-    "cast" | "staff" | "details" | "releases"
-  >("cast");
+  const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details" | "releases">("cast");
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -407,45 +289,61 @@ function MovieDetailContent() {
 
     async function fetchMovie() {
       try {
+        setLoading(true);
         const res = await fetch(`/api/movies/${id}`);
-        if (res.ok) {
-          const data: MovieDetails = await res.json();
-          if (ignore) return;
+        if (!res.ok) throw new Error("Failed to fetch movie");
+        const data: MovieDetails = await res.json();
 
-          const validBackdrops = (data.images?.backdrops || []).filter(
+        if (!ignore) {
+          const rawBackdrops = data.images?.backdrops || [];
+          const validBackdrops = rawBackdrops.filter(
             (b) =>
               Boolean(b.file_path) &&
               (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
           );
 
-          const sortedBackdrops = [...validBackdrops].sort(
-            (a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0)
-          );
+          const defaultBackdrop = data.backdrop_path;
+          const highQualityScenic = validBackdrops
+            .filter(
+              (b) =>
+                b.file_path !== defaultBackdrop &&
+                (b.width ?? 0) >= 1920 &&
+                (b.iso_639_1 === null || b.iso_639_1 === "en")
+            )
+            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
 
-          const topBackdrops = sortedBackdrops
-            .slice(0, 15)
-            .map((b) => b.file_path);
+          let chosenBackdrop = defaultBackdrop;
 
-          if (data.backdrop_path && !topBackdrops.includes(data.backdrop_path)) {
-            topBackdrops.unshift(data.backdrop_path);
-          }
-
-          let chosenBackdrop = data.backdrop_path;
-          if (topBackdrops.length > 0) {
+          if (highQualityScenic.length > 0) {
+            const topCandidates = highQualityScenic.slice(0, 10);
             chosenBackdrop =
-              topBackdrops[Math.floor(Math.random() * topBackdrops.length)];
+              topCandidates[Math.floor(Math.random() * topCandidates.length)].file_path;
+          } else {
+            const withoutDefault = validBackdrops
+              .filter((b) => b.file_path !== defaultBackdrop)
+              .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+
+            if (withoutDefault.length > 0) {
+              const topCandidates = withoutDefault.slice(0, 10);
+              chosenBackdrop =
+                topCandidates[Math.floor(Math.random() * topCandidates.length)].file_path;
+            } else if (validBackdrops.length > 0) {
+              chosenBackdrop = validBackdrops[0].file_path;
+            }
           }
 
-          const validPosters = (data.images?.posters || []).filter(
+          const rawPosters = data.images?.posters || [];
+          const validPosters = rawPosters.filter(
             (p) =>
               Boolean(p.file_path) &&
-              (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+              (!p.aspect_ratio || (p.aspect_ratio >= 0.6 && p.aspect_ratio <= 0.75))
           );
 
           const sortedPosters = [...validPosters].sort((a, b) => {
-            const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
-            if (countDiff !== 0) return countDiff;
-            return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+            const langA = a.iso_639_1 === "en" ? 2 : a.iso_639_1 === null ? 1 : 0;
+            const langB = b.iso_639_1 === "en" ? 2 : b.iso_639_1 === null ? 1 : 0;
+            if (langA !== langB) return langB - langA;
+            return (b.vote_count ?? 0) - (a.vote_count ?? 0);
           });
 
           const chosenPoster = sortedPosters[0]?.file_path || data.poster_path;
@@ -635,916 +533,513 @@ function MovieDetailContent() {
   const displayedCast = isCastExpanded ? allCast : allCast.slice(0, 12);
 
   return (
-    <div className="relative flex-1 w-full font-[family-name:var(--font-geist-sans)] pb-72 sm:pb-80">
-      {backdropUrl && (
-        <div className="absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden pointer-events-none select-none -z-0">
-          <div
-            className="relative mx-auto w-full max-w-[1550px] h-full"
-            style={{
-              maskImage:
-                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 2%, rgba(0,0,0,0.12) 5%, rgba(0,0,0,0.30) 9%, rgba(0,0,0,0.60) 13%, rgba(0,0,0,0.88) 17%, rgba(0,0,0,1) 21%, rgba(0,0,0,1) 79%, rgba(0,0,0,0.88) 83%, rgba(0,0,0,0.60) 87%, rgba(0,0,0,0.30) 91%, rgba(0,0,0,0.12) 95%, rgba(0,0,0,0.03) 98%, rgba(0,0,0,0) 100%)",
-              WebkitMaskImage:
-                "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.03) 2%, rgba(0,0,0,0.12) 5%, rgba(0,0,0,0.30) 9%, rgba(0,0,0,0.60) 13%, rgba(0,0,0,0.88) 17%, rgba(0,0,0,1) 21%, rgba(0,0,0,1) 79%, rgba(0,0,0,0.88) 83%, rgba(0,0,0,0.60) 87%, rgba(0,0,0,0.30) 91%, rgba(0,0,0,0.12) 95%, rgba(0,0,0,0.03) 98%, rgba(0,0,0,0) 100%)",
-            }}
-          >
-            <div
-              className="relative w-full h-full"
-              style={{
-                maskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
-                WebkitMaskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
+    <>
+      <MediaLayout
+        backdropUrl={backdropUrl}
+        backdropAlt={movie.title}
+        isBackdropLoaded={isBackdropLoaded}
+        onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        posterColumn={
+          <>
+            <MediaPosterCard
+              posterUrl={posterUrl}
+              title={movie.title}
+              hasMultiplePosters={hasMultiplePosters}
+              onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            />
+            <MediaActionBar
+              mediaType="movie"
+              status={movieStatus}
+              isFavorite={isFavorite}
+              onOpenLogModal={() => setIsLogModalOpen(true)}
+              onQuickStatusChange={(newStatus) => {
+                setMovieStatus(newStatus);
+                handleQuickAction(newStatus, isFavorite);
               }}
-            >
-              <Image
-                src={backdropUrl}
-                alt={movie.title}
-                fill
-                priority
-                sizes="(max-width: 1550px) 100vw, 1550px"
-                onLoad={() => setIsBackdropLoaded(true)}
-                className={`object-cover object-top transition-opacity duration-500 ease-out ${
-                  isBackdropLoaded ? "opacity-95 sm:opacity-100" : "opacity-0"
-                }`}
-              />
-            </div>
+              onToggleFavorite={() => {
+                const nextFav = !isFavorite;
+                setIsFavorite(nextFav);
+                handleQuickAction(movieStatus, nextFav);
+              }}
+            />
+          </>
+        }
+      >
+        <div className="w-full">
+          <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
+            Movie
+          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+            {movie.title}
+          </h1>
+
+          {movie.original_title && movie.original_title !== movie.title && (
+            <p className="text-sm text-zinc-500 italic mt-1">
+              {movie.original_title}
+            </p>
+          )}
+
+          <div className="flex items-center gap-2.5 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+              <span>{formattedReleaseDate}</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-zinc-500" />
+              <span>{formatRuntime(movie.runtime)}</span>
+            </span>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-zinc-950/60 to-transparent pointer-events-none" />
-        </div>
-      )}
+          <div className="mt-5 space-y-2 max-w-2xl">
+            {movie.tagline && (
+              <p className="text-sm italic font-medium text-[#a8dadc]">
+                &ldquo;{movie.tagline}&rdquo;
+              </p>
+            )}
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              {movie.overview || "No overview available."}
+            </p>
+          </div>
 
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-6 sm:pt-8">
-        <div
-          className={`flex flex-col md:flex-row gap-8 items-start ${
-            backdropUrl ? "mt-64 sm:mt-80 md:mt-96 lg:mt-[460px]" : ""
-          }`}
-        >
-          <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
-            <div
-              onClick={
-                hasMultiplePosters
-                  ? () => setIsPosterPickerOpen(true)
-                  : undefined
-              }
-              title={
-                hasMultiplePosters
-                  ? "Click to change poster"
-                  : undefined
-              }
-              className={`relative aspect-[2/3] w-56 sm:w-full rounded-t-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl ${
-                hasMultiplePosters ? "cursor-pointer group" : ""
-              }`}
-            >
-              {posterUrl ? (
-                <Image
-                  src={posterUrl}
-                  alt={movie.title}
-                  fill
-                  priority
-                  sizes="(max-width: 640px) 224px, 288px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700">
-                  <Film className="w-12 h-12 mb-2" />
-                  <span className="text-xs text-zinc-500">No poster</span>
-                </div>
-              )}
-
-              {hasMultiplePosters && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              )}
-            </div>
-
-            <div ref={quickMenuRef} className="relative w-56 sm:w-full">
-              <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
+          <div className="mt-8">
+            <div className="relative border-b border-zinc-800/60 mb-6">
+              <div className="flex items-center gap-6">
                 <button
+                  ref={(el) => {
+                    tabRefs.current["cast"] = el;
+                  }}
                   type="button"
-                  onClick={() => setIsLogModalOpen(true)}
-                  title="Log movie"
-                  className="flex-1 flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
-                >
-                  <Plus className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsQuickMenuOpen((prev) => !prev)}
-                  title="Quick actions"
-                  className={`w-11 sm:w-12 shrink-0 flex items-center justify-center border-l border-zinc-800 transition-colors cursor-pointer ${
-                    isQuickMenuOpen
-                      ? "text-[#a8dadc] bg-zinc-800/70"
-                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                  onClick={() => setActiveTab("cast")}
+                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
+                    activeTab === "cast"
+                      ? "text-zinc-100"
+                      : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isQuickMenuOpen ? "rotate-180 text-[#a8dadc]" : ""
-                    }`}
-                  />
+                  Cast
+                </button>
+                <button
+                  ref={(el) => {
+                    tabRefs.current["staff"] = el;
+                  }}
+                  type="button"
+                  onClick={() => setActiveTab("staff")}
+                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
+                    activeTab === "staff"
+                      ? "text-zinc-100"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  Crew
+                </button>
+                <button
+                  ref={(el) => {
+                    tabRefs.current["details"] = el;
+                  }}
+                  type="button"
+                  onClick={() => setActiveTab("details")}
+                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
+                    activeTab === "details"
+                      ? "text-zinc-100"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  Details
+                </button>
+                <button
+                  ref={(el) => {
+                    tabRefs.current["releases"] = el;
+                  }}
+                  type="button"
+                  onClick={() => setActiveTab("releases")}
+                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
+                    activeTab === "releases"
+                      ? "text-zinc-100"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  Releases
                 </button>
               </div>
 
-              {isQuickMenuOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 space-y-0.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = movieStatus === "watched" ? null : "watched";
-                      setMovieStatus(next);
-                      handleQuickAction(next, isFavorite);
-                      setIsQuickMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
-                      isWatched
-                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
-                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Eye className={`w-4 h-4 ${isWatched ? "text-[#a8dadc] stroke-[2.5]" : "text-zinc-400"}`} />
-                      <span>Set as Watched</span>
-                    </div>
-                    {isWatched && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = movieStatus === "watchlist" ? null : "watchlist";
-                      setMovieStatus(next);
-                      handleQuickAction(next, isFavorite);
-                      setIsQuickMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
-                      isWatchlisted
-                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
-                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Bookmark className={`w-4 h-4 ${isWatchlisted ? "text-[#a8dadc] fill-[#a8dadc]" : "text-zinc-400"}`} />
-                      <span>Set as Watchlist</span>
-                    </div>
-                    {isWatchlisted && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = !isFavorite;
-                      setIsFavorite(next);
-                      handleQuickAction(movieStatus, next);
-                      setIsQuickMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
-                      isFavorite
-                        ? "text-[#a8dadc] bg-[#a8dadc]/10"
-                        : "text-zinc-300 hover:text-white hover:bg-zinc-800/80"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Heart className={`w-4 h-4 ${isFavorite ? "text-[#a8dadc] fill-[#a8dadc]" : "text-zinc-400"}`} />
-                      <span>Set as Favourite</span>
-                    </div>
-                    {isFavorite && <Check className="w-3.5 h-3.5 text-[#a8dadc]" />}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
-              Movie
-            </p>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
-              {movie.title}
-            </h1>
-
-            {movie.original_title && movie.original_title !== movie.title && (
-              <p className="text-sm text-zinc-500 italic mt-1">
-                {movie.original_title}
-              </p>
-            )}
-
-            <div className="flex items-center gap-2.5 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{formattedReleaseDate}</span>
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{formatRuntime(movie.runtime)}</span>
-              </span>
+              <span
+                className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out"
+                style={{
+                  left: `${indicatorStyle.left}px`,
+                  width: `${indicatorStyle.width}px`,
+                }}
+              />
             </div>
 
-            <div className="mt-5 space-y-2 max-w-2xl">
-              {movie.tagline && (
-                <p className="text-sm italic font-medium text-[#a8dadc]">
-                  &ldquo;{movie.tagline}&rdquo;
-                </p>
-              )}
-              <p className="text-sm text-zinc-300 leading-relaxed">
-                {movie.overview || "No overview available."}
-              </p>
-            </div>
-
-            <div className="mt-8">
-              <div className="relative border-b border-zinc-800/60 mb-6">
-                <div className="flex items-center gap-6">
-                  <button
-                    ref={(el) => {
-                      tabRefs.current["cast"] = el;
-                    }}
-                    type="button"
-                    onClick={() => setActiveTab("cast")}
-                    className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                      activeTab === "cast"
-                        ? "text-zinc-100"
-                        : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    Cast
-                  </button>
-                  <button
-                    ref={(el) => {
-                      tabRefs.current["staff"] = el;
-                    }}
-                    type="button"
-                    onClick={() => setActiveTab("staff")}
-                    className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                      activeTab === "staff"
-                        ? "text-zinc-100"
-                        : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    Crew
-                  </button>
-                  <button
-                    ref={(el) => {
-                      tabRefs.current["details"] = el;
-                    }}
-                    type="button"
-                    onClick={() => setActiveTab("details")}
-                    className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                      activeTab === "details"
-                        ? "text-zinc-100"
-                        : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    Details
-                  </button>
-                  <button
-                    ref={(el) => {
-                      tabRefs.current["releases"] = el;
-                    }}
-                    type="button"
-                    onClick={() => setActiveTab("releases")}
-                    className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                      activeTab === "releases"
-                        ? "text-zinc-100"
-                        : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    Releases
-                  </button>
-                </div>
-
-                <span
-                  className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out"
-                  style={{
-                    left: `${indicatorStyle.left}px`,
-                    width: `${indicatorStyle.width}px`,
-                  }}
-                />
-              </div>
-
-              {activeTab === "cast" && (
-                <div>
-                  {displayedCast.length > 0 ? (
-                    <>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                        {displayedCast.map((actor) => {
-                          const profileUrl = actor.profile_path
-                            ? getPosterUrl(actor.profile_path, "w185")
-                            : null;
-                          return (
-                            <Link
-                              key={actor.id}
-                              href={`/person/${actor.id}`}
-                              className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
-                            >
-                              <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                                {profileUrl ? (
-                                  <Image
-                                    src={profileUrl}
-                                    alt={actor.name}
-                                    fill
-                                    sizes="48px"
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <User className="w-4 h-4 text-zinc-500" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                                <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
-                                  {actor.name}
-                                </p>
-                                {actor.character && (
-                                  <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                                    as <span className="text-zinc-300 font-medium">{actor.character}</span>
-                                  </p>
-                                )}
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-
-                      {allCast.length > 12 && (
-                        <div className="flex justify-start mt-4">
-                          <button
-                            type="button"
-                            onClick={() => setIsCastExpanded(!isCastExpanded)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-                          >
-                            <span>{isCastExpanded ? "less..." : "more..."}</span>
-                            {isCastExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-xs text-zinc-500 py-4 col-span-full">
-                      No cast information available.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "staff" && (
-                <div>
-                  {sectionCrew.length > 0 ? (
-                    <div className="divide-y divide-zinc-700/80">
-                      {sectionCrew.map((section) => (
-                        <div
-                          key={section.key}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                        >
-                          <div className="w-36 sm:w-44 shrink-0">
-                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                              {section.label}
-                            </span>
-                          </div>
-
-                          <div className="flex-1 flex flex-wrap gap-2 items-center">
-                            {section.people.map((person) => (
-                              <Link
-                                key={person.id}
-                                href={`/person/${person.id}`}
-                                className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
-                              >
-                                <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                                  {person.name}
-                                </span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-zinc-500 py-4">
-                      No crew information available.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "details" && (
-                <div className="divide-y divide-zinc-700/80">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        {movie.production_companies && movie.production_companies.length === 1 ? "Studio" : "Studios"}
-                      </span>
-                    </div>
-                    <div className="flex-1 flex flex-wrap gap-2 items-center">
-                      {movie.production_companies && movie.production_companies.length > 0 ? (
-                        movie.production_companies.map((company) => (
+            {activeTab === "cast" && (
+              <div>
+                {displayedCast.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                      {displayedCast.map((actor) => {
+                        const profileUrl = actor.profile_path
+                          ? getPosterUrl(actor.profile_path, "w185")
+                          : null;
+                        return (
                           <Link
-                            key={company.id}
-                            href={`/company/${company.id}`}
-                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
+                            key={actor.id}
+                            href={`/person/${actor.id}`}
+                            className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
                           >
-                            <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                              {company.name}
-                            </span>
-                            {company.origin_country && (
-                              <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
-                                {company.origin_country}
-                              </span>
-                            )}
-                          </Link>
-                        ))
-                      ) : (
-                        <span className="text-xs text-zinc-500">—</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Original title
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
-                        <span
-                          className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
-                          title={movie.original_title || "—"}
-                        >
-                          {movie.original_title || "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Status
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                          {movie.status || "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Original language
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs font-bold uppercase text-zinc-200">
-                          {movie.original_language?.toUpperCase() || "—"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Budget
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                          {movie.budget && movie.budget > 0
-                            ? `$${movie.budget.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Revenue
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center">
-                      <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                        <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                          {movie.revenue && movie.revenue > 0
-                            ? `$${movie.revenue.toLocaleString("en-US")}`
-                            : "Not available"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                    <div className="w-36 sm:w-44 shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                        Genres
-                      </span>
-                    </div>
-                    <div className="flex-1 flex flex-wrap gap-2 items-center">
-                      {movie.genres && movie.genres.length > 0 ? (
-                        movie.genres.map((g) => (
-                          <div
-                            key={g.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
-                          >
-                            <span className="text-xs font-medium text-zinc-200">
-                              {g.name}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <span className="text-xs text-zinc-500">—</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "releases" && (
-                <div>
-                  {releaseDateGroups.length > 0 ? (
-                    <div className="divide-y divide-zinc-700/80">
-                      {releaseDateGroups.map((group) => (
-                        <div
-                          key={group.date}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                        >
-                          <div className="w-32 sm:w-36 shrink-0">
-                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
-                              {group.formattedDate}
-                            </span>
-                          </div>
-
-                          <div className="flex-1 flex flex-wrap gap-2 items-center">
-                            {group.countries.map((c) => (
-                              <div
-                                key={c.code}
-                                className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
-                              >
-                                <img
-                                  src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
-                                  alt=""
-                                  className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-700/60"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                  }}
+                            <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                              {profileUrl ? (
+                                <Image
+                                  src={profileUrl}
+                                  alt={actor.name}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
                                 />
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
-                                  <span
-                                    className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
-                                    title={c.country}
-                                  >
-                                    {c.country}
-                                  </span>
-                                  {c.certification && (
-                                    <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
-                                      {c.certification}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                              ) : (
+                                <User className="w-4 h-4 text-zinc-500" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
+                              <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
+                                {actor.name}
+                              </p>
+                              {actor.character && (
+                                <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                                  as <span className="text-zinc-300 font-medium">{actor.character}</span>
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
-                  ) : (
-                    <p className="text-xs text-zinc-500 py-4">
-                      No release date information available.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
 
-            {movie.collection?.parts && movie.collection.parts.length > 0 && (
-              <div className="mt-12 sm:mt-14">
-                <div className="relative border-b border-zinc-800/60 mb-6 pb-3">
-                  <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
-                    Franchise
-                  </span>
-                </div>
-
-                <FranchiseSlider
-                  parts={movie.collection.parts}
-                  currentMovieId={movie.id}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
-      {isPosterPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-                CHANGE ARTWORK
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsPosterPickerOpen(false)}
-                aria-label="Close"
-                className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
-              {loadingPosters || !dedupedPosters ? (
-                <div className="flex items-center justify-center py-24">
-                  <Loading />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                  {dedupedPosters.map((poster) => {
-                    const url = getPosterUrl(poster.file_path, "w342");
-                    const isSelected = selectedPoster === poster.file_path;
-                    return (
-                      <button
-                        key={poster.file_path}
-                        type="button"
-                        onClick={() => {
-                          setSelectedPoster(poster.file_path);
-                          setIsPosterPickerOpen(false);
-                        }}
-                        className={`relative aspect-[2/3] w-full rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-[#a8dadc]"
-                            : "border-zinc-800 hover:border-zinc-600 hover:opacity-80"
-                        }`}
-                      >
-                        {url && (
-                          <Image
-                            src={url}
-                            alt="Poster option"
-                            fill
-                            sizes="(max-width: 640px) 150px, (max-width: 1024px) 180px, 200px"
-                            className="object-cover"
-                          />
-                        )}
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isBackdropPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
-            <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-                CHANGE BANNER
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsBackdropPickerOpen(false)}
-                aria-label="Close"
-                className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                {(movie.images?.backdrops || []).slice(0, 30).map((b) => {
-                  const url = getBackdropUrl(b.file_path, "w780");
-                  const isSelected = selectedBackdrop === b.file_path;
-                  return (
-                    <button
-                      key={b.file_path}
-                      type="button"
-                      onClick={() => {
-                        setSelectedBackdrop(b.file_path);
-                        setIsBackdropPickerOpen(false);
-                      }}
-                      className={`relative aspect-[16/9] w-full rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                        isSelected
-                          ? "border-[#a8dadc]"
-                          : "border-zinc-800 hover:border-zinc-600 hover:opacity-80"
-                      }`}
-                    >
-                      {url && (
-                        <Image
-                          src={url}
-                          alt="Banner option"
-                          fill
-                          sizes="(max-width: 640px) 100vw, 300px"
-                          className="object-cover"
-                        />
-                      )}
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isLogModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
-            <div className="relative h-32 sm:h-40 w-full bg-zinc-900 overflow-hidden group">
-              {backdropUrl ? (
-                <Image
-                  src={backdropUrl}
-                  alt="Movie banner"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-zinc-900" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/20" />
-
-              <button
-                type="button"
-                onClick={() => setIsBackdropPickerOpen(true)}
-                className="absolute bottom-2.5 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/90 border border-zinc-700/60 text-[11px] font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer backdrop-blur-sm"
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Change banner</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsLogModalOpen(false)}
-                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="px-5 sm:px-6 pb-6">
-              <div className="flex gap-4 sm:gap-5 items-start -mt-12 sm:-mt-16 relative z-10 mb-5">
-                <div className="flex flex-col items-center gap-3 shrink-0">
-                  <div
-                    onClick={() => setIsPosterPickerOpen(true)}
-                    className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl group cursor-pointer"
-                  >
-                    {posterUrl ? (
-                      <Image
-                        src={posterUrl}
-                        alt={movie.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-700">
-                        <Film className="w-8 h-8" />
+                    {allCast.length > 12 && (
+                      <div className="flex justify-start mt-4">
+                        <button
+                          type="button"
+                          onClick={() => setIsCastExpanded(!isCastExpanded)}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+                        >
+                          <span>{isCastExpanded ? "less..." : "more..."}</span>
+                          {isCastExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                          )}
+                        </button>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center">
-                      <ImageIcon className="w-4 h-4 mb-0.5" />
-                      <span className="text-[10px] font-medium leading-tight">Change poster</span>
-                    </div>
-                  </div>
-
-                  <StarRating value={rating} onChange={setRating} />
-                </div>
-
-                <div className="flex-1 min-w-0 pt-12 sm:pt-16">
-                  <h2 className="text-lg sm:text-xl font-black text-zinc-100 tracking-tight leading-tight truncate">
-                    {movie.title}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium mt-0.5">
-                    {movie.release_date ? new Date(movie.release_date).getFullYear() : "—"}
+                  </>
+                ) : (
+                  <p className="text-xs text-zinc-500 py-4 col-span-full">
+                    No cast information available.
                   </p>
+                )}
+              </div>
+            )}
 
-                  <div className="flex items-center gap-2 mt-3.5">
-                    <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                    <input
-                      type="date"
-                      value={watchedDate}
-                      onChange={(e) => setWatchedDate(e.target.value)}
-                      className="bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:border-[#a8dadc] transition-colors cursor-pointer"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setWatchedDate(new Date().toISOString().split("T")[0])}
-                      className="text-[11px] text-[#a8dadc] hover:underline cursor-pointer font-medium"
-                    >
-                      Today
-                    </button>
+            {activeTab === "staff" && (
+              <div>
+                {sectionCrew.length > 0 ? (
+                  <div className="divide-y divide-zinc-700/80">
+                    {sectionCrew.map((section) => (
+                      <div
+                        key={section.key}
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
+                      >
+                        <div className="w-36 sm:w-44 shrink-0">
+                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                            {section.label}
+                          </span>
+                        </div>
+
+                        <div className="flex-1 flex flex-wrap gap-2 items-center">
+                          {section.people.map((person) => (
+                            <Link
+                              key={person.id}
+                              href={`/person/${person.id}`}
+                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
+                            >
+                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                                {person.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <p className="text-xs text-zinc-500 py-4">
+                    No crew information available.
+                  </p>
+                )}
+              </div>
+            )}
 
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
-                      <button
-                        type="button"
-                        onClick={() => setMovieStatus((prev) => (prev === "watched" ? null : "watched"))}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                          movieStatus === "watched"
-                            ? "bg-[#a8dadc] text-zinc-950 shadow-sm"
-                            : "text-zinc-400 hover:text-zinc-200"
-                        }`}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Watched</span>
-                      </button>
+            {activeTab === "details" && (
+              <div className="divide-y divide-zinc-700/80">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      {movie.production_companies && movie.production_companies.length === 1 ? "Studio" : "Studios"}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-wrap gap-2 items-center">
+                    {movie.production_companies && movie.production_companies.length > 0 ? (
+                      movie.production_companies.map((company) => (
+                        <Link
+                          key={company.id}
+                          href={`/company/${company.id}`}
+                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
+                        >
+                          <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                            {company.name}
+                          </span>
+                          {company.origin_country && (
+                            <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
+                              {company.origin_country}
+                            </span>
+                          )}
+                        </Link>
+                      ))
+                    ) : (
+                      <span className="text-xs text-zinc-500">—</span>
+                    )}
+                  </div>
+                </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setMovieStatus((prev) => (prev === "watchlist" ? null : "watchlist"))}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                          movieStatus === "watchlist"
-                            ? "bg-[#a8dadc] text-zinc-950 shadow-sm"
-                            : "text-zinc-400 hover:text-zinc-200"
-                        }`}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Original title
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
+                      <span
+                        className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
+                        title={movie.original_title || "—"}
                       >
-                        <Bookmark className="w-3.5 h-3.5" />
-                        <span>Watchlist</span>
-                      </button>
+                        {movie.original_title || "—"}
+                      </span>
                     </div>
+                  </div>
+                </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setIsFavorite((prev) => !prev)}
-                      title={isFavorite ? "Remove from favorites" : "Mark as favorite"}
-                      className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                        isFavorite
-                          ? "border-[#a8dadc]/60 bg-[#a8dadc]/15 text-[#a8dadc]"
-                          : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-[#a8dadc] hover:border-zinc-700"
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${isFavorite ? "fill-[#a8dadc]" : ""}`} />
-                    </button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Status
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                        {movie.status || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Original language
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                      <span className="text-xs font-bold uppercase text-zinc-200">
+                        {movie.original_language?.toUpperCase() || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Budget
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                        {movie.budget && movie.budget > 0
+                          ? `$${movie.budget.toLocaleString("en-US")}`
+                          : "Not available"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Revenue
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center">
+                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                        {movie.revenue && movie.revenue > 0
+                          ? `$${movie.revenue.toLocaleString("en-US")}`
+                          : "Not available"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+                  <div className="w-36 sm:w-44 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                      Genres
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-wrap gap-2 items-center">
+                    {movie.genres && movie.genres.length > 0 ? (
+                      movie.genres.map((g) => (
+                        <div
+                          key={g.id}
+                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                        >
+                          <span className="text-xs font-medium text-zinc-200">
+                            {g.name}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-xs text-zinc-500">—</span>
+                    )}
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="space-y-3">
-                <textarea
-                  value={review}
-                  onChange={(e) => setReview(e.target.value)}
-                  placeholder="Write a review or thoughts on this movie... (optional)"
-                  rows={4}
-                  className="w-full bg-zinc-900/90 border border-zinc-800 rounded-xl p-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-[#a8dadc] transition-colors resize-none leading-relaxed"
-                />
+            {activeTab === "releases" && (
+              <div>
+                {releaseDateGroups.length > 0 ? (
+                  <div className="divide-y divide-zinc-700/80">
+                    {releaseDateGroups.map((group) => (
+                      <div
+                        key={group.date}
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
+                      >
+                        <div className="w-32 sm:w-36 shrink-0">
+                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
+                            {group.formattedDate}
+                          </span>
+                        </div>
 
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-400 hover:text-zinc-300">
-                    <input
-                      type="checkbox"
-                      checked={hasSpoilers}
-                      onChange={(e) => setHasSpoilers(e.target.checked)}
-                      className="rounded border-zinc-700 bg-zinc-900 text-[#a8dadc] focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 accent-[#a8dadc] cursor-pointer"
-                    />
-                    <span>Review contains spoilers</span>
-                  </label>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsLogModalOpen(false)}
-                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveReview}
-                      disabled={isSaving}
-                      className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#a8dadc]/90 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      {isSaving ? "Saving..." : "Save review"}
-                    </button>
+                        <div className="flex-1 flex flex-wrap gap-2 items-center">
+                          {group.countries.map((c) => (
+                            <div
+                              key={c.code}
+                              className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
+                            >
+                              <img
+                                src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
+                                alt=""
+                                className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-700/60"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
+                                <span
+                                  className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
+                                  title={c.country}
+                                >
+                                  {c.country}
+                                </span>
+                                {c.certification && (
+                                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                                    {c.certification}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <p className="text-xs text-zinc-500 py-4">
+                    No release date information available.
+                  </p>
+                )}
               </div>
-            </div>
+            )}
           </div>
+
+          {movie.collection?.parts && movie.collection.parts.length > 0 && (
+            <div className="mt-12 sm:mt-14">
+              <div className="relative border-b border-zinc-800/60 mb-6 pb-3">
+                <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
+                  Franchise
+                </span>
+              </div>
+
+              <FranchiseSlider
+                parts={movie.collection.parts}
+                currentMovieId={movie.id}
+              />
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </MediaLayout>
+
+      <ArtworkPickerModal
+        isOpen={isPosterPickerOpen}
+        onClose={() => setIsPosterPickerOpen(false)}
+        title="CHANGE ARTWORK"
+        type="poster"
+        images={dedupedPosters || []}
+        selectedImage={selectedPoster}
+        onSelectImage={(path) => setSelectedPoster(path)}
+        isLoading={loadingPosters}
+      />
+
+      <ArtworkPickerModal
+        isOpen={isBackdropPickerOpen}
+        onClose={() => setIsBackdropPickerOpen(false)}
+        title="CHANGE BANNER"
+        type="backdrop"
+        images={(movie.images?.backdrops || []).slice(0, 30)}
+        selectedImage={selectedBackdrop}
+        onSelectImage={(path) => setSelectedBackdrop(path)}
+      />
+
+      <MediaReviewModal
+        isOpen={isLogModalOpen}
+        onClose={() => setIsLogModalOpen(false)}
+        title={movie.title}
+        year={movie.release_date ? new Date(movie.release_date).getFullYear() : "—"}
+        posterUrl={posterUrl}
+        backdropUrl={backdropUrl}
+        mediaType="movie"
+        status={movieStatus}
+        isFavorite={isFavorite}
+        rating={rating}
+        review={review}
+        hasSpoilers={hasSpoilers}
+        watchedDate={watchedDate}
+        isSaving={isSaving}
+        onStatusChange={setMovieStatus}
+        onFavoriteChange={setIsFavorite}
+        onRatingChange={setRating}
+        onReviewChange={setReview}
+        onSpoilersChange={setHasSpoilers}
+        onWatchedDateChange={setWatchedDate}
+        onSave={handleSaveReview}
+        onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
+      />
+    </>
   );
 }
 

@@ -7,17 +7,17 @@ import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
-import MediaLayout from "@/components/media/MediaLayout";
-import MediaPosterCard from "@/components/media/MediaPosterCard";
-import MediaActionBar, { MediaStatus } from "@/components/media/MediaActionBar";
-import MediaReviewModal from "@/components/media/MediaReviewModal";
-import ArtworkPickerModal from "@/components/media/ArtworkPickerModal";
-import MediaHeaderInfo from "@/components/media/MediaHeaderInfo";
-import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
-import CastTab from "@/components/media/tabs/CastTab";
-import CrewTab from "@/components/media/tabs/CrewTab";
-import DetailsTab from "@/components/media/tabs/DetailsTab";
-import ReleasesTab from "@/components/media/tabs/ReleasesTab";
+import MediaLayout from "@/components/modules/MediaLayout";
+import MediaPosterCard from "@/components/modules/MediaPosterCard";
+import MediaActionBar, { MediaStatus } from "@/components/modules/MediaActionBar";
+import MediaReviewModal from "@/components/modules/MediaReviewModal";
+import ArtworkPickerModal from "@/components/modules/ArtworkPickerModal";
+import MediaHeaderInfo from "@/components/modules/MediaHeaderInfo";
+import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
+import CastTab from "@/components/modules/tabs/CastTab";
+import CrewTab from "@/components/modules/tabs/CrewTab";
+import DetailsTab from "@/components/modules/tabs/DetailsTab";
+import ReleasesTab from "@/components/modules/tabs/ReleasesTab";
 import { getMovieCrewSections, getReleaseDateGroups } from "@/lib/media-utils";
 
 function MovieDetailContent() {

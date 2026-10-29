@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
-  Film,
   User,
   ChevronDown,
   ChevronUp,
@@ -13,7 +12,7 @@ import {
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select from "@/components/ui/Select";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import MediaCard from "@/components/media/MediaCard";
 
 const MEDIA_OPTIONS = [
   { id: "all", label: "All Formats" },
@@ -360,57 +359,24 @@ function PersonDetailContent() {
               <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                {displayedCredits.map((credit, idx) => {
-                  const posterUrl = getPosterUrl(credit.poster_path, "w500");
-                  const title = credit.title || credit.name || "Untitled";
-
-                  const isMovie = credit.media_type === "movie";
-                  const cardClass =
-                    "group relative flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
-
-                  const cardContent = (
-                    <>
-                      <CardGradientBorder />
-                      <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800/80 overflow-hidden">
-                        {posterUrl ? (
-                          <Image
-                            src={posterUrl}
-                            alt={title}
-                            fill
-                            sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
-                            <Film className="w-8 h-8 text-zinc-700 mb-1" />
-                            <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
-                              {title}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="py-2.5 px-3 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center">
-                        <p
-                          className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors truncate"
-                          title={`${title}${credit.asRole ? ` (as ${credit.asRole})` : ""}`}
-                        >
-                          as <span className="text-zinc-200 font-medium">{credit.asRole || "Actor"}</span>
-                        </p>
-                      </div>
-                    </>
-                  );
-
-                  return (
-                    <Link
-                      key={`${credit.media_type}-${credit.id}-${idx}`}
-                      href={isMovie ? `/movie/${credit.id}` : `/tv/${credit.id}`}
-                      className={cardClass}
-                    >
-                      {cardContent}
-                    </Link>
-                  );
-                })}
+                {displayedCredits.map((credit, idx) => (
+                  <MediaCard
+                    key={`${credit.media_type}-${credit.id}-${idx}`}
+                    id={credit.id}
+                    mediaType={credit.media_type === "movie" ? "movie" : "tv"}
+                    title={credit.title || credit.name || "Untitled"}
+                    posterPath={credit.poster_path}
+                    subtitle={
+                      credit.asRole ? (
+                        <>
+                          as <span className="text-zinc-200 font-medium">{credit.asRole}</span>
+                        </>
+                      ) : (
+                        "Actor"
+                      )
+                    }
+                  />
+                ))}
               </div>
             )}
           </div>

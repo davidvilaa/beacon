@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Film,
   Tv,
@@ -14,9 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Movie, getPosterUrl } from "@/lib/tmdb";
+import { Movie } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import MediaCard from "@/components/media/MediaCard";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;
@@ -188,67 +187,22 @@ function SearchContent() {
             ))
           ) : filteredMovies.length > 0 ? (
             filteredMovies.map((movie) => {
-              const posterUrl = getPosterUrl(movie.poster_path, "w342");
+              const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
                 : "-";
 
-              const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
-              const cardClass =
-                "group relative flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
-
-              const cardContent = (
-                <>
-                  <CardGradientBorder />
-                  <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
-                    {posterUrl ? (
-                      <Image
-                        src={posterUrl}
-                        alt={movie.title}
-                        fill
-                        sizes="(max-width: 640px) 120px, (max-width: 768px) 130px, 140px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 p-2 text-center">
-                        <Film className="w-6 h-6 text-zinc-700 mb-1" />
-                        <span className="text-[10px] text-zinc-600 font-semibold line-clamp-2">
-                          {movie.title}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
-                    <div>
-                      <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate min-w-0">
-                          {movie.title}
-                        </h3>
-
-                        <div className="flex items-center shrink-0 text-xs text-zinc-500 font-mono">
-                          <span className="inline-block w-[4ch] text-center">
-                            {releaseYear}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-xs text-zinc-400 line-clamp-4 sm:line-clamp-5 leading-relaxed">
-                        {movie.overview || "No overview available."}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              );
-
               return (
-                <Link
+                <MediaCard
                   key={`${movie.moduleType || "media"}-${movie.id}`}
-                  href={isMovie ? `/movie/${movie.id}` : `/tv/${movie.id}`}
-                  className={cardClass}
-                >
-                  {cardContent}
-                </Link>
+                  variant="horizontal"
+                  id={movie.id}
+                  mediaType={isMovie ? "movie" : "tv"}
+                  title={movie.title}
+                  posterPath={movie.poster_path}
+                  year={releaseYear}
+                  overview={movie.overview}
+                />
               );
             })
           ) : (

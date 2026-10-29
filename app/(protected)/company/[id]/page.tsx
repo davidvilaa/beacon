@@ -4,11 +4,11 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Building2, Film, Globe } from "lucide-react";
+import { Building2, Globe } from "lucide-react";
 import { CompanyDetails, CompanyWorkCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select, { Option } from "@/components/ui/Select";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import MediaCard from "@/components/media/MediaCard";
 
 const MEDIA_OPTIONS: Option[] = [
   { id: "all", label: "All Formats" },
@@ -263,47 +263,15 @@ function CompanyDetailContent() {
               <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                {displayedWorks.map((work, idx) => {
-                  const posterUrl = getPosterUrl(work.poster_path, "w500");
-                  const title = work.title || work.name || "Untitled";
-
-                  const isMovie = work.media_type === "movie";
-                  const cardClass =
-                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
-
-                  const cardContent = (
-                    <>
-                      <CardGradientBorder />
-                      {posterUrl ? (
-                        <Image
-                          src={posterUrl}
-                          alt={title}
-                          fill
-                          sizes="(max-width: 640px) 180px, (max-width: 1024px) 240px, 280px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
-                          <Film className="w-8 h-8 text-zinc-700 mb-1" />
-                          <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
-                            {title}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  );
-
-                  return (
-                    <Link
-                      key={`${work.media_type}-${work.id}-${idx}`}
-                      href={isMovie ? `/movie/${work.id}` : `/tv/${work.id}`}
-                      title={title}
-                      className={cardClass}
-                    >
-                      {cardContent}
-                    </Link>
-                  );
-                })}
+                {displayedWorks.map((work, idx) => (
+                  <MediaCard
+                    key={`${work.media_type}-${work.id}-${idx}`}
+                    id={work.id}
+                    mediaType={work.media_type === "movie" ? "movie" : "tv"}
+                    title={work.title || work.name || "Untitled"}
+                    posterPath={work.poster_path}
+                  />
+                ))}
               </div>
             )}
           </div>

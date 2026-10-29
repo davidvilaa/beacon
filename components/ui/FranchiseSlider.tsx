@@ -1,11 +1,9 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight, Film } from "lucide-react";
-import { Movie, getPosterUrl } from "@/lib/tmdb";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Movie } from "@/lib/tmdb";
+import MediaCard from "@/components/media/MediaCard";
 
 interface FranchiseSliderProps {
   parts: Movie[];
@@ -151,42 +149,19 @@ export default function FranchiseSlider({
         ref={scrollRef}
         className="flex items-center gap-3.5 sm:gap-4 overflow-x-auto py-2 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        {parts.map((item) => {
-          const isCurrent = item.id === currentMovieId;
-          const posterUrl = getPosterUrl(item.poster_path, "w342");
-
-          return (
-            <Link
-              key={item.id}
-              ref={isCurrent ? currentPosterRef : null}
-              href={`/movie/${item.id}`}
-              title={item.title}
-              className={`group relative aspect-[2/3] w-28 sm:w-32 md:w-36 shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 select-none ${
-                isCurrent
-                  ? "border-2 border-[#a8dadc]"
-                  : "border border-zinc-800 hover:scale-[1.03]"
-              }`}
-            >
-              {!isCurrent && <CardGradientBorder />}
-              {posterUrl ? (
-                <Image
-                  src={posterUrl}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-zinc-900">
-                  <Film className="w-6 h-6 text-zinc-700 mb-1" />
-                  <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
-                    {item.title}
-                  </span>
-                </div>
-              )}
-            </Link>
-          );
-        })}
+        {parts.map((item) => (
+          <MediaCard
+            key={item.id}
+            ref={item.id === currentMovieId ? currentPosterRef : null}
+            id={item.id}
+            mediaType="movie"
+            title={item.title}
+            posterPath={item.poster_path}
+            isCurrent={item.id === currentMovieId}
+            className="w-28 sm:w-32 md:w-36 shrink-0"
+            sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
+          />
+        ))}
       </div>
 
       {canScroll && (

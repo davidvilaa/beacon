@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
-import MediaCard from "@/components/media/MediaCard";
+import MediaCard from "@/components/ui/MediaCard";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;

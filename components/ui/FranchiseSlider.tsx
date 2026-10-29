@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
-import MediaCard from "@/components/media/MediaCard";
+import MediaCard from "@/components/ui/MediaCard";
 
 interface FranchiseSliderProps {
   parts: Movie[];

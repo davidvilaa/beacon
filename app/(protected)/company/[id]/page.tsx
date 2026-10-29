@@ -8,7 +8,7 @@ import { Building2, Globe } from "lucide-react";
 import { CompanyDetails, CompanyWorkCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select, { Option } from "@/components/ui/Select";
-import MediaCard from "@/components/media/MediaCard";
+import MediaCard from "@/components/ui/MediaCard";
 
 const MEDIA_OPTIONS: Option[] = [
   { id: "all", label: "All Formats" },

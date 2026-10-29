@@ -15,7 +15,7 @@ import {
   XCircle,
   Star,
 } from "lucide-react";
-import { MediaStatus } from "./MediaActionColumn";
+import { MediaStatus } from "../columns/MediaActionColumn";
 
 function StarRating({
   value,

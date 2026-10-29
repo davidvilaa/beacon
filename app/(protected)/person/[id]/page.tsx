@@ -13,6 +13,7 @@ import {
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select from "@/components/ui/Select";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 const MEDIA_OPTIONS = [
   { id: "all", label: "All Formats" },
@@ -365,10 +366,11 @@ function PersonDetailContent() {
 
                   const isMovie = credit.media_type === "movie";
                   const cardClass =
-                    "group relative flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
+                    "group relative flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
 
                   const cardContent = (
                     <>
+                      <CardGradientBorder />
                       <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800/80 overflow-hidden">
                         {posterUrl ? (
                           <Image

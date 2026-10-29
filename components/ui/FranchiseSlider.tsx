@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Film } from "lucide-react";
 import { Movie, getPosterUrl } from "@/lib/tmdb";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 interface FranchiseSliderProps {
   parts: Movie[];
@@ -163,9 +164,10 @@ export default function FranchiseSlider({
               className={`group relative aspect-[2/3] w-28 sm:w-32 md:w-36 shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 select-none ${
                 isCurrent
                   ? "border-2 border-[#a8dadc]"
-                  : "border border-zinc-800 hover:border-[#a8dadc]/60 hover:scale-[1.03]"
+                  : "border border-zinc-800 hover:scale-[1.03]"
               }`}
             >
+              {!isCurrent && <CardGradientBorder />}
               {posterUrl ? (
                 <Image
                   src={posterUrl}

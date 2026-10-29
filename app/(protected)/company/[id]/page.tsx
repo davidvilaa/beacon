@@ -8,6 +8,7 @@ import { Building2, Film, Globe } from "lucide-react";
 import { CompanyDetails, CompanyWorkCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select, { Option } from "@/components/ui/Select";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 const MEDIA_OPTIONS: Option[] = [
   { id: "all", label: "All Formats" },
@@ -268,10 +269,11 @@ function CompanyDetailContent() {
 
                   const isMovie = work.media_type === "movie";
                   const cardClass =
-                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:border-[#a8dadc]/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
+                    "group relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer";
 
                   const cardContent = (
                     <>
+                      <CardGradientBorder />
                       {posterUrl ? (
                         <Image
                           src={posterUrl}

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Movie, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;
@@ -194,10 +195,11 @@ function SearchContent() {
 
               const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
               const cardClass =
-                "group relative flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:border-[#a8dadc]/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
+                "group relative flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52";
 
               const cardContent = (
                 <>
+                  <CardGradientBorder />
                   <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
                     {posterUrl ? (
                       <Image

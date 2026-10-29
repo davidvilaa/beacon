@@ -366,15 +366,7 @@ function PersonDetailContent() {
                     mediaType={credit.media_type === "movie" ? "movie" : "tv"}
                     title={credit.title || credit.name || "Untitled"}
                     posterPath={credit.poster_path}
-                    subtitle={
-                      credit.asRole ? (
-                        <>
-                          as <span className="text-zinc-200 font-medium">{credit.asRole}</span>
-                        </>
-                      ) : (
-                        "Actor"
-                      )
-                    }
+                    asRole={credit.asRole || "Actor"}
                   />
                 ))}
               </div>

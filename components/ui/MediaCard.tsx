@@ -36,6 +36,7 @@ export interface MediaCardProps {
   title: string;
   posterPath?: string | null;
   subtitle?: string | React.ReactNode;
+  asRole?: string | null;
   year?: string | number | null;
   overview?: string | null;
   isCurrent?: boolean;
@@ -54,6 +55,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
       title,
       posterPath,
       subtitle,
+      asRole,
       year,
       overview,
       isCurrent = false,
@@ -125,7 +127,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
       );
     }
 
-    const hasFooter = Boolean(subtitle);
+    const hasFooter = Boolean(subtitle || asRole);
 
     return (
       <Link
@@ -167,17 +169,30 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
         </div>
 
         {hasFooter && (
-          <div className="py-2.5 px-3 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center">
-            {typeof subtitle === "string" ? (
-              <p
-                className="text-xs text-zinc-400 group-hover:text-zinc-300 transition-colors truncate"
-                title={subtitle}
-              >
-                {subtitle}
-              </p>
-            ) : (
-              subtitle
-            )}
+          <div className="py-1.5 px-2.5 bg-zinc-900/50 group-hover:bg-zinc-900/80 transition-colors text-center overflow-hidden">
+            <p
+              className="text-[11px] leading-tight text-zinc-400 group-hover:text-zinc-300 transition-colors truncate block w-full min-w-0"
+              title={
+                asRole
+                  ? `as ${asRole}`
+                  : typeof subtitle === "string"
+                  ? subtitle
+                  : undefined
+              }
+            >
+              {asRole ? (
+                <>
+                  <span className="text-zinc-500 font-normal group-hover:text-zinc-400 transition-colors">
+                    as{" "}
+                  </span>
+                  <span className="text-zinc-200 font-medium group-hover:text-zinc-100 transition-colors">
+                    {asRole}
+                  </span>
+                </>
+              ) : (
+                subtitle
+              )}
+            </p>
           </div>
         )}
       </Link>

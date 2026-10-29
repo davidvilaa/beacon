@@ -1,16 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, Suspense } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Clock,
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  User,
-} from "lucide-react";
 import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
@@ -21,120 +12,13 @@ import MediaPosterCard from "@/components/media/MediaPosterCard";
 import MediaActionBar, { MediaStatus } from "@/components/media/MediaActionBar";
 import MediaReviewModal from "@/components/media/MediaReviewModal";
 import ArtworkPickerModal from "@/components/media/ArtworkPickerModal";
-import { formatRuntime, formatFullDate } from "@/lib/media-utils";
-
-interface CrewSectionConfig {
-  key: string;
-  singular: string;
-  plural: string;
-  jobs: string[];
-}
-
-const CREW_SECTIONS: CrewSectionConfig[] = [
-  {
-    key: "directors",
-    singular: "Director",
-    plural: "Directors",
-    jobs: ["Director"],
-  },
-  {
-    key: "producers",
-    singular: "Producer",
-    plural: "Producers",
-    jobs: ["Producer", "Co-Producer"],
-  },
-  {
-    key: "exec_producers",
-    singular: "Executive Producer",
-    plural: "Executive Producers",
-    jobs: ["Executive Producer", "Associate Producer"],
-  },
-  {
-    key: "writers",
-    singular: "Writer",
-    plural: "Writers",
-    jobs: [
-      "Screenplay",
-      "Writer",
-      "Story",
-      "Original Story",
-      "Author",
-      "Characters",
-      "Novel",
-      "Adaptation",
-    ],
-  },
-  {
-    key: "casting",
-    singular: "Casting",
-    plural: "Casting",
-    jobs: ["Casting", "Casting Director"],
-  },
-  {
-    key: "editors",
-    singular: "Editor",
-    plural: "Editors",
-    jobs: ["Editor", "Film Editor", "Supervising Film Editor"],
-  },
-  {
-    key: "cinematography",
-    singular: "Cinematography",
-    plural: "Cinematography",
-    jobs: ["Director of Photography", "Cinematography"],
-  },
-  {
-    key: "production_design",
-    singular: "Production Design",
-    plural: "Production Design",
-    jobs: ["Production Design", "Art Direction", "Set Decoration"],
-  },
-  {
-    key: "costume_design",
-    singular: "Costume Design",
-    plural: "Costume Design",
-    jobs: ["Costume Design", "Costume Supervisor"],
-  },
-  {
-    key: "makeup",
-    singular: "Hair & Makeup",
-    plural: "Hair & Makeup",
-    jobs: [
-      "Makeup Artist",
-      "Hair Department Head",
-      "Makeup Department Head",
-      "Key Makeup Artist",
-      "Hairstylist",
-    ],
-  },
-  {
-    key: "music",
-    singular: "Music",
-    plural: "Music",
-    jobs: ["Original Music Composer", "Music", "Music Supervisor"],
-  },
-  {
-    key: "sound",
-    singular: "Sound",
-    plural: "Sound",
-    jobs: [
-      "Sound Designer",
-      "Sound Re-Recording Mixer",
-      "Supervising Sound Editor",
-      "Sound Mixer",
-      "Sound Effects Editor",
-    ],
-  },
-  {
-    key: "vfx",
-    singular: "Visual Effects",
-    plural: "Visual Effects",
-    jobs: [
-      "Visual Effects Supervisor",
-      "Animation Supervisor",
-      "Visual Effects Producer",
-    ],
-  },
-];
+import MediaHeaderInfo from "@/components/media/MediaHeaderInfo";
+import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
+import CastTab from "@/components/media/tabs/CastTab";
+import CrewTab from "@/components/media/tabs/CrewTab";
+import DetailsTab from "@/components/media/tabs/DetailsTab";
+import ReleasesTab from "@/components/media/tabs/ReleasesTab";
+import { getMovieCrewSections, getReleaseDateGroups } from "@/lib/media-utils";
 
 function MovieDetailContent() {
   const params = useParams();
@@ -146,7 +30,6 @@ function MovieDetailContent() {
   const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
   const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
-  const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -161,6 +44,8 @@ function MovieDetailContent() {
   const [hasSpoilers, setHasSpoilers] = useState(false);
   const [watchedDate, setWatchedDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details" | "releases">("cast");
 
   useEffect(() => {
     let ignore = false;
@@ -280,10 +165,6 @@ function MovieDetailContent() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details" | "releases">("cast");
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-
   useEffect(() => {
     let ignore = false;
 
@@ -350,7 +231,6 @@ function MovieDetailContent() {
 
           setSelectedBackdrop(chosenBackdrop);
           setSelectedPoster(chosenPoster);
-          setIsCastExpanded(false);
           setMovie(data);
         }
       } catch (err) {
@@ -374,16 +254,6 @@ function MovieDetailContent() {
   }, [id]);
 
   useEffect(() => {
-    const currentTabEl = tabRefs.current[activeTab];
-    if (currentTabEl) {
-      setIndicatorStyle({
-        left: currentTabEl.offsetLeft,
-        width: currentTabEl.offsetWidth,
-      });
-    }
-  }, [activeTab, movie]);
-
-  useEffect(() => {
     setIsBackdropLoaded(false);
   }, [selectedBackdrop]);
 
@@ -392,7 +262,6 @@ function MovieDetailContent() {
 
   useEffect(() => {
     setDedupedPosters(null);
-    setIsCastExpanded(false);
   }, [id]);
 
   useEffect(() => {
@@ -429,77 +298,11 @@ function MovieDetailContent() {
   }, [id, dedupedPosters]);
 
   const sectionCrew = useMemo(() => {
-    const raw = movie?.credits?.crew || [];
-    return CREW_SECTIONS.map((section) => {
-      const peopleMap = new Map<number, { id: number; name: string }>();
-      raw.forEach((member) => {
-        if (member && member.job && section.jobs.includes(member.job)) {
-          if (!peopleMap.has(member.id)) {
-            peopleMap.set(member.id, { id: member.id, name: member.name });
-          }
-        }
-      });
-      const people = Array.from(peopleMap.values());
-      return {
-        key: section.key,
-        label: people.length > 1 ? section.plural : section.singular,
-        people,
-      };
-    }).filter((section) => section.people.length > 0);
+    return getMovieCrewSections(movie?.credits?.crew);
   }, [movie]);
 
   const releaseDateGroups = useMemo(() => {
-    const raw = movie?.release_dates?.results || [];
-    let regionNames: Intl.DisplayNames | null = null;
-    try {
-      regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-    } catch {
-      regionNames = null;
-    }
-
-    const map = new Map<string, { code: string; country: string; certification: string }[]>();
-
-    raw.forEach((item) => {
-      let countryName = item.iso_3166_1;
-      try {
-        if (regionNames) {
-          countryName = regionNames.of(item.iso_3166_1) || item.iso_3166_1;
-        }
-      } catch {
-        countryName = item.iso_3166_1;
-      }
-
-      const validDates = (item.release_dates || []).filter((r) => Boolean(r.release_date));
-      if (validDates.length === 0) return;
-
-      const theatrical =
-        validDates.find((r) => r.type === 3) ||
-        validDates.find((r) => r.type === 2) ||
-        validDates[0];
-
-      const cert =
-        validDates.find((r) => Boolean(r.certification?.trim()))?.certification?.trim() || "";
-
-      const dateStr = theatrical?.release_date ? theatrical.release_date.slice(0, 10) : "";
-      if (!dateStr) return;
-
-      if (!map.has(dateStr)) {
-        map.set(dateStr, []);
-      }
-      map.get(dateStr)!.push({
-        code: item.iso_3166_1,
-        country: countryName,
-        certification: cert,
-      });
-    });
-
-    const groups = Array.from(map.entries()).map(([date, countries]) => ({
-      date,
-      formattedDate: formatFullDate(date),
-      countries: countries.sort((a, b) => a.country.localeCompare(b.country)),
-    }));
-
-    return groups.sort((a, b) => a.date.localeCompare(b.date));
+    return getReleaseDateGroups(movie?.release_dates?.results);
   }, [movie]);
 
   if (loading) {
@@ -526,11 +329,7 @@ function MovieDetailContent() {
 
   const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
   const posterUrl = getPosterUrl(selectedPoster, "w500");
-  const formattedReleaseDate = formatFullDate(movie.release_date);
   const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
-
-  const allCast = movie.credits?.cast || [];
-  const displayedCast = isCastExpanded ? allCast : allCast.slice(0, 12);
 
   return (
     <>
@@ -566,414 +365,42 @@ function MovieDetailContent() {
         }
       >
         <div className="w-full">
-          <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
-            Movie
-          </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
-            {movie.title}
-          </h1>
-
-          {movie.original_title && movie.original_title !== movie.title && (
-            <p className="text-sm text-zinc-500 italic mt-1">
-              {movie.original_title}
-            </p>
-          )}
-
-          <div className="flex items-center gap-2.5 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-              <span>{formattedReleaseDate}</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-zinc-500" />
-              <span>{formatRuntime(movie.runtime)}</span>
-            </span>
-          </div>
-
-          <div className="mt-5 space-y-2 max-w-2xl">
-            {movie.tagline && (
-              <p className="text-sm italic font-medium text-[#a8dadc]">
-                &ldquo;{movie.tagline}&rdquo;
-              </p>
-            )}
-            <p className="text-sm text-zinc-300 leading-relaxed">
-              {movie.overview || "No overview available."}
-            </p>
-          </div>
+          <MediaHeaderInfo
+            typeLabel="Movie"
+            title={movie.title}
+            originalTitle={movie.original_title}
+            releaseDate={movie.release_date}
+            runtimeMinutes={movie.runtime}
+            tagline={movie.tagline}
+            overview={movie.overview}
+          />
 
           <div className="mt-8">
-            <div className="relative border-b border-zinc-800/60 mb-6">
-              <div className="flex items-center gap-6">
-                <button
-                  ref={(el) => {
-                    tabRefs.current["cast"] = el;
-                  }}
-                  type="button"
-                  onClick={() => setActiveTab("cast")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                    activeTab === "cast"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Cast
-                </button>
-                <button
-                  ref={(el) => {
-                    tabRefs.current["staff"] = el;
-                  }}
-                  type="button"
-                  onClick={() => setActiveTab("staff")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                    activeTab === "staff"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Crew
-                </button>
-                <button
-                  ref={(el) => {
-                    tabRefs.current["details"] = el;
-                  }}
-                  type="button"
-                  onClick={() => setActiveTab("details")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                    activeTab === "details"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Details
-                </button>
-                <button
-                  ref={(el) => {
-                    tabRefs.current["releases"] = el;
-                  }}
-                  type="button"
-                  onClick={() => setActiveTab("releases")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer ${
-                    activeTab === "releases"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Releases
-                </button>
-              </div>
+            <MediaTabsNav
+              tabs={[
+                { key: "cast", label: "Cast" },
+                { key: "staff", label: "Crew" },
+                { key: "details", label: "Details" },
+                { key: "releases", label: "Releases" },
+              ]}
+              activeTab={activeTab}
+              onChange={(key) => setActiveTab(key as any)}
+            />
 
-              <span
-                className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out"
-                style={{
-                  left: `${indicatorStyle.left}px`,
-                  width: `${indicatorStyle.width}px`,
-                }}
-              />
-            </div>
-
-            {activeTab === "cast" && (
-              <div>
-                {displayedCast.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                      {displayedCast.map((actor) => {
-                        const profileUrl = actor.profile_path
-                          ? getPosterUrl(actor.profile_path, "w185")
-                          : null;
-                        return (
-                          <Link
-                            key={actor.id}
-                            href={`/person/${actor.id}`}
-                            className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
-                          >
-                            <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                              {profileUrl ? (
-                                <Image
-                                  src={profileUrl}
-                                  alt={actor.name}
-                                  fill
-                                  sizes="48px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <User className="w-4 h-4 text-zinc-500" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                              <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
-                                {actor.name}
-                              </p>
-                              {actor.character && (
-                                <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                                  as <span className="text-zinc-300 font-medium">{actor.character}</span>
-                                </p>
-                              )}
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    {allCast.length > 12 && (
-                      <div className="flex justify-start mt-4">
-                        <button
-                          type="button"
-                          onClick={() => setIsCastExpanded(!isCastExpanded)}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-                        >
-                          <span>{isCastExpanded ? "less..." : "more..."}</span>
-                          {isCastExpanded ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4 col-span-full">
-                    No cast information available.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {activeTab === "staff" && (
-              <div>
-                {sectionCrew.length > 0 ? (
-                  <div className="divide-y divide-zinc-700/80">
-                    {sectionCrew.map((section) => (
-                      <div
-                        key={section.key}
-                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                      >
-                        <div className="w-36 sm:w-44 shrink-0">
-                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                            {section.label}
-                          </span>
-                        </div>
-
-                        <div className="flex-1 flex flex-wrap gap-2 items-center">
-                          {section.people.map((person) => (
-                            <Link
-                              key={person.id}
-                              href={`/person/${person.id}`}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
-                            >
-                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                                {person.name}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4">
-                    No crew information available.
-                  </p>
-                )}
-              </div>
-            )}
-
+            {activeTab === "cast" && <CastTab cast={movie.credits?.cast || []} />}
+            {activeTab === "staff" && <CrewTab sections={sectionCrew} />}
             {activeTab === "details" && (
-              <div className="divide-y divide-zinc-700/80">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      {movie.production_companies && movie.production_companies.length === 1 ? "Studio" : "Studios"}
-                    </span>
-                  </div>
-                  <div className="flex-1 flex flex-wrap gap-2 items-center">
-                    {movie.production_companies && movie.production_companies.length > 0 ? (
-                      movie.production_companies.map((company) => (
-                        <Link
-                          key={company.id}
-                          href={`/company/${company.id}`}
-                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
-                        >
-                          <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                            {company.name}
-                          </span>
-                          {company.origin_country && (
-                            <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
-                              {company.origin_country}
-                            </span>
-                          )}
-                        </Link>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-500">—</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Original title
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
-                      <span
-                        className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
-                        title={movie.original_title || "—"}
-                      >
-                        {movie.original_title || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Status
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                        {movie.status || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Original language
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs font-bold uppercase text-zinc-200">
-                        {movie.original_language?.toUpperCase() || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Budget
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                        {movie.budget && movie.budget > 0
-                          ? `$${movie.budget.toLocaleString("en-US")}`
-                          : "Not available"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Revenue
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                        {movie.revenue && movie.revenue > 0
-                          ? `$${movie.revenue.toLocaleString("en-US")}`
-                          : "Not available"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Genres
-                    </span>
-                  </div>
-                  <div className="flex-1 flex flex-wrap gap-2 items-center">
-                    {movie.genres && movie.genres.length > 0 ? (
-                      movie.genres.map((g) => (
-                        <div
-                          key={g.id}
-                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
-                        >
-                          <span className="text-xs font-medium text-zinc-200">
-                            {g.name}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-500">—</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <DetailsTab
+                productionCompanies={movie.production_companies}
+                originalTitle={movie.original_title}
+                status={movie.status}
+                originalLanguage={movie.original_language}
+                budget={movie.budget}
+                revenue={movie.revenue}
+                genres={movie.genres}
+              />
             )}
-
-            {activeTab === "releases" && (
-              <div>
-                {releaseDateGroups.length > 0 ? (
-                  <div className="divide-y divide-zinc-700/80">
-                    {releaseDateGroups.map((group) => (
-                      <div
-                        key={group.date}
-                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                      >
-                        <div className="w-32 sm:w-36 shrink-0">
-                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
-                            {group.formattedDate}
-                          </span>
-                        </div>
-
-                        <div className="flex-1 flex flex-wrap gap-2 items-center">
-                          {group.countries.map((c) => (
-                            <div
-                              key={c.code}
-                              className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
-                            >
-                              <img
-                                src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
-                                alt=""
-                                className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-700/60"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                }}
-                              />
-                              <div className="flex items-center gap-1.5 px-2.5 py-1 min-w-0">
-                                <span
-                                  className="text-xs font-medium text-zinc-200 truncate max-w-[140px] sm:max-w-[180px]"
-                                  title={c.country}
-                                >
-                                  {c.country}
-                                </span>
-                                {c.certification && (
-                                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
-                                    {c.certification}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4">
-                    No release date information available.
-                  </p>
-                )}
-              </div>
-            )}
+            {activeTab === "releases" && <ReleasesTab groups={releaseDateGroups} />}
           </div>
 
           {movie.collection?.parts && movie.collection.parts.length > 0 && (

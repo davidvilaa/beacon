@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, Suspense, useCallback } from "react";
-import Image from "next/image";
+import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import {
-  Clock,
-  Calendar,
-  Film,
-  ChevronDown,
-  ChevronUp,
-  User,
-} from "lucide-react";
 import {
   TvDetails,
   TvSeasonDetails,
@@ -28,7 +19,13 @@ import MediaPosterCard from "@/components/media/MediaPosterCard";
 import MediaActionBar, { MediaStatus } from "@/components/media/MediaActionBar";
 import MediaReviewModal from "@/components/media/MediaReviewModal";
 import ArtworkPickerModal from "@/components/media/ArtworkPickerModal";
-import { formatRuntime, formatFullDate } from "@/lib/media-utils";
+import MediaHeaderInfo from "@/components/media/MediaHeaderInfo";
+import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
+import CastTab from "@/components/media/tabs/CastTab";
+import CrewTab from "@/components/media/tabs/CrewTab";
+import DetailsTab from "@/components/media/tabs/DetailsTab";
+import EpisodesTab from "@/components/media/tabs/EpisodesTab";
+import { getTvCrewSections } from "@/lib/media-utils";
 
 function TvDetailContent() {
   const params = useParams();
@@ -62,13 +59,10 @@ function TvDetailContent() {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<"cast" | "crew" | "details" | "episodes">("cast");
+
   const supabase = createClient();
   const { addToast } = useToast();
-
-  const [activeTab, setActiveTab] = useState<"cast" | "crew" | "details" | "episodes">("cast");
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [isCastExpanded, setIsCastExpanded] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -308,7 +302,6 @@ function TvDetailContent() {
       if (seasonNum === activeSeason) return;
 
       setActiveSeason(seasonNum);
-      setIsCastExpanded(false);
 
       const newUrl = `/tv/${id}?season=${seasonNum}`;
       window.history.replaceState(null, "", newUrl);
@@ -402,16 +395,6 @@ function TvDetailContent() {
     };
   }, [id, activeSeason, seasonCache]);
 
-  useEffect(() => {
-    const el = tabRefs.current[activeTab];
-    if (el) {
-      setIndicatorStyle({
-        left: el.offsetLeft,
-        width: el.offsetWidth,
-      });
-    }
-  }, [activeTab, tv]);
-
   const regularSeasons = useMemo(() => {
     if (!tv?.seasons) return [];
     return tv.seasons
@@ -425,13 +408,10 @@ function TvDetailContent() {
 
   const currentSeasonDetails = seasonCache[activeSeason] || null;
 
-  const formattedSeasonDate = useMemo(() => {
-    const rawDate =
-      currentSeasonDetails?.air_date ||
-      currentSeasonSummary?.air_date ||
-      tv?.first_air_date;
-    return formatFullDate(rawDate);
-  }, [currentSeasonDetails, currentSeasonSummary, tv]);
+  const rawDate =
+    currentSeasonDetails?.air_date ||
+    currentSeasonSummary?.air_date ||
+    tv?.first_air_date;
 
   const totalRuntimeMinutes = useMemo(() => {
     if (!currentSeasonDetails?.episodes) return 0;
@@ -441,93 +421,24 @@ function TvDetailContent() {
     );
   }, [currentSeasonDetails]);
 
-  const displayedCast = useMemo(() => {
-    const list =
+  const castList = useMemo(() => {
+    return (
       currentSeasonDetails?.credits?.cast ||
       tv?.credits?.cast ||
-      [];
-    return isCastExpanded ? list : list.slice(0, 12);
-  }, [currentSeasonDetails, tv, isCastExpanded]);
-
-  const allCastLength =
-    (currentSeasonDetails?.credits?.cast || tv?.credits?.cast || []).length;
+      []
+    );
+  }, [currentSeasonDetails, tv]);
 
   const crewList = useMemo(() => {
-    const seasonCrew = currentSeasonDetails?.credits?.crew;
-    if (seasonCrew && seasonCrew.length > 0) return seasonCrew;
-    return tv?.credits?.crew || [];
+    return (
+      currentSeasonDetails?.credits?.crew ||
+      tv?.credits?.crew ||
+      []
+    );
   }, [currentSeasonDetails, tv]);
 
   const crewSections = useMemo(() => {
-    const sections: { label: string; people: { id: number; name: string }[] }[] = [];
-
-    if (tv?.created_by && tv.created_by.length > 0) {
-      sections.push({
-        label: tv.created_by.length === 1 ? "Creator" : "Creators",
-        people: tv.created_by.map((c) => ({ id: c.id, name: c.name })),
-      });
-    }
-
-    const directors: { id: number; name: string }[] = [];
-    const writers: { id: number; name: string }[] = [];
-    const producers: { id: number; name: string }[] = [];
-    const dop: { id: number; name: string }[] = [];
-
-    const seenDir = new Set<number>();
-    const seenWrit = new Set<number>();
-    const seenProd = new Set<number>();
-    const seenDop = new Set<number>();
-
-    crewList.forEach((m) => {
-      const job = m.job?.toLowerCase() || "";
-      if (job.includes("director") && !job.includes("photography") && !job.includes("casting")) {
-        if (!seenDir.has(m.id)) {
-          seenDir.add(m.id);
-          directors.push({ id: m.id, name: m.name });
-        }
-      } else if (job.includes("writer") || job.includes("screenplay") || job.includes("story")) {
-        if (!seenWrit.has(m.id)) {
-          seenWrit.add(m.id);
-          writers.push({ id: m.id, name: m.name });
-        }
-      } else if (job.includes("producer")) {
-        if (!seenProd.has(m.id)) {
-          seenProd.add(m.id);
-          producers.push({ id: m.id, name: m.name });
-        }
-      } else if (job.includes("photography") || job.includes("cinematograph")) {
-        if (!seenDop.has(m.id)) {
-          seenDop.add(m.id);
-          dop.push({ id: m.id, name: m.name });
-        }
-      }
-    });
-
-    if (directors.length > 0) {
-      sections.push({
-        label: directors.length === 1 ? "Director" : "Directors",
-        people: directors,
-      });
-    }
-    if (writers.length > 0) {
-      sections.push({
-        label: writers.length === 1 ? "Writer" : "Writers",
-        people: writers,
-      });
-    }
-    if (producers.length > 0) {
-      sections.push({
-        label: producers.length === 1 ? "Producer" : "Producers",
-        people: producers,
-      });
-    }
-    if (dop.length > 0) {
-      sections.push({
-        label: "Cinematography",
-        people: dop,
-      });
-    }
-    return sections;
+    return getTvCrewSections(crewList, tv?.created_by);
   }, [crewList, tv?.created_by]);
 
   if (loading) {
@@ -629,415 +540,52 @@ function TvDetailContent() {
         }
       >
         <div className="w-full">
-          <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
-            Series
-          </p>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
-            {tv.name}
-          </h1>
-
-          {tv.original_name && tv.original_name !== tv.name && (
-            <p className="text-sm text-zinc-500 italic mt-1">
-              {tv.original_name}
-            </p>
-          )}
-
-          <div className="flex items-center gap-2.5 text-xs text-zinc-400 mt-3 pb-3 border-b border-zinc-800/80 flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-              <span>{formattedSeasonDate}</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-zinc-500" />
-              <span>{formatRuntime(totalRuntimeMinutes)}</span>
-            </span>
-            {episodesCount > 0 && (
-              <>
-                <span>•</span>
-                <span>{episodesCount} Episodes</span>
-              </>
-            )}
-          </div>
-
-          <div className="mt-5 space-y-2 max-w-2xl">
-            {tv.tagline && (
-              <p className="text-sm italic font-medium text-[#a8dadc]">
-                &ldquo;{tv.tagline}&rdquo;
-              </p>
-            )}
-            <p className="text-sm text-zinc-300 leading-relaxed">
-              {overviewText || "No overview available."}
-            </p>
-          </div>
+          <MediaHeaderInfo
+            typeLabel="Series"
+            title={tv.name}
+            originalTitle={tv.original_name}
+            releaseDate={rawDate}
+            runtimeMinutes={totalRuntimeMinutes}
+            episodesCount={episodesCount}
+            tagline={tv.tagline}
+            overview={overviewText}
+          />
 
           <div className="mt-8">
-            <div className="relative border-b border-zinc-800/60 mb-6">
-              <div className="flex items-center gap-6 overflow-x-auto [scrollbar-width:none]">
-                <button
-                  type="button"
-                  ref={(el) => {
-                    tabRefs.current.cast = el;
-                  }}
-                  onClick={() => setActiveTab("cast")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer shrink-0 ${
-                    activeTab === "cast"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Cast
-                </button>
-                <button
-                  type="button"
-                  ref={(el) => {
-                    tabRefs.current.crew = el;
-                  }}
-                  onClick={() => setActiveTab("crew")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer shrink-0 ${
-                    activeTab === "crew"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Crew
-                </button>
-                <button
-                  type="button"
-                  ref={(el) => {
-                    tabRefs.current.details = el;
-                  }}
-                  onClick={() => setActiveTab("details")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer shrink-0 ${
-                    activeTab === "details"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Details
-                </button>
-                <button
-                  type="button"
-                  ref={(el) => {
-                    tabRefs.current.episodes = el;
-                  }}
-                  onClick={() => setActiveTab("episodes")}
-                  className={`text-sm font-bold uppercase tracking-wider pb-3 transition-colors cursor-pointer shrink-0 ${
-                    activeTab === "episodes"
-                      ? "text-zinc-100"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  Episodes
-                </button>
-
-                <div
-                  className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: `${indicatorStyle.left}px`,
-                    width: `${indicatorStyle.width}px`,
-                  }}
-                />
-              </div>
-            </div>
+            <MediaTabsNav
+              tabs={[
+                { key: "cast", label: "Cast" },
+                { key: "crew", label: "Crew" },
+                { key: "details", label: "Details" },
+                { key: "episodes", label: "Episodes" },
+              ]}
+              activeTab={activeTab}
+              onChange={(key) => setActiveTab(key as any)}
+            />
 
             {activeTab === "cast" && (
-              <div>
-                {displayedCast.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
-                      {displayedCast.map((actor, idx) => {
-                        const profileUrl = actor.profile_path
-                          ? getPosterUrl(actor.profile_path, "w185")
-                          : null;
-                        return (
-                          <Link
-                            key={`${actor.id}-${idx}`}
-                            href={`/person/${actor.id}`}
-                            className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
-                          >
-                            <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                              {profileUrl ? (
-                                <Image
-                                  src={profileUrl}
-                                  alt={actor.name}
-                                  fill
-                                  sizes="48px"
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <User className="w-4 h-4 text-zinc-500" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                              <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
-                                {actor.name}
-                              </p>
-                              {actor.character && (
-                                <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                                  as <span className="text-zinc-300 font-medium">{actor.character}</span>
-                                </p>
-                              )}
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-
-                    {allCastLength > 12 && (
-                      <div className="flex justify-start mt-4">
-                        <button
-                          type="button"
-                          onClick={() => setIsCastExpanded(!isCastExpanded)}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-                        >
-                          <span>{isCastExpanded ? "less..." : "more..."}</span>
-                          {isCastExpanded ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4 col-span-full">
-                    No cast information available for this season.
-                  </p>
-                )}
-              </div>
+              <CastTab
+                cast={castList}
+                emptyMessage="No cast information available for this season."
+              />
             )}
-
-            {activeTab === "crew" && (
-              <div>
-                {crewSections.length > 0 ? (
-                  <div className="divide-y divide-zinc-700/80">
-                    {crewSections.map((section, idx) => (
-                      <div
-                        key={`${section.label}-${idx}`}
-                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                      >
-                        <div className="w-36 sm:w-44 shrink-0">
-                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                            {section.label}
-                          </span>
-                        </div>
-
-                        <div className="flex-1 flex flex-wrap gap-2 items-center">
-                          {section.people.map((person) => (
-                            <Link
-                              key={person.id}
-                              href={`/person/${person.id}`}
-                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
-                            >
-                              <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                                {person.name}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4">
-                    No crew information available.
-                  </p>
-                )}
-              </div>
-            )}
-
+            {activeTab === "crew" && <CrewTab sections={crewSections} />}
             {activeTab === "details" && (
-              <div className="divide-y divide-zinc-700/80">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      {tv.production_companies && tv.production_companies.length === 1 ? "Studio" : "Studios"}
-                    </span>
-                  </div>
-                  <div className="flex-1 flex flex-wrap gap-2 items-center">
-                    {tv.production_companies && tv.production_companies.length > 0 ? (
-                      tv.production_companies.map((company) => (
-                        <Link
-                          key={company.id}
-                          href={`/company/${company.id}`}
-                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
-                        >
-                          <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                            {company.name}
-                          </span>
-                          {company.origin_country && (
-                            <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
-                              {company.origin_country}
-                            </span>
-                          )}
-                        </Link>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-500">—</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Original title
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
-                      <span
-                        className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
-                        title={tv.original_name || "—"}
-                      >
-                        {tv.original_name || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Status
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                        {tv.status || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Original language
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs font-bold uppercase text-zinc-200">
-                        {tv.original_language?.toUpperCase() || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Seasons & Episodes
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center">
-                    <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
-                      <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                        {tv.number_of_seasons} Seasons • {tv.number_of_episodes} Episodes
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
-                  <div className="w-36 sm:w-44 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                      Genres
-                    </span>
-                  </div>
-                  <div className="flex-1 flex flex-wrap gap-2 items-center">
-                    {tv.genres && tv.genres.length > 0 ? (
-                      tv.genres.map((g) => (
-                        <div
-                          key={g.id}
-                          className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
-                        >
-                          <span className="text-xs font-medium text-zinc-200">
-                            {g.name}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-500">—</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <DetailsTab
+                productionCompanies={tv.production_companies}
+                originalTitle={tv.original_name}
+                status={tv.status}
+                originalLanguage={tv.original_language}
+                seasonsCount={tv.number_of_seasons}
+                episodesCount={tv.number_of_episodes}
+                genres={tv.genres}
+              />
             )}
-
             {activeTab === "episodes" && (
-              <div>
-                {currentSeasonDetails?.episodes &&
-                currentSeasonDetails.episodes.length > 0 ? (
-                  <div
-                    className={`divide-y divide-zinc-700/80 transition-opacity duration-200 ${
-                      isSeasonLoading ? "opacity-50" : "opacity-100"
-                    }`}
-                  >
-                    {currentSeasonDetails.episodes.map((ep) => {
-                      const stillUrl = getPosterUrl(ep.still_path, "w500");
-                      return (
-                        <div
-                          key={ep.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
-                        >
-                          <div className="flex-1 min-w-0 pr-0 sm:pr-6">
-                            <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200">
-                              E{String(ep.episode_number).padStart(2, "0")}. {ep.name}
-                            </h4>
-
-                            <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
-                              <span>{formatFullDate(ep.air_date)}</span>
-                              {ep.runtime ? (
-                                <>
-                                  <span>•</span>
-                                  <span>{ep.runtime}m</span>
-                                </>
-                              ) : null}
-                            </div>
-
-                            {ep.overview && (
-                              <p className="text-xs text-zinc-400 line-clamp-2 sm:line-clamp-3 mt-2 leading-relaxed">
-                                {ep.overview}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
-                            {stillUrl ? (
-                              <Image
-                                src={stillUrl}
-                                alt={ep.name}
-                                fill
-                                sizes="(max-width: 640px) 100vw, 192px"
-                                className="object-cover transition-opacity duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
-                                <Film className="w-6 h-6 mb-1 text-zinc-700" />
-                                <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[140px]">
-                                  {ep.name}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : isSeasonLoading ? (
-                  <div className="py-12 flex items-center justify-center">
-                    <Loading />
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-500 py-4">No episode information available.</p>
-                )}
-              </div>
+              <EpisodesTab
+                episodes={currentSeasonDetails?.episodes}
+                isLoading={isSeasonLoading}
+              />
             )}
           </div>
         </div>

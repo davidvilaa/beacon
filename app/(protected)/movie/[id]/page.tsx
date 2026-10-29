@@ -8,11 +8,10 @@ import FranchiseSlider from "@/components/ui/FranchiseSlider";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaPosterCard from "@/components/modules/MediaPosterCard";
-import MediaActionBar, { MediaStatus } from "@/components/modules/MediaActionBar";
+import MediaActionColumn, { MediaStatus } from "@/components/modules/MediaActionColumn";
+import MediaInfoColumn from "@/components/modules/MediaInfoColumn";
 import MediaReviewModal from "@/components/modules/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/ArtworkPickerModal";
-import MediaHeaderInfo from "@/components/modules/MediaHeaderInfo";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
@@ -339,69 +338,61 @@ function MovieDetailContent() {
         isBackdropLoaded={isBackdropLoaded}
         onBackdropLoaded={() => setIsBackdropLoaded(true)}
         posterColumn={
-          <>
-            <MediaPosterCard
-              posterUrl={posterUrl}
-              title={movie.title}
-              hasMultiplePosters={hasMultiplePosters}
-              onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
-            />
-            <MediaActionBar
-              mediaType="movie"
-              status={movieStatus}
-              isFavorite={isFavorite}
-              onOpenLogModal={() => setIsLogModalOpen(true)}
-              onQuickStatusChange={(newStatus) => {
-                setMovieStatus(newStatus);
-                handleQuickAction(newStatus, isFavorite);
-              }}
-              onToggleFavorite={() => {
-                const nextFav = !isFavorite;
-                setIsFavorite(nextFav);
-                handleQuickAction(movieStatus, nextFav);
-              }}
-            />
-          </>
+          <MediaActionColumn
+            posterUrl={posterUrl}
+            title={movie.title}
+            hasMultiplePosters={hasMultiplePosters}
+            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            mediaType="movie"
+            status={movieStatus}
+            isFavorite={isFavorite}
+            onOpenLogModal={() => setIsLogModalOpen(true)}
+            onQuickStatusChange={(newStatus) => {
+              setMovieStatus(newStatus);
+              handleQuickAction(newStatus, isFavorite);
+            }}
+            onToggleFavorite={() => {
+              const nextFav = !isFavorite;
+              setIsFavorite(nextFav);
+              handleQuickAction(movieStatus, nextFav);
+            }}
+          />
         }
       >
-        <div className="w-full">
-          <MediaHeaderInfo
-            typeLabel="Movie"
-            title={movie.title}
-            originalTitle={movie.original_title}
-            releaseDate={movie.release_date}
-            runtimeMinutes={movie.runtime}
-            tagline={movie.tagline}
-            overview={movie.overview}
+        <MediaInfoColumn
+          typeLabel="Movie"
+          title={movie.title}
+          originalTitle={movie.original_title}
+          releaseDate={movie.release_date}
+          runtimeMinutes={movie.runtime}
+          tagline={movie.tagline}
+          overview={movie.overview}
+        >
+          <MediaTabsNav
+            tabs={[
+              { key: "cast", label: "Cast" },
+              { key: "staff", label: "Crew" },
+              { key: "details", label: "Details" },
+              { key: "releases", label: "Releases" },
+            ]}
+            activeTab={activeTab}
+            onChange={(key) => setActiveTab(key as any)}
           />
 
-          <div className="mt-8">
-            <MediaTabsNav
-              tabs={[
-                { key: "cast", label: "Cast" },
-                { key: "staff", label: "Crew" },
-                { key: "details", label: "Details" },
-                { key: "releases", label: "Releases" },
-              ]}
-              activeTab={activeTab}
-              onChange={(key) => setActiveTab(key as any)}
+          {activeTab === "cast" && <CastTab cast={movie.credits?.cast || []} />}
+          {activeTab === "staff" && <CrewTab sections={sectionCrew} />}
+          {activeTab === "details" && (
+            <DetailsTab
+              productionCompanies={movie.production_companies}
+              originalTitle={movie.original_title}
+              status={movie.status}
+              originalLanguage={movie.original_language}
+              budget={movie.budget}
+              revenue={movie.revenue}
+              genres={movie.genres}
             />
-
-            {activeTab === "cast" && <CastTab cast={movie.credits?.cast || []} />}
-            {activeTab === "staff" && <CrewTab sections={sectionCrew} />}
-            {activeTab === "details" && (
-              <DetailsTab
-                productionCompanies={movie.production_companies}
-                originalTitle={movie.original_title}
-                status={movie.status}
-                originalLanguage={movie.original_language}
-                budget={movie.budget}
-                revenue={movie.revenue}
-                genres={movie.genres}
-              />
-            )}
-            {activeTab === "releases" && <ReleasesTab groups={releaseDateGroups} />}
-          </div>
+          )}
+          {activeTab === "releases" && <ReleasesTab groups={releaseDateGroups} />}
 
           {movie.collection?.parts && movie.collection.parts.length > 0 && (
             <div className="mt-12 sm:mt-14">
@@ -417,7 +408,7 @@ function MovieDetailContent() {
               />
             </div>
           )}
-        </div>
+        </MediaInfoColumn>
       </MediaLayout>
 
       <ArtworkPickerModal

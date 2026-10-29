@@ -1,9 +1,10 @@
 "use client";
 
+import React from "react";
 import { Calendar, Clock } from "lucide-react";
 import { formatRuntime, formatFullDate } from "@/lib/media-utils";
 
-interface MediaHeaderInfoProps {
+interface MediaInfoColumnProps {
   typeLabel: string;
   title: string;
   originalTitle?: string | null;
@@ -12,9 +13,11 @@ interface MediaHeaderInfoProps {
   episodesCount?: number | null;
   tagline?: string | null;
   overview?: string | null;
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export default function MediaHeaderInfo({
+export default function MediaInfoColumn({
   typeLabel,
   title,
   originalTitle,
@@ -23,11 +26,13 @@ export default function MediaHeaderInfo({
   episodesCount,
   tagline,
   overview,
-}: MediaHeaderInfoProps) {
+  children,
+  className = "",
+}: MediaInfoColumnProps) {
   const formattedDate = formatFullDate(releaseDate);
 
   return (
-    <div className="w-full">
+    <div className={`flex-1 min-w-0 w-full ${className}`}>
       <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
         {typeLabel}
       </p>
@@ -69,6 +74,8 @@ export default function MediaHeaderInfo({
           {overview || "No overview available."}
         </p>
       </div>
+
+      {children && <div className="mt-8">{children}</div>}
     </div>
   );
 }

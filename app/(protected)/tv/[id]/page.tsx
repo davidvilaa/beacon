@@ -15,11 +15,10 @@ import SeasonRevolver from "@/components/ui/SeasonRevolver";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaPosterCard from "@/components/modules/MediaPosterCard";
-import MediaActionBar, { MediaStatus } from "@/components/modules/MediaActionBar";
+import MediaActionColumn, { MediaStatus } from "@/components/modules/MediaActionColumn";
+import MediaInfoColumn from "@/components/modules/MediaInfoColumn";
 import MediaReviewModal from "@/components/modules/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/ArtworkPickerModal";
-import MediaHeaderInfo from "@/components/modules/MediaHeaderInfo";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
@@ -493,102 +492,92 @@ function TvDetailContent() {
         isBackdropLoaded={isBackdropLoaded}
         onBackdropLoaded={() => setIsBackdropLoaded(true)}
         posterColumn={
-          <div className="relative w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
+          <MediaActionColumn
+            posterUrl={posterUrl}
+            title={tv.name}
+            hasMultiplePosters={true}
+            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            mediaType="tv"
+            status={seriesStatus}
+            isFavorite={isFavorite}
+            onOpenLogModal={() => setIsLogModalOpen(true)}
+            onQuickStatusChange={(newStatus) => {
+              setSeriesStatus(newStatus);
+              handleQuickAction(newStatus, isFavorite);
+            }}
+            onToggleFavorite={() => {
+              const nextFav = !isFavorite;
+              setIsFavorite(nextFav);
+              handleQuickAction(seriesStatus, nextFav);
+            }}
+          >
             {regularSeasons.length > 0 && (
-              <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
-                <SeasonRevolver
-                  seasons={regularSeasons}
-                  activeSeason={activeSeason}
-                  onSelectSeason={handleSelectSeason}
-                />
-              </div>
+              <>
+                <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
+                  <SeasonRevolver
+                    seasons={regularSeasons}
+                    activeSeason={activeSeason}
+                    onSelectSeason={handleSelectSeason}
+                  />
+                </div>
+                <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <SeasonRevolver
+                    seasons={regularSeasons}
+                    activeSeason={activeSeason}
+                    onSelectSeason={handleSelectSeason}
+                  />
+                </div>
+              </>
             )}
-
-            <MediaPosterCard
-              posterUrl={posterUrl}
-              title={tv.name}
-              hasMultiplePosters={true}
-              onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
-            />
-
-            <MediaActionBar
-              mediaType="tv"
-              status={seriesStatus}
-              isFavorite={isFavorite}
-              onOpenLogModal={() => setIsLogModalOpen(true)}
-              onQuickStatusChange={(newStatus) => {
-                setSeriesStatus(newStatus);
-                handleQuickAction(newStatus, isFavorite);
-              }}
-              onToggleFavorite={() => {
-                const nextFav = !isFavorite;
-                setIsFavorite(nextFav);
-                handleQuickAction(seriesStatus, nextFav);
-              }}
-            />
-
-            {regularSeasons.length > 0 && (
-              <div className="sm:hidden flex items-center justify-center mt-3 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
-                <SeasonRevolver
-                  seasons={regularSeasons}
-                  activeSeason={activeSeason}
-                  onSelectSeason={handleSelectSeason}
-                />
-              </div>
-            )}
-          </div>
+          </MediaActionColumn>
         }
       >
-        <div className="w-full">
-          <MediaHeaderInfo
-            typeLabel="Series"
-            title={tv.name}
-            originalTitle={tv.original_name}
-            releaseDate={rawDate}
-            runtimeMinutes={totalRuntimeMinutes}
-            episodesCount={episodesCount}
-            tagline={tv.tagline}
-            overview={overviewText}
+        <MediaInfoColumn
+          typeLabel="Series"
+          title={tv.name}
+          originalTitle={tv.original_name}
+          releaseDate={rawDate}
+          runtimeMinutes={totalRuntimeMinutes}
+          episodesCount={episodesCount}
+          tagline={tv.tagline}
+          overview={overviewText}
+        >
+          <MediaTabsNav
+            tabs={[
+              { key: "cast", label: "Cast" },
+              { key: "crew", label: "Crew" },
+              { key: "details", label: "Details" },
+              { key: "episodes", label: "Episodes" },
+            ]}
+            activeTab={activeTab}
+            onChange={(key) => setActiveTab(key as any)}
           />
 
-          <div className="mt-8">
-            <MediaTabsNav
-              tabs={[
-                { key: "cast", label: "Cast" },
-                { key: "crew", label: "Crew" },
-                { key: "details", label: "Details" },
-                { key: "episodes", label: "Episodes" },
-              ]}
-              activeTab={activeTab}
-              onChange={(key) => setActiveTab(key as any)}
+          {activeTab === "cast" && (
+            <CastTab
+              cast={castList}
+              emptyMessage="No cast information available for this season."
             />
-
-            {activeTab === "cast" && (
-              <CastTab
-                cast={castList}
-                emptyMessage="No cast information available for this season."
-              />
-            )}
-            {activeTab === "crew" && <CrewTab sections={crewSections} />}
-            {activeTab === "details" && (
-              <DetailsTab
-                productionCompanies={tv.production_companies}
-                originalTitle={tv.original_name}
-                status={tv.status}
-                originalLanguage={tv.original_language}
-                seasonsCount={tv.number_of_seasons}
-                episodesCount={tv.number_of_episodes}
-                genres={tv.genres}
-              />
-            )}
-            {activeTab === "episodes" && (
-              <EpisodesTab
-                episodes={currentSeasonDetails?.episodes}
-                isLoading={isSeasonLoading}
-              />
-            )}
-          </div>
-        </div>
+          )}
+          {activeTab === "crew" && <CrewTab sections={crewSections} />}
+          {activeTab === "details" && (
+            <DetailsTab
+              productionCompanies={tv.production_companies}
+              originalTitle={tv.original_name}
+              status={tv.status}
+              originalLanguage={tv.original_language}
+              seasonsCount={tv.number_of_seasons}
+              episodesCount={tv.number_of_episodes}
+              genres={tv.genres}
+            />
+          )}
+          {activeTab === "episodes" && (
+            <EpisodesTab
+              episodes={currentSeasonDetails?.episodes}
+              isLoading={isSeasonLoading}
+            />
+          )}
+        </MediaInfoColumn>
       </MediaLayout>
 
       <ArtworkPickerModal

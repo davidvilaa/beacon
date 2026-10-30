@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 interface CrewSection {
   key?: string;
@@ -39,8 +40,9 @@ export default function CrewTab({
               <Link
                 key={person.id}
                 href={`/person/${person.id}`}
-                className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer"
+                className="relative inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
               >
+                <CardGradientBorder roundedClassName="rounded-md" />
                 <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                   {person.name}
                 </span>

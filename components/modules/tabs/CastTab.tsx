@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { User, ChevronDown, ChevronUp } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 interface CastMember {
   id: number;
@@ -41,8 +42,9 @@ export default function CastTab({
             <Link
               key={`${actor.id}-${idx}`}
               href={`/person/${actor.id}`}
-              className="flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:border-[#a8dadc]/60 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
+              className="relative flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
             >
+              <CardGradientBorder roundedClassName="rounded-lg" />
               <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
                 {profileUrl ? (
                   <Image

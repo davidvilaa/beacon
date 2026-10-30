@@ -16,6 +16,7 @@ import {
 import { Movie } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import MediaCard from "@/components/ui/MediaCard";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 interface SearchMovieItem extends Movie {
   moduleType?: string;
@@ -145,12 +146,13 @@ function SearchContent() {
                 onClick={() => handleModuleClick(mod.id)}
                 title={mod.title}
                 aria-label={mod.title}
-                className={`w-14 h-14 rounded-md border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 ${
+                className={`group relative w-14 h-14 rounded-md border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden ${
                   isSelected
                     ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc]"
-                    : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900"
+                    : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
                 }`}
               >
+                {!isSelected && <CardGradientBorder roundedClassName="rounded-md" />}
                 <Icon className="w-6 h-6" />
               </button>
             );

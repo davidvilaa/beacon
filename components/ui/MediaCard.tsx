@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Film } from "lucide-react";
-import { getPosterUrl } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 
 function CardGradientBorder({
   className = "",
@@ -35,6 +35,7 @@ export interface MediaCardProps {
   href?: string;
   title: string;
   posterPath?: string | null;
+  backdropPath?: string | null;
   subtitle?: string | React.ReactNode;
   asRole?: string | null;
   year?: string | number | null;
@@ -54,6 +55,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
       href,
       title,
       posterPath,
+      backdropPath,
       subtitle,
       asRole,
       year,
@@ -69,59 +71,57 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
     const resolvedHref = href || (id ? `/${mediaType}/${id}` : "#");
     const posterUrl = getPosterUrl(
       posterPath || null,
-      variant === "horizontal" ? "w342" : "w500"
+      variant === "horizontal" ? "w500" : "w500"
     );
 
     if (variant === "horizontal") {
+      const backdropUrl = backdropPath ? getBackdropUrl(backdropPath, "w780") : null;
+      const imageUrl = backdropUrl || posterUrl;
+
       return (
         <Link
           ref={ref}
           href={resolvedHref}
           title={title}
-          className={`group relative flex items-stretch rounded-xl border border-zinc-800/80 bg-zinc-900/30 hover:bg-zinc-900/60 hover:scale-[1.03] hover:z-10 transition-all duration-200 cursor-pointer overflow-hidden h-44 sm:h-48 md:h-52 ${className}`}
+          className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
         >
-          {!isCurrent && <CardGradientBorder />}
+          <div className="flex-1 min-w-0 pr-0 sm:pr-6">
+            <div className="flex items-baseline gap-2 min-w-0 mb-1.5 flex-wrap">
+              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                {title}
+              </h3>
+              {year && (
+                <span className="text-xs text-zinc-400 font-mono shrink-0 font-normal">
+                  ({year})
+                </span>
+              )}
+            </div>
 
-          <div className="relative h-full aspect-[2/3] shrink-0 bg-zinc-900 border-r border-zinc-800/80 overflow-hidden">
-            {posterUrl ? (
+            {overview && (
+              <p className="text-xs text-zinc-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                {overview}
+              </p>
+            )}
+          </div>
+
+          <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+            {imageUrl ? (
               <Image
-                src={posterUrl}
+                src={imageUrl}
                 alt={title}
                 fill
                 priority={priority}
-                sizes={sizes || "(max-width: 640px) 120px, (max-width: 768px) 130px, 140px"}
-                className="object-cover"
+                sizes={sizes || "(max-width: 640px) 100vw, 192px"}
+                className="object-cover transition-opacity duration-300"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 p-2 text-center">
-                <Film className="w-6 h-6 text-zinc-700 mb-1" />
-                <span className="text-[10px] text-zinc-600 font-semibold line-clamp-2">
+              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
+                <Film className="w-6 h-6 mb-1 text-zinc-700" />
+                <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[140px]">
                   {title}
                 </span>
               </div>
             )}
-          </div>
-
-          <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
-            <div>
-              <div className="flex items-start justify-between gap-3 mb-1.5">
-                <h3 className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate min-w-0">
-                  {title}
-                </h3>
-
-                {year && (
-                  <div className="flex items-center shrink-0 text-xs text-zinc-500 font-mono">
-                    <span className="inline-block w-[4ch] text-center">
-                      {year}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <p className="text-xs text-zinc-400 line-clamp-4 sm:line-clamp-5 leading-relaxed">
-                {overview || "No overview available."}
-              </p>
-            </div>
           </div>
         </Link>
       );

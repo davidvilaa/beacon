@@ -165,24 +165,22 @@ function SearchContent() {
           </h2>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="divide-y divide-zinc-700/80">
           {loading ? (
             Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="h-44 sm:h-48 md:h-52 rounded-xl bg-zinc-900/30 border border-zinc-800/60 animate-pulse flex items-stretch overflow-hidden"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 animate-pulse"
               >
-                <div className="h-full aspect-[2/3] bg-zinc-800/60 shrink-0 border-r border-zinc-800/60" />
-                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
-                      <div className="h-3 bg-zinc-800/40 rounded w-10" />
-                    </div>
-                    <div className="h-3 bg-zinc-800/30 rounded w-full" />
-                    <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
+                <div className="flex-1 min-w-0 pr-0 sm:pr-6 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
+                    <div className="h-3 bg-zinc-800/40 rounded w-12" />
                   </div>
+                  <div className="h-3 bg-zinc-800/30 rounded w-full" />
+                  <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
                 </div>
+                <div className="w-full sm:w-44 md:w-48 aspect-video rounded-lg bg-zinc-900 border border-zinc-800/80 shrink-0" />
               </div>
             ))
           ) : filteredMovies.length > 0 ? (
@@ -190,7 +188,7 @@ function SearchContent() {
               const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
-                : "-";
+                : "";
 
               return (
                 <MediaCard
@@ -200,6 +198,7 @@ function SearchContent() {
                   mediaType={isMovie ? "movie" : "tv"}
                   title={movie.title}
                   posterPath={movie.poster_path}
+                  backdropPath={movie.backdrop_path}
                   year={releaseYear}
                   overview={movie.overview}
                 />

@@ -170,17 +170,17 @@ function SearchContent() {
             Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 animate-pulse"
+                className="flex items-center gap-4 sm:gap-5 py-3.5 sm:py-4 px-2 animate-pulse"
               >
-                <div className="flex-1 min-w-0 pr-0 sm:pr-6 space-y-2.5">
+                <div className="w-16 sm:w-20 md:w-24 aspect-[2/3] rounded-lg bg-zinc-900 border border-zinc-800/80 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
-                    <div className="h-3 bg-zinc-800/40 rounded w-12" />
+                    <div className="h-3 bg-zinc-800/40 rounded w-10" />
                   </div>
                   <div className="h-3 bg-zinc-800/30 rounded w-full" />
                   <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
                 </div>
-                <div className="w-full sm:w-44 md:w-48 aspect-video rounded-lg bg-zinc-900 border border-zinc-800/80 shrink-0" />
               </div>
             ))
           ) : filteredMovies.length > 0 ? (

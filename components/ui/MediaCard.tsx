@@ -75,24 +75,41 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
     );
 
     if (variant === "horizontal") {
-      const backdropUrl = backdropPath ? getBackdropUrl(backdropPath, "w780") : null;
-      const imageUrl = backdropUrl || posterUrl;
-
       return (
         <Link
           ref={ref}
           href={resolvedHref}
           title={title}
-          className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
+          className={`group flex items-center gap-4 sm:gap-5 py-3.5 sm:py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
         >
-          <div className="flex-1 min-w-0 pr-0 sm:pr-6">
-            <div className="flex items-baseline gap-2 min-w-0 mb-1.5 flex-wrap">
+          <div className="relative w-16 sm:w-20 md:w-24 aspect-[2/3] rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+            {posterUrl ? (
+              <Image
+                src={posterUrl}
+                alt={title}
+                fill
+                priority={priority}
+                sizes={sizes || "(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"}
+                className="object-cover transition-opacity duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center text-zinc-600 bg-zinc-900">
+                <Film className="w-5 h-5 mb-1 text-zinc-700" />
+                <span className="text-[9px] text-zinc-500 font-semibold truncate max-w-[60px]">
+                  {title}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-2 min-w-0 mb-1 flex-wrap">
               <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
                 {title}
               </h3>
               {year && (
                 <span className="text-xs text-zinc-400 font-mono shrink-0 font-normal">
-                  ({year})
+                  {year}
                 </span>
               )}
             </div>
@@ -101,26 +118,6 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
               <p className="text-xs text-zinc-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                 {overview}
               </p>
-            )}
-          </div>
-
-          <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt={title}
-                fill
-                priority={priority}
-                sizes={sizes || "(max-width: 640px) 100vw, 192px"}
-                className="object-cover transition-opacity duration-300"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
-                <Film className="w-6 h-6 mb-1 text-zinc-700" />
-                <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[140px]">
-                  {title}
-                </span>
-              </div>
             )}
           </div>
         </Link>

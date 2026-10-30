@@ -12,6 +12,7 @@ import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/Med
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
 import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
+import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
@@ -258,9 +259,12 @@ function MovieDetailContent() {
 
   const [dedupedPosters, setDedupedPosters] = useState<MovieImage[] | null>(null);
   const [loadingPosters, setLoadingPosters] = useState(false);
+  const [dedupedBackdrops, setDedupedBackdrops] = useState<MovieImage[] | null>(null);
+  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
 
   useEffect(() => {
     setDedupedPosters(null);
+    setDedupedBackdrops(null);
   }, [id]);
 
   useEffect(() => {
@@ -296,6 +300,67 @@ function MovieDetailContent() {
     };
   }, [id, dedupedPosters]);
 
+  useEffect(() => {
+    if (!id || dedupedBackdrops) return;
+
+    let ignore = false;
+
+    async function fetchBackdrops() {
+      try {
+        setLoadingBackdrops(true);
+        const res = await fetch(`/api/movies/${id}/backdrops`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.backdrops?.length) {
+            setDedupedBackdrops(data.backdrops);
+          }
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error(err);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingBackdrops(false);
+        }
+      }
+    }
+
+    fetchBackdrops();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, dedupedBackdrops]);
+
+  const handleSelectPoster = async (path: string) => {
+    setSelectedPoster(path);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && movie && movieStatus) {
+        await supabase
+          .from("user_movies")
+          .update({ custom_poster_path: path })
+          .eq("user_id", session.user.id)
+          .eq("movie_id", movie.id);
+      }
+    } catch {}
+  };
+
+  const handleSelectBackdrop = async (path: string) => {
+    setSelectedBackdrop(path);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && movie && movieStatus) {
+        await supabase
+          .from("user_movies")
+          .update({ custom_backdrop_path: path })
+          .eq("user_id", session.user.id)
+          .eq("movie_id", movie.id);
+      }
+    } catch {}
+  };
+
   const sectionCrew = useMemo(() => {
     return getMovieCrewSections(movie?.credits?.crew);
   }, [movie]);
@@ -328,7 +393,8 @@ function MovieDetailContent() {
 
   const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
   const posterUrl = getPosterUrl(selectedPoster, "w500");
-  const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
+  const hasMultiplePosters = (dedupedPosters?.length || movie.images?.posters?.length || 0) > 1;
+  const hasMultipleBackdrops = (dedupedBackdrops?.length || movie.images?.backdrops?.length || 0) > 1;
 
   return (
     <>
@@ -337,6 +403,8 @@ function MovieDetailContent() {
         backdropAlt={movie.title}
         isBackdropLoaded={isBackdropLoaded}
         onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        hasMultipleBackdrops={hasMultipleBackdrops}
+        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
@@ -418,18 +486,18 @@ function MovieDetailContent() {
         type="poster"
         images={dedupedPosters || []}
         selectedImage={selectedPoster}
-        onSelectImage={(path) => setSelectedPoster(path)}
+        onSelectImage={handleSelectPoster}
         isLoading={loadingPosters}
       />
 
-      <ArtworkPickerModal
+      <BackdropPickerModal
         isOpen={isBackdropPickerOpen}
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
-        type="backdrop"
-        images={(movie.images?.backdrops || []).slice(0, 30)}
+        images={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
         selectedImage={selectedBackdrop}
-        onSelectImage={(path) => setSelectedBackdrop(path)}
+        onSelectImage={handleSelectBackdrop}
+        isLoading={loadingBackdrops}
       />
 
       <MediaReviewModal
@@ -454,8 +522,6 @@ function MovieDetailContent() {
         onSpoilersChange={setHasSpoilers}
         onWatchedDateChange={setWatchedDate}
         onSave={handleSaveReview}
-        onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
-        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
       />
     </>
   );

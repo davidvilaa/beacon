@@ -8,7 +8,6 @@ import {
   Eye,
   Bookmark,
   Heart,
-  ImageIcon,
   Film,
   PlayCircle,
   PauseCircle,
@@ -98,8 +97,6 @@ interface MediaReviewModalProps {
   onSpoilersChange: (hasSpoilers: boolean) => void;
   onWatchedDateChange: (date: string) => void;
   onSave: () => void;
-  onOpenPosterPicker?: () => void;
-  onOpenBackdropPicker?: () => void;
 }
 
 export default function MediaReviewModal({
@@ -125,8 +122,6 @@ export default function MediaReviewModal({
   onSpoilersChange,
   onWatchedDateChange,
   onSave,
-  onOpenPosterPicker,
-  onOpenBackdropPicker,
 }: MediaReviewModalProps) {
   if (!isOpen) return null;
 
@@ -157,7 +152,7 @@ export default function MediaReviewModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
-        <div className="relative h-32 sm:h-40 w-full bg-zinc-900 overflow-hidden group">
+        <div className="relative h-32 sm:h-40 w-full bg-zinc-900 overflow-hidden">
           {backdropUrl ? (
             <Image
               src={backdropUrl}
@@ -169,17 +164,6 @@ export default function MediaReviewModal({
             <div className="w-full h-full bg-zinc-900" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/20" />
-
-          {onOpenBackdropPicker && (
-            <button
-              type="button"
-              onClick={onOpenBackdropPicker}
-              className="absolute bottom-2.5 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/90 border border-zinc-700/60 text-[11px] font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer backdrop-blur-sm"
-            >
-              <ImageIcon className="w-3.5 h-3.5" />
-              <span>Change banner</span>
-            </button>
-          )}
 
           <button
             type="button"
@@ -193,12 +177,7 @@ export default function MediaReviewModal({
         <div className="px-5 sm:px-6 pb-6">
           <div className="flex gap-4 sm:gap-5 items-start -mt-12 sm:-mt-16 relative z-10 mb-5">
             <div className="flex flex-col items-center gap-3 shrink-0">
-              <div
-                onClick={onOpenPosterPicker}
-                className={`relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl group ${
-                  onOpenPosterPicker ? "cursor-pointer" : ""
-                }`}
-              >
+              <div className="relative w-24 sm:w-28 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
                 {posterUrl ? (
                   <Image
                     src={posterUrl}
@@ -209,14 +188,6 @@ export default function MediaReviewModal({
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-700">
                     <Film className="w-8 h-8" />
-                  </div>
-                )}
-                {onOpenPosterPicker && (
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-1 text-center">
-                    <ImageIcon className="w-4 h-4 mb-0.5" />
-                    <span className="text-[10px] font-medium leading-tight">
-                      Change poster
-                    </span>
                   </div>
                 )}
               </div>

@@ -19,6 +19,7 @@ import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/Med
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
 import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
+import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
@@ -48,6 +49,8 @@ function TvDetailContent() {
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
   const [availablePosters, setAvailablePosters] = useState<Record<number, MovieImage[]>>({});
   const [loadingPosters, setLoadingPosters] = useState(false);
+  const [dedupedBackdrops, setDedupedBackdrops] = useState<MovieImage[] | null>(null);
+  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
 
   const [seriesStatus, setSeriesStatus] = useState<MediaStatus>(null);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -362,6 +365,76 @@ function TvDetailContent() {
   }, [id, activeSeason, availablePosters]);
 
   useEffect(() => {
+    setDedupedBackdrops(null);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id || dedupedBackdrops) return;
+
+    let ignore = false;
+
+    async function fetchBackdrops() {
+      try {
+        setLoadingBackdrops(true);
+        const res = await fetch(`/api/tv/${id}/backdrops`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.backdrops?.length) {
+            setDedupedBackdrops(data.backdrops);
+          }
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error(err);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingBackdrops(false);
+        }
+      }
+    }
+
+    fetchBackdrops();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, dedupedBackdrops]);
+
+  const handleSelectPoster = async (path: string) => {
+    setCustomPosters((prev) => ({
+      ...prev,
+      [activeSeason]: path,
+    }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && tv && seriesStatus) {
+        await supabase
+          .from("user_series")
+          .update({ custom_poster_path: path })
+          .eq("user_id", session.user.id)
+          .eq("series_id", tv.id)
+          .eq("season_number", activeSeason);
+      }
+    } catch {}
+  };
+
+  const handleSelectBackdrop = async (path: string) => {
+    setSelectedBackdrop(path);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && tv && seriesStatus) {
+        await supabase
+          .from("user_series")
+          .update({ custom_backdrop_path: path })
+          .eq("user_id", session.user.id)
+          .eq("series_id", tv.id)
+          .eq("season_number", activeSeason);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
     if (!id || seasonCache[activeSeason]) return;
 
     let ignore = false;
@@ -491,6 +564,8 @@ function TvDetailContent() {
         backdropAlt={tv.name}
         isBackdropLoaded={isBackdropLoaded}
         onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        hasMultipleBackdrops={(dedupedBackdrops?.length || tv.images?.backdrops?.length || 0) > 1}
+        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
@@ -587,23 +662,18 @@ function TvDetailContent() {
         type="poster"
         images={availablePosters[activeSeason] || []}
         selectedImage={posterPath}
-        onSelectImage={(path) => {
-          setCustomPosters((prev) => ({
-            ...prev,
-            [activeSeason]: path,
-          }));
-        }}
+        onSelectImage={handleSelectPoster}
         isLoading={loadingPosters}
       />
 
-      <ArtworkPickerModal
+      <BackdropPickerModal
         isOpen={isBackdropPickerOpen}
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
-        type="backdrop"
-        images={(tv.images?.backdrops || []).slice(0, 30)}
+        images={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
         selectedImage={selectedBackdrop}
-        onSelectImage={(path) => setSelectedBackdrop(path)}
+        onSelectImage={handleSelectBackdrop}
+        isLoading={loadingBackdrops}
       />
 
       <MediaReviewModal
@@ -629,8 +699,6 @@ function TvDetailContent() {
         onSpoilersChange={setHasSpoilers}
         onWatchedDateChange={setWatchedDate}
         onSave={handleSaveReview}
-        onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
-        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
       />
     </>
   );

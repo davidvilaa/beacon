@@ -8,6 +8,8 @@ interface MediaLayoutProps {
   backdropAlt?: string;
   isBackdropLoaded: boolean;
   onBackdropLoaded?: () => void;
+  hasMultipleBackdrops?: boolean;
+  onOpenBackdropPicker?: () => void;
   posterColumn: React.ReactNode;
   children: React.ReactNode;
   socialColumn?: React.ReactNode;
@@ -19,17 +21,29 @@ export default function MediaLayout({
   backdropAlt = "Backdrop",
   isBackdropLoaded,
   onBackdropLoaded,
+  hasMultipleBackdrops = false,
+  onOpenBackdropPicker,
   posterColumn,
   children,
   socialColumn,
   bottomPaddingClassName = "pb-72 sm:pb-80",
 }: MediaLayoutProps) {
+  const isBackdropClickable = hasMultipleBackdrops && Boolean(onOpenBackdropPicker);
+
   return (
     <div
       className={`relative flex-1 w-full font-[family-name:var(--font-geist-sans)] ${bottomPaddingClassName}`}
     >
       {backdropUrl && (
-        <div className="absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden pointer-events-none select-none -z-0">
+        <div
+          onClick={isBackdropClickable ? onOpenBackdropPicker : undefined}
+          className={`absolute top-0 left-0 right-0 h-[380px] sm:h-[460px] md:h-[520px] lg:h-[560px] overflow-hidden select-none z-0 ${
+            isBackdropClickable
+              ? "cursor-pointer group pointer-events-auto"
+              : "pointer-events-none"
+          }`}
+          title={isBackdropClickable ? "Change backdrop" : undefined}
+        >
           <div
             className="relative mx-auto w-full max-w-[1550px] h-full"
             style={{
@@ -59,6 +73,10 @@ export default function MediaLayout({
                   isBackdropLoaded ? "opacity-95 sm:opacity-100" : "opacity-0"
                 }`}
               />
+
+              {isBackdropClickable && (
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              )}
             </div>
           </div>
 
@@ -67,9 +85,9 @@ export default function MediaLayout({
         </div>
       )}
 
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-6 sm:pt-8">
+      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pointer-events-none">
         <div
-          className={`flex flex-col md:flex-row gap-8 items-start ${
+          className={`flex flex-col md:flex-row gap-8 items-start pointer-events-auto ${
             backdropUrl ? "mt-64 sm:mt-80 md:mt-96 lg:mt-[460px]" : ""
           }`}
         >

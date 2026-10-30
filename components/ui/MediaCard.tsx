@@ -80,42 +80,42 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
           ref={ref}
           href={resolvedHref}
           title={title}
-          className={`group flex items-center gap-4 sm:gap-5 py-3.5 sm:py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
+          className={`group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
         >
-          <div className="relative w-16 sm:w-20 md:w-24 aspect-[2/3] rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+          <div className="relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
             {posterUrl ? (
               <Image
                 src={posterUrl}
                 alt={title}
                 fill
                 priority={priority}
-                sizes={sizes || "(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"}
+                sizes={sizes || "(max-width: 640px) 80px, (max-width: 768px) 112px, 128px"}
                 className="object-cover transition-opacity duration-300"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-1 text-center text-zinc-600 bg-zinc-900">
-                <Film className="w-5 h-5 mb-1 text-zinc-700" />
-                <span className="text-[9px] text-zinc-500 font-semibold truncate max-w-[60px]">
+              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
+                <Film className="w-8 h-8 mb-1.5 text-zinc-700" />
+                <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[80px]">
                   {title}
                 </span>
               </div>
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2 min-w-0 mb-1 flex-wrap">
-              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+          <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+            <div className="flex items-baseline gap-2.5 min-w-0 mb-1.5 flex-wrap">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
                 {title}
               </h3>
               {year && (
-                <span className="text-xs text-zinc-400 font-mono shrink-0 font-normal">
+                <span className="text-xs sm:text-sm text-zinc-400 font-mono shrink-0 font-normal">
                   {year}
                 </span>
               )}
             </div>
 
             {overview && (
-              <p className="text-xs text-zinc-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 sm:line-clamp-4 leading-relaxed mt-2">
                 {overview}
               </p>
             )}

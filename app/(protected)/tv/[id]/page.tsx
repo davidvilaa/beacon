@@ -17,7 +17,7 @@ import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
 import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
-import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
+import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
@@ -122,7 +122,11 @@ function TvDetailContent() {
   const handleQuickAction = async (newStatus: MediaStatus, newFavorite: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !tv) return;
+      if (!session) {
+        addToast("Please log in to track series", "error");
+        return;
+      }
+      if (!tv) return;
 
       await supabase.from("series").upsert({
         id: tv.id,
@@ -134,23 +138,46 @@ function TvDetailContent() {
         number_of_episodes: tv.number_of_episodes,
       });
 
-      await supabase.from("user_series").upsert(
+      const { error } = await supabase.from("user_series").upsert(
         {
           user_id: session.user.id,
           series_id: tv.id,
           season_number: activeSeason,
           status: newStatus,
           is_favorite: newFavorite,
+          rating: rating > 0 ? rating : null,
+          review: review.trim() || null,
+          has_spoilers: hasSpoilers,
+          start_date: startDate || null,
+          end_date: endDate || null,
           custom_poster_path: customPosters[activeSeason] || null,
           custom_backdrop_path: selectedBackdrop,
         },
         { onConflict: "user_id,series_id,season_number" }
       );
+
+      if (error) {
+        addToast("Error saving action", "error");
+        return;
+      }
+
+      if (newStatus !== seriesStatus) {
+        if (newStatus === "watching") addToast("Marked as Watching", "success");
+        else if (newStatus === "watched") addToast("Marked as Watched", "success");
+        else if (newStatus === "paused") addToast("Marked as Paused", "info");
+        else if (newStatus === "dropped") addToast("Marked as Dropped", "info");
+        else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
+        else if (seriesStatus) addToast("Removed status", "info");
+      } else if (newFavorite !== isFavorite) {
+        if (newFavorite) addToast("Added to favourites", "success");
+        else addToast("Removed from favourites", "info");
+      }
     } catch (err) {
+      addToast("Error saving action", "error");
     }
   };
 
-  const handleSaveReview = async () => {
+  const handleSaveReview = async (reviewData: MediaReviewData) => {
     try {
       setIsSaving(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -183,13 +210,13 @@ function TvDetailContent() {
           user_id: session.user.id,
           series_id: tv.id,
           season_number: activeSeason,
-          status: seriesStatus,
-          is_favorite: isFavorite,
-          rating: rating > 0 ? rating : null,
-          review: review.trim() || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
+          status: reviewData.status,
+          is_favorite: reviewData.isFavorite,
+          rating: reviewData.rating > 0 ? reviewData.rating : null,
+          review: reviewData.review.trim() || null,
+          has_spoilers: reviewData.hasSpoilers,
+          start_date: reviewData.startDate || null,
+          end_date: reviewData.endDate || null,
           custom_poster_path: customPosters[activeSeason] || null,
           custom_backdrop_path: selectedBackdrop,
         },
@@ -201,6 +228,14 @@ function TvDetailContent() {
         setIsSaving(false);
         return;
       }
+
+      setSeriesStatus(reviewData.status);
+      setIsFavorite(reviewData.isFavorite);
+      setRating(reviewData.rating);
+      setReview(reviewData.review);
+      setHasSpoilers(reviewData.hasSpoilers);
+      setStartDate(reviewData.startDate || "");
+      setEndDate(reviewData.endDate || "");
 
       addToast("Season review saved successfully", "success");
       setIsLogModalOpen(false);
@@ -697,14 +732,7 @@ function TvDetailContent() {
         hasSpoilers={hasSpoilers}
         startDate={startDate}
         endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
         isSaving={isSaving}
-        onStatusChange={setSeriesStatus}
-        onFavoriteChange={setIsFavorite}
-        onRatingChange={setRating}
-        onReviewChange={setReview}
-        onSpoilersChange={setHasSpoilers}
         onSave={handleSaveReview}
       />
     </>

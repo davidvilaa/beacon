@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
 import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
-import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
+import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
@@ -61,16 +61,25 @@ function MovieDetailContent() {
           .eq("user_id", session.user.id)
           .maybeSingle();
 
-        if (ignore || !data) return;
+        if (ignore) return;
 
-        setMovieStatus(data.status);
-        setIsFavorite(Boolean(data.is_favorite));
-        setRating(data.rating ? Number(data.rating) : 0);
-        setReview(data.review || "");
-        setHasSpoilers(Boolean(data.has_spoilers));
-        setWatchedDate(data.watched_date || "");
-        if (data.custom_poster_path) setSelectedPoster(data.custom_poster_path);
-        if (data.custom_backdrop_path) setSelectedBackdrop(data.custom_backdrop_path);
+        if (data) {
+          setMovieStatus(data.status);
+          setIsFavorite(Boolean(data.is_favorite));
+          setRating(data.rating ? Number(data.rating) : 0);
+          setReview(data.review || "");
+          setHasSpoilers(Boolean(data.has_spoilers));
+          setWatchedDate(data.watched_date || "");
+          if (data.custom_poster_path) setSelectedPoster(data.custom_poster_path);
+          if (data.custom_backdrop_path) setSelectedBackdrop(data.custom_backdrop_path);
+        } else {
+          setMovieStatus(null);
+          setIsFavorite(false);
+          setRating(0);
+          setReview("");
+          setHasSpoilers(false);
+          setWatchedDate("");
+        }
       } catch (err) {
       }
     }
@@ -83,7 +92,11 @@ function MovieDetailContent() {
   const handleQuickAction = async (newStatus: MediaStatus, newFavorite: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !movie) return;
+      if (!session) {
+        addToast("Please log in to track movies", "error");
+        return;
+      }
+      if (!movie) return;
 
       await supabase.from("movies").upsert({
         id: movie.id,
@@ -93,22 +106,42 @@ function MovieDetailContent() {
         backdrop_path: movie.backdrop_path,
       });
 
-      await supabase.from("user_movies").upsert(
+      const { error } = await supabase.from("user_movies").upsert(
         {
           user_id: session.user.id,
           movie_id: movie.id,
           status: newStatus,
           is_favorite: newFavorite,
+          rating: rating > 0 ? rating : null,
+          review: review.trim() || null,
+          has_spoilers: hasSpoilers,
+          watched_date: watchedDate || null,
           custom_poster_path: selectedPoster,
           custom_backdrop_path: selectedBackdrop,
         },
         { onConflict: "user_id,movie_id" }
       );
+
+      if (error) {
+        addToast("Error saving action", "error");
+        return;
+      }
+
+      if (newStatus !== movieStatus) {
+        if (newStatus === "watched") addToast("Marked as Watched", "success");
+        else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
+        else if (movieStatus === "watched") addToast("Removed from Watched", "info");
+        else if (movieStatus === "watchlist") addToast("Removed from Watchlist", "info");
+      } else if (newFavorite !== isFavorite) {
+        if (newFavorite) addToast("Added to favourites", "success");
+        else addToast("Removed from favourites", "info");
+      }
     } catch (err) {
+      addToast("Error saving action", "error");
     }
   };
 
-  const handleSaveReview = async () => {
+  const handleSaveReview = async (reviewData: MediaReviewData) => {
     try {
       setIsSaving(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -138,12 +171,12 @@ function MovieDetailContent() {
         {
           user_id: session.user.id,
           movie_id: movie.id,
-          status: movieStatus,
-          is_favorite: isFavorite,
-          rating: rating > 0 ? rating : null,
-          review: review.trim() || null,
-          has_spoilers: hasSpoilers,
-          watched_date: watchedDate || null,
+          status: reviewData.status,
+          is_favorite: reviewData.isFavorite,
+          rating: reviewData.rating > 0 ? reviewData.rating : null,
+          review: reviewData.review.trim() || null,
+          has_spoilers: reviewData.hasSpoilers,
+          watched_date: reviewData.watchedDate || null,
           custom_poster_path: selectedPoster,
           custom_backdrop_path: selectedBackdrop,
         },
@@ -155,6 +188,13 @@ function MovieDetailContent() {
         setIsSaving(false);
         return;
       }
+
+      setMovieStatus(reviewData.status);
+      setIsFavorite(reviewData.isFavorite);
+      setRating(reviewData.rating);
+      setReview(reviewData.review);
+      setHasSpoilers(reviewData.hasSpoilers);
+      setWatchedDate(reviewData.watchedDate || "");
 
       addToast("Review saved successfully", "success");
       setIsLogModalOpen(false);
@@ -518,12 +558,6 @@ function MovieDetailContent() {
         hasSpoilers={hasSpoilers}
         watchedDate={watchedDate}
         isSaving={isSaving}
-        onStatusChange={setMovieStatus}
-        onFavoriteChange={setIsFavorite}
-        onRatingChange={setRating}
-        onReviewChange={setReview}
-        onSpoilersChange={setHasSpoilers}
-        onWatchedDateChange={setWatchedDate}
         onSave={handleSaveReview}
       />
     </>

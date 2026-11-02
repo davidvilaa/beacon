@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   X,
@@ -73,6 +73,17 @@ function StarRating({
   );
 }
 
+export interface MediaReviewData {
+  status: MediaStatus;
+  isFavorite: boolean;
+  rating: number;
+  review: string;
+  hasSpoilers: boolean;
+  watchedDate?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 interface MediaReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -95,15 +106,7 @@ interface MediaReviewModalProps {
   startDate?: string;
   endDate?: string;
   isSaving?: boolean;
-  onStatusChange: (status: MediaStatus) => void;
-  onFavoriteChange: (fav: boolean) => void;
-  onRatingChange: (rating: number) => void;
-  onReviewChange: (review: string) => void;
-  onSpoilersChange: (hasSpoilers: boolean) => void;
-  onWatchedDateChange?: (date: string) => void;
-  onStartDateChange?: (date: string) => void;
-  onEndDateChange?: (date: string) => void;
-  onSave: () => void;
+  onSave: (data: MediaReviewData) => void;
 }
 
 export default function MediaReviewModal({
@@ -111,7 +114,6 @@ export default function MediaReviewModal({
   onClose,
   title,
   typeLabel,
-  subtitle,
   year,
   releaseDate,
   runtimeMinutes,
@@ -128,16 +130,30 @@ export default function MediaReviewModal({
   startDate,
   endDate,
   isSaving = false,
-  onStatusChange,
-  onFavoriteChange,
-  onRatingChange,
-  onReviewChange,
-  onSpoilersChange,
-  onWatchedDateChange,
-  onStartDateChange,
-  onEndDateChange,
   onSave,
 }: MediaReviewModalProps) {
+  const [draftStatus, setDraftStatus] = useState<MediaStatus>(status);
+  const [draftFavorite, setDraftFavorite] = useState<boolean>(isFavorite);
+  const [draftRating, setDraftRating] = useState<number>(rating);
+  const [draftReview, setDraftReview] = useState<string>(review);
+  const [draftSpoilers, setDraftSpoilers] = useState<boolean>(hasSpoilers);
+  const [draftWatchedDate, setDraftWatchedDate] = useState<string>(watchedDate || "");
+  const [draftStartDate, setDraftStartDate] = useState<string>(startDate || "");
+  const [draftEndDate, setDraftEndDate] = useState<string>(endDate || "");
+
+  useEffect(() => {
+    if (isOpen) {
+      setDraftStatus(status);
+      setDraftFavorite(isFavorite);
+      setDraftRating(rating);
+      setDraftReview(review);
+      setDraftSpoilers(hasSpoilers);
+      setDraftWatchedDate(watchedDate || "");
+      setDraftStartDate(startDate || "");
+      setDraftEndDate(endDate || "");
+    }
+  }, [isOpen, status, isFavorite, rating, review, hasSpoilers, watchedDate, startDate, endDate]);
+
   if (!isOpen) return null;
 
   const movieStatusOptions: {
@@ -172,6 +188,19 @@ export default function MediaReviewModal({
     ? String(year)
     : null;
   const runtimeFormatted = formatRuntime(runtimeMinutes || null);
+
+  const handleSaveClick = () => {
+    onSave({
+      status: draftStatus,
+      isFavorite: draftFavorite,
+      rating: draftRating,
+      review: draftReview,
+      hasSpoilers: draftSpoilers,
+      watchedDate: draftWatchedDate,
+      startDate: draftStartDate,
+      endDate: draftEndDate,
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
@@ -218,7 +247,7 @@ export default function MediaReviewModal({
               </div>
 
               <div className="mt-1 flex justify-center w-full">
-                <StarRating value={rating} onChange={onRatingChange} />
+                <StarRating value={draftRating} onChange={setDraftRating} />
               </div>
             </div>
 
@@ -260,8 +289,8 @@ export default function MediaReviewModal({
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-zinc-400">Start</span>
                     <DatePicker
-                      value={startDate || ""}
-                      onChange={onStartDateChange || (() => {})}
+                      value={draftStartDate}
+                      onChange={setDraftStartDate}
                       placeholder="dd/mm/yyyy"
                     />
                   </div>
@@ -269,8 +298,8 @@ export default function MediaReviewModal({
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-zinc-400">End</span>
                     <DatePicker
-                      value={endDate || ""}
-                      onChange={onEndDateChange || (() => {})}
+                      value={draftEndDate}
+                      onChange={setDraftEndDate}
                       placeholder="dd/mm/yyyy"
                     />
                   </div>
@@ -278,8 +307,8 @@ export default function MediaReviewModal({
               ) : (
                 <div className="mt-4">
                   <DatePicker
-                    value={watchedDate || ""}
-                    onChange={onWatchedDateChange || (() => {})}
+                    value={draftWatchedDate}
+                    onChange={setDraftWatchedDate}
                     placeholder="dd/mm/yyyy"
                   />
                 </div>
@@ -290,13 +319,13 @@ export default function MediaReviewModal({
                   <div className="flex items-center gap-1 pr-1">
                     {statusOptions.map((opt) => {
                       const Icon = opt.icon;
-                      const isSelected = status === opt.key;
+                      const isSelected = draftStatus === opt.key;
                       return (
                         <button
                           key={opt.key}
                           type="button"
                           onClick={() =>
-                            onStatusChange(isSelected ? null : opt.key)
+                            setDraftStatus(isSelected ? null : opt.key)
                           }
                           title={opt.label}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
@@ -315,19 +344,19 @@ export default function MediaReviewModal({
                   <div className="pl-1">
                     <button
                       type="button"
-                      onClick={() => onFavoriteChange(!isFavorite)}
+                      onClick={() => setDraftFavorite(!draftFavorite)}
                       title={
-                        isFavorite ? "Remove from favourites" : "Mark as favourite"
+                        draftFavorite ? "Remove from favourites" : "Mark as favourite"
                       }
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                        isFavorite
+                        draftFavorite
                           ? "bg-[#a8dadc] text-zinc-950 font-bold"
                           : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
                       }`}
                     >
                       <Heart
                         className={`w-3.5 h-3.5 stroke-[2] ${
-                          isFavorite ? "fill-zinc-950 text-zinc-950" : ""
+                          draftFavorite ? "fill-zinc-950 text-zinc-950" : ""
                         }`}
                       />
                       <span>Favourite</span>
@@ -341,8 +370,8 @@ export default function MediaReviewModal({
           <div className="space-y-4">
             <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
               <textarea
-                value={review}
-                onChange={(e) => onReviewChange(e.target.value)}
+                value={draftReview}
+                onChange={(e) => setDraftReview(e.target.value)}
                 placeholder="Write a review or thoughts... (optional)"
                 rows={4}
                 className="w-full bg-transparent p-3 sm:p-4 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none resize-none leading-relaxed block"
@@ -350,8 +379,8 @@ export default function MediaReviewModal({
 
               <div className="border-t border-zinc-800/80 px-3.5 py-2.5 bg-zinc-900/50 flex items-center justify-between">
                 <Checkbox
-                  checked={hasSpoilers}
-                  onChange={onSpoilersChange}
+                  checked={draftSpoilers}
+                  onChange={setDraftSpoilers}
                   label="Review contains spoilers"
                 />
               </div>
@@ -367,7 +396,7 @@ export default function MediaReviewModal({
               </button>
               <button
                 type="button"
-                onClick={onSave}
+                onClick={handleSaveClick}
                 disabled={isSaving}
                 className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
               >

@@ -91,14 +91,18 @@ interface MediaReviewModalProps {
   rating: number;
   review: string;
   hasSpoilers: boolean;
-  watchedDate: string;
+  watchedDate?: string;
+  startDate?: string;
+  endDate?: string;
   isSaving?: boolean;
   onStatusChange: (status: MediaStatus) => void;
   onFavoriteChange: (fav: boolean) => void;
   onRatingChange: (rating: number) => void;
   onReviewChange: (review: string) => void;
   onSpoilersChange: (hasSpoilers: boolean) => void;
-  onWatchedDateChange: (date: string) => void;
+  onWatchedDateChange?: (date: string) => void;
+  onStartDateChange?: (date: string) => void;
+  onEndDateChange?: (date: string) => void;
   onSave: () => void;
 }
 
@@ -121,6 +125,8 @@ export default function MediaReviewModal({
   review,
   hasSpoilers,
   watchedDate,
+  startDate,
+  endDate,
   isSaving = false,
   onStatusChange,
   onFavoriteChange,
@@ -128,6 +134,8 @@ export default function MediaReviewModal({
   onReviewChange,
   onSpoilersChange,
   onWatchedDateChange,
+  onStartDateChange,
+  onEndDateChange,
   onSave,
 }: MediaReviewModalProps) {
   if (!isOpen) return null;
@@ -247,13 +255,35 @@ export default function MediaReviewModal({
                 )}
               </div>
 
-              <div className="mt-4">
-                <DatePicker
-                  value={watchedDate}
-                  onChange={onWatchedDateChange}
-                  placeholder="dd/mm/yyyy"
-                />
-              </div>
+              {mediaType === "tv" ? (
+                <div className="mt-4 flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-400">Start</span>
+                    <DatePicker
+                      value={startDate || ""}
+                      onChange={onStartDateChange || (() => {})}
+                      placeholder="dd/mm/yyyy"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-zinc-400">End</span>
+                    <DatePicker
+                      value={endDate || ""}
+                      onChange={onEndDateChange || (() => {})}
+                      placeholder="dd/mm/yyyy"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <DatePicker
+                    value={watchedDate || ""}
+                    onChange={onWatchedDateChange || (() => {})}
+                    placeholder="dd/mm/yyyy"
+                  />
+                </div>
+              )}
 
               <div className="mt-3">
                 <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg divide-x divide-zinc-800/80">

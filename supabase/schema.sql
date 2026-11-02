@@ -118,6 +118,8 @@ create table public.user_series (
   custom_backdrop_path text null,
   last_watched_episode integer null default 0,
   watched_date date null,
+  start_date date null,
+  end_date date null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint user_series_user_season_unique unique (user_id, series_id, season_number)

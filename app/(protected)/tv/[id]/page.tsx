@@ -57,7 +57,8 @@ function TvDetailContent() {
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
-  const [watchedDate, setWatchedDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -89,7 +90,8 @@ function TvDetailContent() {
           setRating(data.rating ? Number(data.rating) : 0);
           setReview(data.review || "");
           setHasSpoilers(Boolean(data.has_spoilers));
-          setWatchedDate(data.watched_date || "");
+          setStartDate(data.start_date || "");
+          setEndDate(data.end_date || data.watched_date || "");
           if (data.custom_poster_path) {
             setCustomPosters((prev) => ({
               ...prev,
@@ -105,7 +107,8 @@ function TvDetailContent() {
           setRating(0);
           setReview("");
           setHasSpoilers(false);
-          setWatchedDate("");
+          setStartDate("");
+          setEndDate("");
         }
       } catch (err) {
       }
@@ -187,7 +190,9 @@ function TvDetailContent() {
           rating: rating > 0 ? rating : null,
           review: review.trim() || null,
           has_spoilers: hasSpoilers,
-          watched_date: watchedDate || null,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          watched_date: endDate || null,
           custom_poster_path: customPosters[activeSeason] || null,
           custom_backdrop_path: selectedBackdrop,
         },
@@ -693,14 +698,16 @@ function TvDetailContent() {
         rating={rating}
         review={review}
         hasSpoilers={hasSpoilers}
-        watchedDate={watchedDate}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
         isSaving={isSaving}
         onStatusChange={setSeriesStatus}
         onFavoriteChange={setIsFavorite}
         onRatingChange={setRating}
         onReviewChange={setReview}
         onSpoilersChange={setHasSpoilers}
-        onWatchedDateChange={setWatchedDate}
         onSave={handleSaveReview}
       />
     </>

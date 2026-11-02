@@ -44,7 +44,6 @@ create table public.series (
   backdrop_path text null,
   number_of_seasons integer null default 0,
   number_of_episodes integer null default 0,
-  status text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

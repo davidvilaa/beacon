@@ -37,7 +37,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `poster_path`: text
   - `backdrop_path`: text
   - `number_of_seasons`, `number_of_episodes`: integer default 0
-  - `status`: text
   - `created_at`, `updated_at`: timestamptz
 
 - **`public.user_movies`**:

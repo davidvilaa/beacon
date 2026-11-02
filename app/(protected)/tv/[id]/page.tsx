@@ -132,7 +132,6 @@ function TvDetailContent() {
         backdrop_path: tv.backdrop_path,
         number_of_seasons: tv.number_of_seasons,
         number_of_episodes: tv.number_of_episodes,
-        status: tv.status,
       });
 
       await supabase.from("user_series").upsert(
@@ -171,7 +170,6 @@ function TvDetailContent() {
         backdrop_path: tv.backdrop_path,
         number_of_seasons: tv.number_of_seasons,
         number_of_episodes: tv.number_of_episodes,
-        status: tv.status,
       });
 
       if (seriesError) {

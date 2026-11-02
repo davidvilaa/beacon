@@ -679,8 +679,12 @@ function TvDetailContent() {
       <MediaReviewModal
         isOpen={isLogModalOpen}
         onClose={() => setIsLogModalOpen(false)}
+        typeLabel="Series"
         title={tv.name}
         subtitle={currentSeasonSummary?.name || `Season ${activeSeason}`}
+        releaseDate={rawDate}
+        runtimeMinutes={totalRuntimeMinutes}
+        episodesCount={episodesCount}
         year={seasonYear}
         posterUrl={posterUrl}
         backdropUrl={backdropUrl}

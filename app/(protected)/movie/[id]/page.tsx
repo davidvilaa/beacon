@@ -503,7 +503,10 @@ function MovieDetailContent() {
       <MediaReviewModal
         isOpen={isLogModalOpen}
         onClose={() => setIsLogModalOpen(false)}
+        typeLabel="Movie"
         title={movie.title}
+        releaseDate={movie.release_date}
+        runtimeMinutes={movie.runtime}
         year={movie.release_date ? new Date(movie.release_date).getFullYear() : "—"}
         posterUrl={posterUrl}
         backdropUrl={backdropUrl}

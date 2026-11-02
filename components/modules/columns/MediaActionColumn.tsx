@@ -11,7 +11,6 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
-  Check,
   Film,
 } from "lucide-react";
 
@@ -73,28 +72,24 @@ export default function MediaActionColumn({
     };
   }, [isOpen]);
 
-  const movieOptions: {
-    statusKey: MediaStatus;
-    label: string;
-    icon: typeof Eye;
-  }[] = [
-    { statusKey: "watched", label: "Watched", icon: Eye },
-    { statusKey: "watchlist", label: "Watchlist", icon: Bookmark },
+  const movieOptions = [
+    { statusKey: "watched" as const, label: "Watched", icon: Eye },
+    { statusKey: "watchlist" as const, label: "Watchlist", icon: Bookmark },
   ];
 
-  const tvOptions: {
-    statusKey: MediaStatus;
-    label: string;
-    icon: typeof Eye;
-  }[] = [
-    { statusKey: "watched", label: "Watched", icon: Eye },
-    { statusKey: "watching", label: "Watching", icon: PlayCircle },
-    { statusKey: "paused", label: "Paused", icon: PauseCircle },
-    { statusKey: "dropped", label: "Dropped", icon: XCircle },
-    { statusKey: "watchlist", label: "Watchlist", icon: Bookmark },
+  const tvOptions = [
+    { statusKey: "watched" as const, label: "Watched", icon: Eye },
+    { statusKey: "watching" as const, label: "Watching", icon: PlayCircle },
+    { statusKey: "paused" as const, label: "Paused", icon: PauseCircle },
+    { statusKey: "dropped" as const, label: "Dropped", icon: XCircle },
+    { statusKey: "watchlist" as const, label: "Watchlist", icon: Bookmark },
   ];
 
   const statusOptions = mediaType === "movie" ? movieOptions : tvOptions;
+  const iconSizeClass =
+    mediaType === "movie"
+      ? "w-6 h-6"
+      : "w-4.5 h-4.5 sm:w-5 sm:h-5";
 
   return (
     <div className={`relative w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center ${className}`}>
@@ -132,7 +127,10 @@ export default function MediaActionColumn({
         <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
           <button
             type="button"
-            onClick={onOpenLogModal}
+            onClick={() => {
+              setIsOpen(false);
+              onOpenLogModal();
+            }}
             title="Log entry"
             className="flex-1 flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
           >
@@ -158,7 +156,7 @@ export default function MediaActionColumn({
         </div>
 
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 z-30 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-2xl p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex items-stretch divide-x divide-zinc-800 animate-in fade-in slide-in-from-top-1 duration-150">
             {statusOptions.map((opt) => {
               const Icon = opt.icon;
               const isSelected = status === opt.statusKey;
@@ -166,48 +164,44 @@ export default function MediaActionColumn({
                 <button
                   key={opt.statusKey}
                   type="button"
-                  onClick={() => {
-                    onQuickStatusChange(isSelected ? null : opt.statusKey);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                  onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
+                  title={opt.label}
+                  className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                     isSelected
-                      ? "bg-[#a8dadc]/15 text-[#a8dadc]"
-                      : "text-zinc-300 hover:bg-zinc-850 hover:text-white"
+                      ? "text-[#a8dadc] bg-zinc-800/80"
+                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 stroke-[1.75]" />
-                    <span>{opt.label}</span>
-                  </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                  <Icon
+                    className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                      isSelected
+                        ? opt.statusKey === "watchlist"
+                          ? "fill-[#a8dadc] stroke-[2]"
+                          : "stroke-[2.2]"
+                        : "stroke-[1.75]"
+                    }`}
+                  />
                 </button>
               );
             })}
 
-            <div className="h-px bg-zinc-800/80 my-1" />
-
             <button
               type="button"
-              onClick={() => {
-                onToggleFavorite();
-                setIsOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              onClick={onToggleFavorite}
+              title="Favourite"
+              className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                 isFavorite
-                  ? "bg-[#a8dadc]/15 text-[#a8dadc]"
-                  : "text-zinc-300 hover:bg-zinc-850 hover:text-white"
+                  ? "text-[#a8dadc] bg-zinc-800/80"
+                  : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
               }`}
             >
-              <div className="flex items-center gap-2.5">
-                <Heart
-                  className={`w-4 h-4 stroke-[1.75] ${
-                    isFavorite ? "fill-[#a8dadc]" : ""
-                  }`}
-                />
-                <span>Favourite</span>
-              </div>
-              {isFavorite && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+              <Heart
+                className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                  isFavorite
+                    ? "fill-[#a8dadc] stroke-[2]"
+                    : "stroke-[1.75]"
+                }`}
+              />
             </button>
           </div>
         )}

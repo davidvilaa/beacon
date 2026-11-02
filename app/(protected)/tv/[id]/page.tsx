@@ -128,6 +128,30 @@ function TvDetailContent() {
       }
       if (!tv) return;
 
+      if (!newStatus) {
+        const { error } = await supabase
+          .from("user_series")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("series_id", tv.id)
+          .eq("season_number", activeSeason);
+
+        if (error) {
+          addToast("Error removing log", "error");
+          return;
+        }
+
+        setSeriesStatus(null);
+        setIsFavorite(false);
+        setRating(0);
+        setReview("");
+        setHasSpoilers(false);
+        setStartDate("");
+        setEndDate("");
+        addToast("Removed from your library", "info");
+        return;
+      }
+
       await supabase.from("series").upsert({
         id: tv.id,
         name: tv.name,
@@ -161,19 +185,61 @@ function TvDetailContent() {
         return;
       }
 
+      setSeriesStatus(newStatus);
+      setIsFavorite(newFavorite);
+
       if (newStatus !== seriesStatus) {
         if (newStatus === "watching") addToast("Marked as Watching", "success");
         else if (newStatus === "watched") addToast("Marked as Watched", "success");
         else if (newStatus === "paused") addToast("Marked as Paused", "info");
         else if (newStatus === "dropped") addToast("Marked as Dropped", "info");
         else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
-        else if (seriesStatus) addToast("Removed status", "info");
       } else if (newFavorite !== isFavorite) {
         if (newFavorite) addToast("Added to favourites", "success");
         else addToast("Removed from favourites", "info");
       }
     } catch (err) {
       addToast("Error saving action", "error");
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    try {
+      setIsSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        addToast("Please log in to manage reviews", "error");
+        setIsSaving(false);
+        return;
+      }
+      if (!tv) return;
+
+      const { error } = await supabase
+        .from("user_series")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("series_id", tv.id)
+        .eq("season_number", activeSeason);
+
+      if (error) {
+        addToast("Error deleting review", "error");
+        return;
+      }
+
+      setSeriesStatus(null);
+      setIsFavorite(false);
+      setRating(0);
+      setReview("");
+      setHasSpoilers(false);
+      setStartDate("");
+      setEndDate("");
+
+      addToast("Season log deleted successfully", "info");
+      setIsLogModalOpen(false);
+    } catch (err) {
+      addToast("Something went wrong", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -612,15 +678,15 @@ function TvDetailContent() {
             mediaType="tv"
             status={seriesStatus}
             isFavorite={isFavorite}
+            hasLog={Boolean(seriesStatus)}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
-              setSeriesStatus(newStatus);
               handleQuickAction(newStatus, isFavorite);
             }}
             onToggleFavorite={() => {
               const nextFav = !isFavorite;
-              setIsFavorite(nextFav);
-              handleQuickAction(seriesStatus, nextFav);
+              const nextStatus = seriesStatus || "watched";
+              handleQuickAction(nextStatus, nextFav);
             }}
           >
             {regularSeasons.length > 0 && (
@@ -734,6 +800,7 @@ function TvDetailContent() {
         endDate={endDate}
         isSaving={isSaving}
         onSave={handleSaveReview}
+        onDelete={handleDeleteReview}
       />
     </>
   );

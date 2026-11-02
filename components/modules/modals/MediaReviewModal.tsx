@@ -74,7 +74,7 @@ function StarRating({
 }
 
 export interface MediaReviewData {
-  status: MediaStatus;
+  status: Exclude<MediaStatus, null>;
   isFavorite: boolean;
   rating: number;
   review: string;
@@ -107,6 +107,7 @@ interface MediaReviewModalProps {
   endDate?: string;
   isSaving?: boolean;
   onSave: (data: MediaReviewData) => void;
+  onDelete?: () => void;
 }
 
 export default function MediaReviewModal({
@@ -131,8 +132,14 @@ export default function MediaReviewModal({
   endDate,
   isSaving = false,
   onSave,
+  onDelete,
 }: MediaReviewModalProps) {
-  const [draftStatus, setDraftStatus] = useState<MediaStatus>(status);
+  const fallbackStatus: Exclude<MediaStatus, null> =
+    mediaType === "movie" ? "watched" : "watched";
+
+  const [draftStatus, setDraftStatus] = useState<Exclude<MediaStatus, null>>(
+    (status as Exclude<MediaStatus, null>) || fallbackStatus
+  );
   const [draftFavorite, setDraftFavorite] = useState<boolean>(isFavorite);
   const [draftRating, setDraftRating] = useState<number>(rating);
   const [draftReview, setDraftReview] = useState<string>(review);
@@ -143,7 +150,7 @@ export default function MediaReviewModal({
 
   useEffect(() => {
     if (isOpen) {
-      setDraftStatus(status);
+      setDraftStatus((status as Exclude<MediaStatus, null>) || fallbackStatus);
       setDraftFavorite(isFavorite);
       setDraftRating(rating);
       setDraftReview(review);
@@ -152,12 +159,23 @@ export default function MediaReviewModal({
       setDraftStartDate(startDate || "");
       setDraftEndDate(endDate || "");
     }
-  }, [isOpen, status, isFavorite, rating, review, hasSpoilers, watchedDate, startDate, endDate]);
+  }, [
+    isOpen,
+    status,
+    isFavorite,
+    rating,
+    review,
+    hasSpoilers,
+    watchedDate,
+    startDate,
+    endDate,
+    fallbackStatus,
+  ]);
 
   if (!isOpen) return null;
 
   const movieStatusOptions: {
-    key: MediaStatus;
+    key: Exclude<MediaStatus, null>;
     label: string;
     icon: typeof Eye;
   }[] = [
@@ -166,7 +184,7 @@ export default function MediaReviewModal({
   ];
 
   const tvStatusOptions: {
-    key: MediaStatus;
+    key: Exclude<MediaStatus, null>;
     label: string;
     icon: typeof Eye;
   }[] = [
@@ -190,8 +208,10 @@ export default function MediaReviewModal({
   const runtimeFormatted = formatRuntime(runtimeMinutes || null);
 
   const handleSaveClick = () => {
+    const finalStatus: Exclude<MediaStatus, null> =
+      draftStatus || fallbackStatus;
     onSave({
-      status: draftStatus,
+      status: finalStatus,
       isFavorite: draftFavorite,
       rating: draftRating,
       review: draftReview,
@@ -324,9 +344,7 @@ export default function MediaReviewModal({
                         <button
                           key={opt.key}
                           type="button"
-                          onClick={() =>
-                            setDraftStatus(isSelected ? null : opt.key)
-                          }
+                          onClick={() => setDraftStatus(opt.key)}
                           title={opt.label}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                             isSelected
@@ -386,22 +404,37 @@ export default function MediaReviewModal({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveClick}
-                disabled={isSaving}
-                className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSaving ? "Saving..." : "Save review"}
-              </button>
+            <div className="flex items-center justify-between gap-2.5">
+              <div>
+                {status && onDelete && (
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    disabled={isSaving}
+                    className="px-3 py-1.5 rounded-md text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Delete entry
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveClick}
+                  disabled={isSaving}
+                  className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSaving ? "Saving..." : "Save review"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

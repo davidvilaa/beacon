@@ -98,6 +98,28 @@ function MovieDetailContent() {
       }
       if (!movie) return;
 
+      if (!newStatus) {
+        const { error } = await supabase
+          .from("user_movies")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("movie_id", movie.id);
+
+        if (error) {
+          addToast("Error removing log", "error");
+          return;
+        }
+
+        setMovieStatus(null);
+        setIsFavorite(false);
+        setRating(0);
+        setReview("");
+        setHasSpoilers(false);
+        setWatchedDate("");
+        addToast("Removed from your library", "info");
+        return;
+      }
+
       await supabase.from("movies").upsert({
         id: movie.id,
         title: movie.title,
@@ -127,17 +149,56 @@ function MovieDetailContent() {
         return;
       }
 
+      setMovieStatus(newStatus);
+      setIsFavorite(newFavorite);
+
       if (newStatus !== movieStatus) {
         if (newStatus === "watched") addToast("Marked as Watched", "success");
         else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
-        else if (movieStatus === "watched") addToast("Removed from Watched", "info");
-        else if (movieStatus === "watchlist") addToast("Removed from Watchlist", "info");
       } else if (newFavorite !== isFavorite) {
         if (newFavorite) addToast("Added to favourites", "success");
         else addToast("Removed from favourites", "info");
       }
     } catch (err) {
       addToast("Error saving action", "error");
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    try {
+      setIsSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        addToast("Please log in to manage reviews", "error");
+        setIsSaving(false);
+        return;
+      }
+      if (!movie) return;
+
+      const { error } = await supabase
+        .from("user_movies")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("movie_id", movie.id);
+
+      if (error) {
+        addToast("Error deleting review", "error");
+        return;
+      }
+
+      setMovieStatus(null);
+      setIsFavorite(false);
+      setRating(0);
+      setReview("");
+      setHasSpoilers(false);
+      setWatchedDate("");
+
+      addToast("Log deleted successfully", "info");
+      setIsLogModalOpen(false);
+    } catch (err) {
+      addToast("Something went wrong", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -454,15 +515,15 @@ function MovieDetailContent() {
             mediaType="movie"
             status={movieStatus}
             isFavorite={isFavorite}
+            hasLog={Boolean(movieStatus)}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
-              setMovieStatus(newStatus);
               handleQuickAction(newStatus, isFavorite);
             }}
             onToggleFavorite={() => {
               const nextFav = !isFavorite;
-              setIsFavorite(nextFav);
-              handleQuickAction(movieStatus, nextFav);
+              const nextStatus = movieStatus || "watched";
+              handleQuickAction(nextStatus, nextFav);
             }}
           />
         }
@@ -559,6 +620,7 @@ function MovieDetailContent() {
         watchedDate={watchedDate}
         isSaving={isSaving}
         onSave={handleSaveReview}
+        onDelete={handleDeleteReview}
       />
     </>
   );

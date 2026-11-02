@@ -43,7 +43,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `id`: uuid primary key default gen_random_uuid()
   - `user_id`: uuid references public.users(id) on delete cascade
   - `movie_id`: bigint references public.movies(id) on delete cascade
-  - `status`: text ('watched', 'watchlist')
+  - `status`: text not null check (status in ('watched', 'watchlist'))
   - `is_favorite`: boolean default false
   - `rating`: numeric(2, 1) (0.5 to 5.0)
   - `review`: text
@@ -58,7 +58,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `user_id`: uuid references public.users(id) on delete cascade
   - `series_id`: bigint references public.series(id) on delete cascade
   - `season_number`: integer not null default 1
-  - `status`: text ('watching', 'watched', 'paused', 'dropped', 'watchlist')
+  - `status`: text not null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist'))
   - `is_favorite`: boolean default false
   - `rating`: numeric(2, 1) (0.5 to 5.0)
   - `review`: text

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   Plus,
+  Check,
   ChevronDown,
   Eye,
   Bookmark,
@@ -30,6 +31,7 @@ interface MediaActionColumnProps {
   mediaType: "movie" | "tv";
   status: MediaStatus;
   isFavorite: boolean;
+  hasLog?: boolean;
   onOpenLogModal: () => void;
   onQuickStatusChange: (newStatus: MediaStatus) => void;
   onToggleFavorite: () => void;
@@ -45,6 +47,7 @@ export default function MediaActionColumn({
   mediaType,
   status,
   isFavorite,
+  hasLog,
   onOpenLogModal,
   onQuickStatusChange,
   onToggleFavorite,
@@ -54,6 +57,7 @@ export default function MediaActionColumn({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isClickable = hasMultiplePosters && Boolean(onOpenPosterPicker);
+  const isLogged = hasLog !== undefined ? hasLog : Boolean(status);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -131,10 +135,18 @@ export default function MediaActionColumn({
               setIsOpen(false);
               onOpenLogModal();
             }}
-            title="Log entry"
-            className="flex-1 flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
+            title={isLogged ? "Edit log" : "Log entry"}
+            className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
+              isLogged
+                ? "text-[#a8dadc] bg-zinc-800/70 hover:bg-zinc-800/90"
+                : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+            }`}
           >
-            <Plus className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
+            {isLogged ? (
+              <Check className="w-5 h-5 stroke-[2.2] group-hover:scale-110 transition-transform" />
+            ) : (
+              <Plus className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
+            )}
           </button>
 
           <button

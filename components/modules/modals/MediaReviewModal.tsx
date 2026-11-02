@@ -245,12 +245,6 @@ export default function MediaReviewModal({
                     <span>{episodesCount} Episodes</span>
                   </>
                 )}
-                {subtitle && (
-                  <>
-                    <span>•</span>
-                    <span className="text-zinc-400">{subtitle}</span>
-                  </>
-                )}
               </div>
 
               <div className="mt-4">

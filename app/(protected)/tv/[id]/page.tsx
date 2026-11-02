@@ -681,7 +681,6 @@ function TvDetailContent() {
         onClose={() => setIsLogModalOpen(false)}
         typeLabel="Series"
         title={tv.name}
-        subtitle={currentSeasonSummary?.name || `Season ${activeSeason}`}
         releaseDate={rawDate}
         runtimeMinutes={totalRuntimeMinutes}
         episodesCount={episodesCount}

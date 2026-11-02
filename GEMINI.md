@@ -66,7 +66,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `has_spoilers`: boolean default false
   - `custom_poster_path`, `custom_backdrop_path`: text
   - `last_watched_episode`: integer default 0
-  - `watched_date`: date
   - `start_date`, `end_date`: date
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id, season_number)`

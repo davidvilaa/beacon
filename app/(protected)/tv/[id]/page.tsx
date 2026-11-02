@@ -91,7 +91,7 @@ function TvDetailContent() {
           setReview(data.review || "");
           setHasSpoilers(Boolean(data.has_spoilers));
           setStartDate(data.start_date || "");
-          setEndDate(data.end_date || data.watched_date || "");
+          setEndDate(data.end_date || "");
           if (data.custom_poster_path) {
             setCustomPosters((prev) => ({
               ...prev,
@@ -192,7 +192,6 @@ function TvDetailContent() {
           has_spoilers: hasSpoilers,
           start_date: startDate || null,
           end_date: endDate || null,
-          watched_date: endDate || null,
           custom_poster_path: customPosters[activeSeason] || null,
           custom_backdrop_path: selectedBackdrop,
         },

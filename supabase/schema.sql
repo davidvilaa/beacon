@@ -117,7 +117,6 @@ create table public.user_series (
   custom_poster_path text null,
   custom_backdrop_path text null,
   last_watched_episode integer null default 0,
-  watched_date date null,
   start_date date null,
   end_date date null,
   created_at timestamptz not null default now(),

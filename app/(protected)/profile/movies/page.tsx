@@ -2,13 +2,11 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Eye, Bookmark, Heart } from "lucide-react";
+import { Eye, Bookmark, Heart, Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
-import ProfileFilterBar from "@/components/profile/ProfileFilterBar";
-import ProfileMediaGrid from "@/components/profile/ProfileMediaGrid";
-import ProfileFavoriteSlots, { FavoriteSlotItem } from "@/components/profile/ProfileFavoriteSlots";
-import { ProfileMediaCardProps } from "@/components/profile/ProfileMediaCard";
+import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
+import ProfileMediaTab, { ProfileMediaItem } from "@/components/profile/ProfileMediaTab";
 
 interface UserMovieEntry {
   id: string;
@@ -120,7 +118,7 @@ function ProfileMoviesContent() {
     };
   }, [supabase]);
 
-  const favoriteItems = useMemo<FavoriteSlotItem[]>(() => {
+  const favoriteItems = useMemo<FavoriteMediaItem[]>(() => {
     return movies
       .filter((m) => m.is_favorite)
       .slice(0, 5)
@@ -130,7 +128,12 @@ function ProfileMoviesContent() {
         posterPath: m.custom_poster_path || m.movies?.poster_path || null,
         href: `/movie/${m.movie_id}`,
         mediaType: "movie",
-        rating: m.rating ? Number(m.rating) : null,
+        subtitle: m.rating && m.rating > 0 ? (
+          <span className="flex items-center justify-center gap-1 text-[#a8dadc] font-bold">
+            <Star className="w-3 h-3 fill-[#a8dadc]" />
+            <span>{Number(m.rating).toFixed(1)}</span>
+          </span>
+        ) : undefined,
       }));
   }, [movies]);
 
@@ -174,55 +177,51 @@ function ProfileMoviesContent() {
     return result;
   }, [movies, statusFilter, favoriteFilter, sortBy]);
 
-  const cardItems = useMemo<ProfileMediaCardProps[]>(() => {
+  const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredMovies.map((m) => ({
       id: m.movie_id,
       title: m.movies?.title || "Movie",
       posterPath: m.custom_poster_path || m.movies?.poster_path || null,
       href: `/movie/${m.movie_id}`,
       mediaType: "movie",
-      rating: m.rating ? Number(m.rating) : null,
-      status: m.status,
-      isFavorite: m.is_favorite,
+      subtitle: m.rating && m.rating > 0 ? (
+        <span className="flex items-center justify-center gap-1 text-[#a8dadc] font-bold">
+          <Star className="w-3 h-3 fill-[#a8dadc]" />
+          <span>{Number(m.rating).toFixed(1)}</span>
+        </span>
+      ) : undefined,
     }));
   }, [filteredMovies]);
 
   if (currentSubTab === "overview") {
     return (
-      <div className="space-y-8">
-        <ProfileFavoriteSlots
-          title="Favorite movies"
-          items={favoriteItems}
-          viewAllHref="/profile/movies?tab=movies"
-          isLoading={loading}
-        />
-      </div>
+      <ProfileOverviewTab
+        title="Favorite movies"
+        items={favoriteItems}
+        viewAllHref="/profile/movies?tab=movies"
+        isLoading={loading}
+      />
     );
   }
 
   return (
-    <div>
-      <ProfileFilterBar
-        statusValue={statusFilter}
-        onStatusChange={setStatusFilter}
-        statusOptions={STATUS_OPTIONS}
-        favoriteValue={favoriteFilter}
-        onFavoriteChange={setFavoriteFilter}
-        favoriteOptions={FAVORITE_OPTIONS}
-        sortValue={sortBy}
-        onSortChange={setSortBy}
-        sortOptions={SORT_OPTIONS}
-        totalCount={filteredMovies.length}
-        itemLabel="movie"
-      />
-
-      <ProfileMediaGrid
-        items={cardItems}
-        isLoading={loading}
-        emptyTitle="No movies found"
-        emptyDescription="No movies match your selected filters. Try changing or clearing your filters."
-      />
-    </div>
+    <ProfileMediaTab
+      items={catalogItems}
+      statusValue={statusFilter}
+      onStatusChange={setStatusFilter}
+      statusOptions={STATUS_OPTIONS}
+      favoriteValue={favoriteFilter}
+      onFavoriteChange={setFavoriteFilter}
+      favoriteOptions={FAVORITE_OPTIONS}
+      sortValue={sortBy}
+      onSortChange={setSortBy}
+      sortOptions={SORT_OPTIONS}
+      totalCount={filteredMovies.length}
+      itemLabel="movie"
+      isLoading={loading}
+      emptyTitle="No movies found"
+      emptyDescription="No movies match your selected filters. Try changing or clearing your filters."
+    />
   );
 }
 

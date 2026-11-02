@@ -1,35 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import ProfileMediaCard, { ProfileMediaCardProps } from "./ProfileMediaCard";
+import MediaCard from "@/components/ui/MediaCard";
 
-export interface FavoriteSlotItem {
+export interface FavoriteMediaItem {
   id: number | string;
   title: string;
   posterPath: string | null;
-  href: string;
+  href?: string;
   mediaType: "movie" | "tv";
-  rating?: number | null;
-  subtitle?: string | null;
+  subtitle?: string | React.ReactNode;
 }
 
-interface ProfileFavoriteSlotsProps {
+interface ProfileOverviewTabProps {
   title: string;
-  items: FavoriteSlotItem[];
+  items: FavoriteMediaItem[];
   viewAllHref?: string;
   isLoading?: boolean;
 }
 
-export default function ProfileFavoriteSlots({
+export default function ProfileOverviewTab({
   title,
   items,
   viewAllHref,
   isLoading = false,
-}: ProfileFavoriteSlotsProps) {
+}: ProfileOverviewTabProps) {
   const slots = Array.from({ length: 5 });
 
   return (
-    <section>
+    <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
           {title}
@@ -44,7 +43,7 @@ export default function ProfileFavoriteSlots({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
         {isLoading
           ? slots.map((_, index) => (
               <div
@@ -56,16 +55,14 @@ export default function ProfileFavoriteSlots({
               const item = items[index];
               if (item) {
                 return (
-                  <ProfileMediaCard
+                  <MediaCard
                     key={item.id}
                     id={item.id}
+                    mediaType={item.mediaType}
                     title={item.title}
                     posterPath={item.posterPath}
                     href={item.href}
-                    mediaType={item.mediaType}
-                    rating={item.rating}
                     subtitle={item.subtitle}
-                    isFavorite={true}
                   />
                 );
               }
@@ -77,6 +74,6 @@ export default function ProfileFavoriteSlots({
               );
             })}
       </div>
-    </section>
+    </div>
   );
 }

@@ -5,10 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Eye, Bookmark, Heart, PlayCircle, PauseCircle, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
-import ProfileFilterBar from "@/components/profile/ProfileFilterBar";
-import ProfileMediaGrid from "@/components/profile/ProfileMediaGrid";
-import ProfileFavoriteSlots, { FavoriteSlotItem } from "@/components/profile/ProfileFavoriteSlots";
-import { ProfileMediaCardProps } from "@/components/profile/ProfileMediaCard";
+import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
+import ProfileMediaTab, { ProfileMediaItem } from "@/components/profile/ProfileMediaTab";
 
 interface UserSeriesEntry {
   id: string;
@@ -131,7 +129,7 @@ function ProfileSeriesContent() {
     };
   }, [supabase]);
 
-  const favoriteItems = useMemo<FavoriteSlotItem[]>(() => {
+  const favoriteItems = useMemo<FavoriteMediaItem[]>(() => {
     return series
       .filter((s) => s.is_favorite)
       .slice(0, 5)
@@ -141,7 +139,6 @@ function ProfileSeriesContent() {
         posterPath: s.custom_poster_path || s.series?.poster_path || null,
         href: `/tv/${s.series_id}?season=${s.season_number}`,
         mediaType: "tv",
-        rating: s.rating ? Number(s.rating) : null,
         subtitle: s.season_number > 0 ? `Season ${s.season_number}` : undefined,
       }));
   }, [series]);
@@ -186,56 +183,46 @@ function ProfileSeriesContent() {
     return result;
   }, [series, statusFilter, favoriteFilter, sortBy]);
 
-  const cardItems = useMemo<ProfileMediaCardProps[]>(() => {
+  const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredSeries.map((s) => ({
       id: `${s.series_id}-${s.season_number}`,
       title: s.series?.name || "Series",
       posterPath: s.custom_poster_path || s.series?.poster_path || null,
       href: `/tv/${s.series_id}?season=${s.season_number}`,
       mediaType: "tv",
-      rating: s.rating ? Number(s.rating) : null,
-      status: s.status,
-      isFavorite: s.is_favorite,
       subtitle: s.season_number > 0 ? `Season ${s.season_number}` : undefined,
     }));
   }, [filteredSeries]);
 
   if (currentSubTab === "overview") {
     return (
-      <div className="space-y-8">
-        <ProfileFavoriteSlots
-          title="Favorite series"
-          items={favoriteItems}
-          viewAllHref="/profile/series?tab=series"
-          isLoading={loading}
-        />
-      </div>
+      <ProfileOverviewTab
+        title="Favorite series"
+        items={favoriteItems}
+        viewAllHref="/profile/series?tab=series"
+        isLoading={loading}
+      />
     );
   }
 
   return (
-    <div>
-      <ProfileFilterBar
-        statusValue={statusFilter}
-        onStatusChange={setStatusFilter}
-        statusOptions={STATUS_OPTIONS}
-        favoriteValue={favoriteFilter}
-        onFavoriteChange={setFavoriteFilter}
-        favoriteOptions={FAVORITE_OPTIONS}
-        sortValue={sortBy}
-        onSortChange={setSortBy}
-        sortOptions={SORT_OPTIONS}
-        totalCount={filteredSeries.length}
-        itemLabel="series"
-      />
-
-      <ProfileMediaGrid
-        items={cardItems}
-        isLoading={loading}
-        emptyTitle="No series found"
-        emptyDescription="No series match your selected filters. Try changing or clearing your filters."
-      />
-    </div>
+    <ProfileMediaTab
+      items={catalogItems}
+      statusValue={statusFilter}
+      onStatusChange={setStatusFilter}
+      statusOptions={STATUS_OPTIONS}
+      favoriteValue={favoriteFilter}
+      onFavoriteChange={setFavoriteFilter}
+      favoriteOptions={FAVORITE_OPTIONS}
+      sortValue={sortBy}
+      onSortChange={setSortBy}
+      sortOptions={SORT_OPTIONS}
+      totalCount={filteredSeries.length}
+      itemLabel="series"
+      isLoading={loading}
+      emptyTitle="No series found"
+      emptyDescription="No series match your selected filters. Try changing or clearing your filters."
+    />
   );
 }
 

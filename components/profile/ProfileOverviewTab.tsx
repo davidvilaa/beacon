@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import MediaCard from "@/components/ui/MediaCard";
 
 export interface FavoriteMediaItem {
@@ -9,38 +8,27 @@ export interface FavoriteMediaItem {
   posterPath: string | null;
   href?: string;
   mediaType: "movie" | "tv";
-  subtitle?: string | React.ReactNode;
 }
 
 interface ProfileOverviewTabProps {
   title: string;
   items: FavoriteMediaItem[];
-  viewAllHref?: string;
   isLoading?: boolean;
 }
 
 export default function ProfileOverviewTab({
   title,
   items,
-  viewAllHref,
   isLoading = false,
 }: ProfileOverviewTabProps) {
   const slots = Array.from({ length: 5 });
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
           {title}
         </h3>
-        {viewAllHref && (
-          <Link
-            href={viewAllHref}
-            className="text-xs font-semibold text-zinc-500 hover:text-[#a8dadc] transition-colors cursor-pointer"
-          >
-            View all
-          </Link>
-        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
@@ -62,7 +50,6 @@ export default function ProfileOverviewTab({
                     title={item.title}
                     posterPath={item.posterPath}
                     href={item.href}
-                    subtitle={item.subtitle}
                   />
                 );
               }

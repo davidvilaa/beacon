@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Eye, Bookmark, Heart, PlayCircle, PauseCircle, XCircle } from "lucide-react";
+import { Eye, Bookmark, PlayCircle, PauseCircle, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
 import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
@@ -43,11 +43,6 @@ const STATUS_OPTIONS: Option[] = [
   { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
 ];
 
-const FAVORITE_OPTIONS: Option[] = [
-  { id: "all", label: "All series" },
-  { id: "favorites", label: "Favorites only", icon: <Heart className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
-];
-
 const SORT_OPTIONS: Option[] = [
   { id: "recent", label: "Recently added" },
   { id: "rating_desc", label: "Highest rating" },
@@ -63,7 +58,6 @@ function ProfileSeriesContent() {
   const [series, setSeries] = useState<UserSeriesEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [favoriteFilter, setFavoriteFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const supabase = createClient();
 
@@ -139,7 +133,6 @@ function ProfileSeriesContent() {
         posterPath: s.custom_poster_path || s.series?.poster_path || null,
         href: `/tv/${s.series_id}?season=${s.season_number}`,
         mediaType: "tv",
-        subtitle: s.season_number > 0 ? `Season ${s.season_number}` : undefined,
       }));
   }, [series]);
 
@@ -148,10 +141,6 @@ function ProfileSeriesContent() {
 
     if (statusFilter !== "all") {
       result = result.filter((s) => s.status === statusFilter);
-    }
-
-    if (favoriteFilter === "favorites") {
-      result = result.filter((s) => s.is_favorite);
     }
 
     switch (sortBy) {
@@ -181,7 +170,7 @@ function ProfileSeriesContent() {
     }
 
     return result;
-  }, [series, statusFilter, favoriteFilter, sortBy]);
+  }, [series, statusFilter, sortBy]);
 
   const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredSeries.map((s) => ({
@@ -190,7 +179,6 @@ function ProfileSeriesContent() {
       posterPath: s.custom_poster_path || s.series?.poster_path || null,
       href: `/tv/${s.series_id}?season=${s.season_number}`,
       mediaType: "tv",
-      subtitle: s.season_number > 0 ? `Season ${s.season_number}` : undefined,
     }));
   }, [filteredSeries]);
 
@@ -199,7 +187,6 @@ function ProfileSeriesContent() {
       <ProfileOverviewTab
         title="Favorite series"
         items={favoriteItems}
-        viewAllHref="/profile/series?tab=series"
         isLoading={loading}
       />
     );
@@ -211,14 +198,9 @@ function ProfileSeriesContent() {
       statusValue={statusFilter}
       onStatusChange={setStatusFilter}
       statusOptions={STATUS_OPTIONS}
-      favoriteValue={favoriteFilter}
-      onFavoriteChange={setFavoriteFilter}
-      favoriteOptions={FAVORITE_OPTIONS}
       sortValue={sortBy}
       onSortChange={setSortBy}
       sortOptions={SORT_OPTIONS}
-      totalCount={filteredSeries.length}
-      itemLabel="series"
       isLoading={loading}
       emptyTitle="No series found"
       emptyDescription="No series match your selected filters. Try changing or clearing your filters."

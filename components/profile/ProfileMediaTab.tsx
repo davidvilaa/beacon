@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Film } from "lucide-react";
 import Select, { Option } from "@/components/ui/Select";
 import MediaCard from "@/components/ui/MediaCard";
@@ -11,7 +10,6 @@ export interface ProfileMediaItem {
   posterPath: string | null;
   href?: string;
   mediaType: "movie" | "tv";
-  subtitle?: string | React.ReactNode;
 }
 
 interface ProfileMediaTabProps {
@@ -19,14 +17,9 @@ interface ProfileMediaTabProps {
   statusValue: string;
   onStatusChange: (val: string) => void;
   statusOptions: Option[];
-  favoriteValue: string;
-  onFavoriteChange: (val: string) => void;
-  favoriteOptions: Option[];
   sortValue: string;
   onSortChange: (val: string) => void;
   sortOptions: Option[];
-  totalCount: number;
-  itemLabel: string;
   isLoading?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
@@ -37,51 +30,31 @@ export default function ProfileMediaTab({
   statusValue,
   onStatusChange,
   statusOptions,
-  favoriteValue,
-  onFavoriteChange,
-  favoriteOptions,
   sortValue,
   onSortChange,
   sortOptions,
-  totalCount,
-  itemLabel,
   isLoading = false,
   emptyTitle = "No media found",
   emptyDescription = "There are no entries matching your current filters.",
 }: ProfileMediaTabProps) {
   return (
     <div>
-      <div className="pb-4 mb-6 border-b border-zinc-800/80 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <Select
-            value={statusValue}
-            onChange={onStatusChange}
-            options={statusOptions}
-            variant="compact"
-            className="w-36 sm:w-40"
-          />
+      <div className="pb-4 mb-6 border-b border-zinc-800/80 flex items-center gap-2.5 flex-wrap">
+        <Select
+          value={statusValue}
+          onChange={onStatusChange}
+          options={statusOptions}
+          variant="compact"
+          className="w-36 sm:w-40"
+        />
 
-          <Select
-            value={favoriteValue}
-            onChange={onFavoriteChange}
-            options={favoriteOptions}
-            variant="compact"
-            className="w-36 sm:w-40"
-          />
-
-          <Select
-            value={sortValue}
-            onChange={onSortChange}
-            options={sortOptions}
-            variant="compact"
-            className="w-40 sm:w-44"
-          />
-        </div>
-
-        <span className="text-xs font-semibold text-zinc-500 shrink-0">
-          {totalCount} {itemLabel}
-          {totalCount === 1 ? "" : "s"}
-        </span>
+        <Select
+          value={sortValue}
+          onChange={onSortChange}
+          options={sortOptions}
+          variant="compact"
+          className="w-40 sm:w-44"
+        />
       </div>
 
       {isLoading ? (
@@ -111,7 +84,6 @@ export default function ProfileMediaTab({
               title={item.title}
               posterPath={item.posterPath}
               href={item.href}
-              subtitle={item.subtitle}
             />
           ))}
         </div>

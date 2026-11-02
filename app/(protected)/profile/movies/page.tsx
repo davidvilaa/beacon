@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Eye, Bookmark, Heart, Star } from "lucide-react";
+import { Eye, Bookmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
 import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
@@ -36,11 +36,6 @@ const STATUS_OPTIONS: Option[] = [
   { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
 ];
 
-const FAVORITE_OPTIONS: Option[] = [
-  { id: "all", label: "All movies" },
-  { id: "favorites", label: "Favorites only", icon: <Heart className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
-];
-
 const SORT_OPTIONS: Option[] = [
   { id: "recent", label: "Recently added" },
   { id: "rating_desc", label: "Highest rating" },
@@ -56,7 +51,6 @@ function ProfileMoviesContent() {
   const [movies, setMovies] = useState<UserMovieEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [favoriteFilter, setFavoriteFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const supabase = createClient();
 
@@ -128,12 +122,6 @@ function ProfileMoviesContent() {
         posterPath: m.custom_poster_path || m.movies?.poster_path || null,
         href: `/movie/${m.movie_id}`,
         mediaType: "movie",
-        subtitle: m.rating && m.rating > 0 ? (
-          <span className="flex items-center justify-center gap-1 text-[#a8dadc] font-bold">
-            <Star className="w-3 h-3 fill-[#a8dadc]" />
-            <span>{Number(m.rating).toFixed(1)}</span>
-          </span>
-        ) : undefined,
       }));
   }, [movies]);
 
@@ -142,10 +130,6 @@ function ProfileMoviesContent() {
 
     if (statusFilter !== "all") {
       result = result.filter((m) => m.status === statusFilter);
-    }
-
-    if (favoriteFilter === "favorites") {
-      result = result.filter((m) => m.is_favorite);
     }
 
     switch (sortBy) {
@@ -175,7 +159,7 @@ function ProfileMoviesContent() {
     }
 
     return result;
-  }, [movies, statusFilter, favoriteFilter, sortBy]);
+  }, [movies, statusFilter, sortBy]);
 
   const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredMovies.map((m) => ({
@@ -184,12 +168,6 @@ function ProfileMoviesContent() {
       posterPath: m.custom_poster_path || m.movies?.poster_path || null,
       href: `/movie/${m.movie_id}`,
       mediaType: "movie",
-      subtitle: m.rating && m.rating > 0 ? (
-        <span className="flex items-center justify-center gap-1 text-[#a8dadc] font-bold">
-          <Star className="w-3 h-3 fill-[#a8dadc]" />
-          <span>{Number(m.rating).toFixed(1)}</span>
-        </span>
-      ) : undefined,
     }));
   }, [filteredMovies]);
 
@@ -198,7 +176,6 @@ function ProfileMoviesContent() {
       <ProfileOverviewTab
         title="Favorite movies"
         items={favoriteItems}
-        viewAllHref="/profile/movies?tab=movies"
         isLoading={loading}
       />
     );
@@ -210,14 +187,9 @@ function ProfileMoviesContent() {
       statusValue={statusFilter}
       onStatusChange={setStatusFilter}
       statusOptions={STATUS_OPTIONS}
-      favoriteValue={favoriteFilter}
-      onFavoriteChange={setFavoriteFilter}
-      favoriteOptions={FAVORITE_OPTIONS}
       sortValue={sortBy}
       onSortChange={setSortBy}
       sortOptions={SORT_OPTIONS}
-      totalCount={filteredMovies.length}
-      itemLabel="movie"
       isLoading={loading}
       emptyTitle="No movies found"
       emptyDescription="No movies match your selected filters. Try changing or clearing your filters."

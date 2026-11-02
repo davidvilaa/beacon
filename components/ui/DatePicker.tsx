@@ -46,14 +46,16 @@ function formatDateToIso(d: Date): string {
 function formatDisplayDate(str: string): string {
   const d = parseDate(str);
   if (!d) return "";
-  const month = MONTH_NAMES[d.getMonth()].slice(0, 3);
-  return `${month} ${d.getDate()}, ${d.getFullYear()}`;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export default function DatePicker({
   value,
   onChange,
-  placeholder = "Select date",
+  placeholder = "dd/mm/yyyy",
   className = "",
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -164,19 +166,21 @@ export default function DatePicker({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border text-xs font-medium transition-all cursor-pointer ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-800 border text-xs font-medium transition-all cursor-pointer ${
           isOpen
-            ? "border-[#a8dadc] text-zinc-100 bg-zinc-800/80"
-            : "border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white"
+            ? "border-[#a8dadc] text-zinc-100 bg-zinc-700/60"
+            : "border-zinc-700/80 text-zinc-300 hover:border-[#a8dadc]/60 hover:text-white hover:bg-zinc-700/50"
         }`}
       >
         <CalendarIcon className="w-3.5 h-3.5 text-[#a8dadc] shrink-0" />
-        <span>{value ? formatDisplayDate(value) : placeholder}</span>
+        <span className={value ? "text-zinc-200" : "text-zinc-400 font-mono tracking-wider"}>
+          {value ? formatDisplayDate(value) : placeholder}
+        </span>
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-64 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-3 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80 mb-2">
+        <div className="absolute top-full left-0 mt-2 z-50 w-64 bg-zinc-950 border border-zinc-700/80 rounded-lg shadow-2xl p-3 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-800 mb-2">
             <span className="text-xs font-bold text-zinc-200">
               {MONTH_NAMES[viewMonth]} {viewYear}
             </span>
@@ -185,7 +189,7 @@ export default function DatePicker({
                 type="button"
                 onClick={handlePrevMonth}
                 title="Previous month"
-                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -193,7 +197,7 @@ export default function DatePicker({
                 type="button"
                 onClick={handleNextMonth}
                 title="Next month"
-                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -229,7 +233,7 @@ export default function DatePicker({
                   key={`cur-${d}`}
                   type="button"
                   onClick={() => handleSelectDay(d)}
-                  className={`h-7 rounded-lg text-[11px] font-medium transition-all flex items-center justify-center cursor-pointer ${
+                  className={`h-7 rounded-md text-[11px] font-medium transition-all flex items-center justify-center cursor-pointer ${
                     active
                       ? "bg-[#a8dadc] text-zinc-950 font-bold"
                       : current
@@ -252,7 +256,7 @@ export default function DatePicker({
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-zinc-800/80 text-[11px]">
+          <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-zinc-800 text-[11px]">
             <button
               type="button"
               onClick={handleSetToday}

@@ -194,7 +194,7 @@ export default function MediaReviewModal({
         <div className="px-5 sm:px-8 pb-6 sm:pb-8">
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start -mt-14 sm:-mt-20 relative z-10 mb-5">
             <div className="flex flex-col items-center gap-3 shrink-0">
-              <div className="relative w-28 sm:w-36 aspect-[2/3] rounded-xl overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
+              <div className="relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
                 {posterUrl ? (
                   <Image
                     src={posterUrl}
@@ -253,14 +253,16 @@ export default function MediaReviewModal({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-4 flex-wrap">
+              <div className="mt-4">
                 <DatePicker
                   value={watchedDate}
                   onChange={onWatchedDateChange}
-                  placeholder="Watched date"
+                  placeholder="dd/mm/yyyy"
                 />
+              </div>
 
-                <div className="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-xl divide-x divide-zinc-800/80">
+              <div className="mt-3">
+                <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg divide-x divide-zinc-800/80">
                   <div className="flex items-center gap-1 pr-1">
                     {statusOptions.map((opt) => {
                       const Icon = opt.icon;
@@ -273,7 +275,7 @@ export default function MediaReviewModal({
                             onStatusChange(isSelected ? null : opt.key)
                           }
                           title={opt.label}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                             isSelected
                               ? "bg-[#a8dadc] text-zinc-950 font-bold"
                               : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
@@ -293,7 +295,7 @@ export default function MediaReviewModal({
                       title={
                         isFavorite ? "Remove from favourites" : "Mark as favourite"
                       }
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                         isFavorite
                           ? "bg-[#a8dadc] text-zinc-950 font-bold"
                           : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
@@ -313,7 +315,7 @@ export default function MediaReviewModal({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-xl overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
               <textarea
                 value={review}
                 onChange={(e) => onReviewChange(e.target.value)}
@@ -335,7 +337,7 @@ export default function MediaReviewModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -343,7 +345,7 @@ export default function MediaReviewModal({
                 type="button"
                 onClick={onSave}
                 disabled={isSaving}
-                className="px-5 py-2 rounded-xl text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save review"}
               </button>

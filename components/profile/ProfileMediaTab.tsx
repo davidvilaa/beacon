@@ -58,8 +58,8 @@ export default function ProfileMediaTab({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
-          {Array.from({ length: 12 }).map((_, index) => (
+        <div className="grid grid-cols-4 min-[460px]:grid-cols-5 sm:grid-cols-7 md:grid-cols-9 lg:grid-cols-12 xl:grid-cols-[repeat(15,minmax(0,1fr))] gap-2 sm:gap-2.5">
+          {Array.from({ length: 30 }).map((_, index) => (
             <div
               key={index}
               className="aspect-[2/3] w-full rounded-xl bg-zinc-900/40 border border-zinc-800/40 animate-pulse"
@@ -75,7 +75,7 @@ export default function ProfileMediaTab({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5">
+        <div className="grid grid-cols-4 min-[460px]:grid-cols-5 sm:grid-cols-7 md:grid-cols-9 lg:grid-cols-12 xl:grid-cols-[repeat(15,minmax(0,1fr))] gap-2 sm:gap-2.5">
           {items.map((item) => (
             <MediaCard
               key={`${item.mediaType}-${item.id}`}
@@ -84,6 +84,7 @@ export default function ProfileMediaTab({
               title={item.title}
               posterPath={item.posterPath}
               href={item.href}
+              sizes="(max-width: 640px) 25vw, (max-width: 1024px) 12vw, 85px"
             />
           ))}
         </div>

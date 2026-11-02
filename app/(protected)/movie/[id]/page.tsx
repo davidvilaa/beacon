@@ -39,6 +39,7 @@ function MovieDetailContent() {
 
   const [movieStatus, setMovieStatus] = useState<MediaStatus>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [canAddFavorite, setCanAddFavorite] = useState(true);
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
@@ -80,6 +81,18 @@ function MovieDetailContent() {
           setHasSpoilers(false);
           setWatchedDate("");
         }
+
+        const { count: favCount } = await supabase
+          .from("user_movies")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true);
+
+        const currentIsFav = Boolean(data?.is_favorite);
+        const otherFavCount = currentIsFav
+          ? Math.max(0, (favCount || 1) - 1)
+          : (favCount || 0);
+        setCanAddFavorite(otherFavCount < 5);
       } catch (err) {
       }
     }
@@ -116,8 +129,24 @@ function MovieDetailContent() {
         setReview("");
         setHasSpoilers(false);
         setWatchedDate("");
+        setCanAddFavorite(true);
         addToast("Removed from your library", "info");
         return;
+      }
+
+      if (newFavorite && !isFavorite) {
+        const { count } = await supabase
+          .from("user_movies")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true)
+          .neq("movie_id", movie.id);
+
+        if ((count || 0) >= 5) {
+          addToast("You can only have up to 5 favorite movies", "error");
+          setCanAddFavorite(false);
+          return;
+        }
       }
 
       await supabase.from("movies").upsert({
@@ -213,6 +242,22 @@ function MovieDetailContent() {
       }
 
       if (!movie) return;
+
+      if (reviewData.isFavorite && !isFavorite) {
+        const { count } = await supabase
+          .from("user_movies")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true)
+          .neq("movie_id", movie.id);
+
+        if ((count || 0) >= 5) {
+          addToast("You can only have up to 5 favorite movies", "error");
+          setIsSaving(false);
+          setCanAddFavorite(false);
+          return;
+        }
+      }
 
       const { error: movieError } = await supabase.from("movies").upsert({
         id: movie.id,
@@ -522,6 +567,10 @@ function MovieDetailContent() {
             }}
             onToggleFavorite={() => {
               const nextFav = !isFavorite;
+              if (nextFav && !canAddFavorite) {
+                addToast("You can only have up to 5 favorite movies", "error");
+                return;
+              }
               const nextStatus = movieStatus || "watched";
               handleQuickAction(nextStatus, nextFav);
             }}
@@ -614,6 +663,7 @@ function MovieDetailContent() {
         mediaType="movie"
         status={movieStatus}
         isFavorite={isFavorite}
+        canAddFavorite={canAddFavorite}
         rating={rating}
         review={review}
         hasSpoilers={hasSpoilers}

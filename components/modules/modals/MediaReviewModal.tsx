@@ -19,6 +19,7 @@ import { MediaStatus } from "../columns/MediaActionColumn";
 import { formatRuntime, formatFullDate } from "@/lib/media-utils";
 import DatePicker from "@/components/ui/DatePicker";
 import Checkbox from "@/components/ui/Checkbox";
+import { useToast } from "@/components/ui/Toast";
 
 function StarRating({
   value,
@@ -99,6 +100,7 @@ interface MediaReviewModalProps {
   mediaType: "movie" | "tv";
   status: MediaStatus;
   isFavorite: boolean;
+  canAddFavorite?: boolean;
   rating: number;
   review: string;
   hasSpoilers: boolean;
@@ -124,6 +126,7 @@ export default function MediaReviewModal({
   mediaType,
   status,
   isFavorite,
+  canAddFavorite = true,
   rating,
   review,
   hasSpoilers,
@@ -134,6 +137,7 @@ export default function MediaReviewModal({
   onSave,
   onDelete,
 }: MediaReviewModalProps) {
+  const { addToast } = useToast();
   const fallbackStatus: Exclude<MediaStatus, null> =
     mediaType === "movie" ? "watched" : "watched";
 
@@ -362,7 +366,18 @@ export default function MediaReviewModal({
                   <div className="pl-1">
                     <button
                       type="button"
-                      onClick={() => setDraftFavorite(!draftFavorite)}
+                      onClick={() => {
+                        if (!draftFavorite && canAddFavorite === false) {
+                          addToast(
+                            mediaType === "movie"
+                              ? "You can only have up to 5 favorite movies"
+                              : "You can only have up to 5 favorite series",
+                            "error"
+                          );
+                          return;
+                        }
+                        setDraftFavorite(!draftFavorite);
+                      }}
                       title={
                         draftFavorite ? "Remove from favourites" : "Mark as favourite"
                       }

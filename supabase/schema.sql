@@ -103,6 +103,30 @@ create trigger trigger_user_movies_updated_at
   before update on public.user_movies
   for each row execute function public.handle_updated_at();
 
+create or replace function public.check_user_movies_favorites_limit()
+returns trigger as $$
+declare
+  fav_count integer;
+begin
+  if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    select count(*) into fav_count
+    from public.user_movies
+    where user_id = new.user_id
+      and is_favorite = true
+      and movie_id <> new.movie_id;
+
+    if fav_count >= 5 then
+      raise exception 'Maximum of 5 favorite movies reached';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_user_movies_favorites_limit
+  before insert or update on public.user_movies
+  for each row execute function public.check_user_movies_favorites_limit();
+
 create table public.user_series (
   id uuid not null default gen_random_uuid() primary key,
   user_id uuid not null references public.users(id) on delete cascade,
@@ -146,3 +170,27 @@ create policy "user_series_delete_policy"
 create trigger trigger_user_series_updated_at
   before update on public.user_series
   for each row execute function public.handle_updated_at();
+
+create or replace function public.check_user_series_favorites_limit()
+returns trigger as $$
+declare
+  fav_count integer;
+begin
+  if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    select count(*) into fav_count
+    from public.user_series
+    where user_id = new.user_id
+      and is_favorite = true
+      and not (series_id = new.series_id and season_number = new.season_number);
+
+    if fav_count >= 5 then
+      raise exception 'Maximum of 5 favorite series reached';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_user_series_favorites_limit
+  before insert or update on public.user_series
+  for each row execute function public.check_user_series_favorites_limit();

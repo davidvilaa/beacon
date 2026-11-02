@@ -68,3 +68,6 @@ Full DDL script is located in `supabase/schema.sql`.
   - `start_date`, `end_date`: date
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id, season_number)`
+
+- **Favorites Limit**:
+  - Maximum of 5 favorites per user for each media type (`public.user_movies` and `public.user_series`). Enforced via triggers `check_user_movies_favorites_limit` and `check_user_series_favorites_limit`, as well as client-side checks and user toasts.

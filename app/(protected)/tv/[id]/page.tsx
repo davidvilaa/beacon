@@ -54,6 +54,7 @@ function TvDetailContent() {
 
   const [seriesStatus, setSeriesStatus] = useState<MediaStatus>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [canAddFavorite, setCanAddFavorite] = useState(true);
   const [rating, setRating] = useState<number>(0);
   const [review, setReview] = useState<string>("");
   const [hasSpoilers, setHasSpoilers] = useState(false);
@@ -110,6 +111,18 @@ function TvDetailContent() {
           setStartDate("");
           setEndDate("");
         }
+
+        const { data: favData } = await supabase
+          .from("user_series")
+          .select("series_id, season_number")
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true);
+
+        const currentIsFav = Boolean(data?.is_favorite);
+        const otherFavCount = (favData || []).filter(
+          (f) => !(f.series_id === id && f.season_number === activeSeason)
+        ).length;
+        setCanAddFavorite(otherFavCount < 5);
       } catch (err) {
       }
     }
@@ -148,8 +161,27 @@ function TvDetailContent() {
         setHasSpoilers(false);
         setStartDate("");
         setEndDate("");
+        setCanAddFavorite(true);
         addToast("Removed from your library", "info");
         return;
+      }
+
+      if (newFavorite && !isFavorite) {
+        const { data: favData } = await supabase
+          .from("user_series")
+          .select("series_id, season_number")
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true);
+
+        const otherFavCount = (favData || []).filter(
+          (f) => !(f.series_id === tv.id && f.season_number === activeSeason)
+        ).length;
+
+        if (otherFavCount >= 5) {
+          addToast("You can only have up to 5 favorite series", "error");
+          setCanAddFavorite(false);
+          return;
+        }
       }
 
       await supabase.from("series").upsert({
@@ -254,6 +286,25 @@ function TvDetailContent() {
       }
 
       if (!tv) return;
+
+      if (reviewData.isFavorite && !isFavorite) {
+        const { data: favData } = await supabase
+          .from("user_series")
+          .select("series_id, season_number")
+          .eq("user_id", session.user.id)
+          .eq("is_favorite", true);
+
+        const otherFavCount = (favData || []).filter(
+          (f) => !(f.series_id === tv.id && f.season_number === activeSeason)
+        ).length;
+
+        if (otherFavCount >= 5) {
+          addToast("You can only have up to 5 favorite series", "error");
+          setIsSaving(false);
+          setCanAddFavorite(false);
+          return;
+        }
+      }
 
       const { error: seriesError } = await supabase.from("series").upsert({
         id: tv.id,
@@ -685,6 +736,10 @@ function TvDetailContent() {
             }}
             onToggleFavorite={() => {
               const nextFav = !isFavorite;
+              if (nextFav && !canAddFavorite) {
+                addToast("You can only have up to 5 favorite series", "error");
+                return;
+              }
               const nextStatus = seriesStatus || "watched";
               handleQuickAction(nextStatus, nextFav);
             }}
@@ -793,6 +848,7 @@ function TvDetailContent() {
         mediaType="tv"
         status={seriesStatus}
         isFavorite={isFavorite}
+        canAddFavorite={canAddFavorite}
         rating={rating}
         review={review}
         hasSpoilers={hasSpoilers}

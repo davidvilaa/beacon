@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Eye, Bookmark, Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
 import ProfileFilterBar from "@/components/profile/ProfileFilterBar";
 import ProfileMediaGrid from "@/components/profile/ProfileMediaGrid";
+import ProfileFavoriteSlots, { FavoriteSlotItem } from "@/components/profile/ProfileFavoriteSlots";
 import { ProfileMediaCardProps } from "@/components/profile/ProfileMediaCard";
 
 interface UserMovieEntry {
@@ -49,7 +51,10 @@ const SORT_OPTIONS: Option[] = [
   { id: "title_desc", label: "Title (Z-A)" },
 ];
 
-export default function ProfileMoviesPage() {
+function ProfileMoviesContent() {
+  const searchParams = useSearchParams();
+  const currentSubTab = searchParams.get("tab") || "overview";
+
   const [movies, setMovies] = useState<UserMovieEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -69,7 +74,7 @@ export default function ProfileMoviesPage() {
 
         if (!session) return;
 
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("user_movies")
           .select(`
             id,
@@ -114,6 +119,20 @@ export default function ProfileMoviesPage() {
       ignore = true;
     };
   }, [supabase]);
+
+  const favoriteItems = useMemo<FavoriteSlotItem[]>(() => {
+    return movies
+      .filter((m) => m.is_favorite)
+      .slice(0, 5)
+      .map((m) => ({
+        id: m.movie_id,
+        title: m.movies?.title || "Movie",
+        posterPath: m.custom_poster_path || m.movies?.poster_path || null,
+        href: `/movie/${m.movie_id}`,
+        mediaType: "movie",
+        rating: m.rating ? Number(m.rating) : null,
+      }));
+  }, [movies]);
 
   const filteredMovies = useMemo(() => {
     let result = [...movies];
@@ -168,6 +187,19 @@ export default function ProfileMoviesPage() {
     }));
   }, [filteredMovies]);
 
+  if (currentSubTab === "overview") {
+    return (
+      <div className="space-y-8">
+        <ProfileFavoriteSlots
+          title="Favorite movies"
+          items={favoriteItems}
+          viewAllHref="/profile/movies?tab=movies"
+          isLoading={loading}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <ProfileFilterBar
@@ -191,5 +223,13 @@ export default function ProfileMoviesPage() {
         emptyDescription="No movies match your selected filters. Try changing or clearing your filters."
       />
     </div>
+  );
+}
+
+export default function ProfileMoviesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[300px]" />}>
+      <ProfileMoviesContent />
+    </Suspense>
   );
 }

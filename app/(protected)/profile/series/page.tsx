@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Eye, Bookmark, Heart, PlayCircle, PauseCircle, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
 import ProfileFilterBar from "@/components/profile/ProfileFilterBar";
 import ProfileMediaGrid from "@/components/profile/ProfileMediaGrid";
+import ProfileFavoriteSlots, { FavoriteSlotItem } from "@/components/profile/ProfileFavoriteSlots";
 import { ProfileMediaCardProps } from "@/components/profile/ProfileMediaCard";
 
 interface UserSeriesEntry {
@@ -56,7 +58,10 @@ const SORT_OPTIONS: Option[] = [
   { id: "name_desc", label: "Title (Z-A)" },
 ];
 
-export default function ProfileSeriesPage() {
+function ProfileSeriesContent() {
+  const searchParams = useSearchParams();
+  const currentSubTab = searchParams.get("tab") || "overview";
+
   const [series, setSeries] = useState<UserSeriesEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -76,7 +81,7 @@ export default function ProfileSeriesPage() {
 
         if (!session) return;
 
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("user_series")
           .select(`
             id,
@@ -125,6 +130,21 @@ export default function ProfileSeriesPage() {
       ignore = true;
     };
   }, [supabase]);
+
+  const favoriteItems = useMemo<FavoriteSlotItem[]>(() => {
+    return series
+      .filter((s) => s.is_favorite)
+      .slice(0, 5)
+      .map((s) => ({
+        id: `${s.series_id}-${s.season_number}`,
+        title: s.series?.name || "Series",
+        posterPath: s.custom_poster_path || s.series?.poster_path || null,
+        href: `/tv/${s.series_id}?season=${s.season_number}`,
+        mediaType: "tv",
+        rating: s.rating ? Number(s.rating) : null,
+        subtitle: s.season_number > 0 ? `Season ${s.season_number}` : undefined,
+      }));
+  }, [series]);
 
   const filteredSeries = useMemo(() => {
     let result = [...series];
@@ -180,6 +200,19 @@ export default function ProfileSeriesPage() {
     }));
   }, [filteredSeries]);
 
+  if (currentSubTab === "overview") {
+    return (
+      <div className="space-y-8">
+        <ProfileFavoriteSlots
+          title="Favorite series"
+          items={favoriteItems}
+          viewAllHref="/profile/series?tab=series"
+          isLoading={loading}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <ProfileFilterBar
@@ -203,5 +236,13 @@ export default function ProfileSeriesPage() {
         emptyDescription="No series match your selected filters. Try changing or clearing your filters."
       />
     </div>
+  );
+}
+
+export default function ProfileSeriesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[300px]" />}>
+      <ProfileSeriesContent />
+    </Suspense>
   );
 }

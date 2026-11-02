@@ -1,11 +1,83 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useRef, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { UserCircle, Link as LinkIcon } from "lucide-react";
 import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
+
+function ProfileSubNav({ activeTab }: { activeTab: string }) {
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "overview";
+
+  const getSubTabs = (tab: string) => {
+    switch (tab) {
+      case "movies":
+        return [
+          { id: "overview", label: "Overview", href: "/profile/movies", disabled: false },
+          { id: "movies", label: "Movies", href: "/profile/movies?tab=movies", disabled: false },
+          { id: "lists", label: "Lists", href: "#", disabled: true },
+        ];
+      case "series":
+        return [
+          { id: "overview", label: "Overview", href: "/profile/series", disabled: false },
+          { id: "series", label: "Series", href: "/profile/series?tab=series", disabled: false },
+          { id: "lists", label: "Lists", href: "#", disabled: true },
+        ];
+      case "anime":
+        return [
+          { id: "overview", label: "Overview", href: "/profile/anime", disabled: false },
+          { id: "anime", label: "Anime", href: "/profile/anime?tab=anime", disabled: true },
+          { id: "lists", label: "Lists", href: "#", disabled: true },
+        ];
+      case "games":
+        return [
+          { id: "overview", label: "Overview", href: "/profile/games", disabled: false },
+          { id: "games", label: "Games", href: "/profile/games?tab=games", disabled: true },
+          { id: "lists", label: "Lists", href: "#", disabled: true },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const subTabs = getSubTabs(activeTab);
+  if (subTabs.length === 0) return null;
+
+  return (
+    <div className="border-b border-zinc-800/60 py-3 flex items-center gap-6 overflow-x-auto scrollbar-none">
+      {subTabs.map((subTab) => {
+        if (subTab.disabled) {
+          return (
+            <span
+              key={subTab.id}
+              className="text-xs font-bold uppercase tracking-wider text-zinc-600 opacity-40 select-none cursor-not-allowed shrink-0"
+            >
+              {subTab.label}
+            </span>
+          );
+        }
+
+        const isActive = currentTab === subTab.id;
+
+        return (
+          <Link
+            key={subTab.id}
+            href={subTab.href}
+            className={`text-xs font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer ${
+              isActive
+                ? "text-[#a8dadc]"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {subTab.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function ProfileLayout({
   children,
@@ -98,36 +170,6 @@ export default function ProfileLayout({
     { id: "games", label: "Games", href: "/profile/games" },
   ];
 
-  const getSubTabs = (tab: string) => {
-    switch (tab) {
-      case "movies":
-        return [
-          { id: "overview", label: "Overview", disabled: false },
-          { id: "movies", label: "Movies", disabled: true },
-          { id: "lists", label: "Lists", disabled: true },
-        ];
-      case "series":
-        return [
-          { id: "overview", label: "Overview", disabled: false },
-          { id: "series", label: "Series", disabled: true },
-          { id: "lists", label: "Lists", disabled: true },
-        ];
-      case "anime":
-        return [
-          { id: "overview", label: "Overview", disabled: false },
-          { id: "anime", label: "Anime", disabled: true },
-          { id: "lists", label: "Lists", disabled: true },
-        ];
-      case "games":
-        return [
-          { id: "overview", label: "Overview", disabled: false },
-          { id: "games", label: "Games", disabled: true },
-          { id: "lists", label: "Lists", disabled: true },
-        ];
-      default:
-        return [];
-    }
-  };
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
@@ -220,28 +262,9 @@ export default function ProfileLayout({
       </div>
 
       {activeTab !== "overview" && (
-        <div className="border-b border-zinc-800/60 py-3 flex items-center gap-6 overflow-x-auto scrollbar-none">
-          {getSubTabs(activeTab).map((subTab) => {
-            if (subTab.disabled) {
-              return (
-                <span
-                  key={subTab.id}
-                  className="text-xs font-bold uppercase tracking-wider text-zinc-600 opacity-40 select-none cursor-not-allowed shrink-0"
-                >
-                  {subTab.label}
-                </span>
-              );
-            }
-            return (
-              <span
-                key={subTab.id}
-                className="text-xs font-bold uppercase tracking-wider text-[#a8dadc] cursor-default shrink-0"
-              >
-                {subTab.label}
-              </span>
-            );
-          })}
-        </div>
+        <Suspense fallback={<div className="h-10 border-b border-zinc-800/60" />}>
+          <ProfileSubNav activeTab={activeTab} />
+        </Suspense>
       )}
 
       <div className="pt-8">{children}</div>

@@ -148,63 +148,79 @@ export default function MediaActionColumn({
             }`}
           >
             <ChevronDown
-              className={`w-4 h-4 transition-transform duration-200 ${
+              className={`w-4 h-4 transition-transform duration-300 ease-in-out ${
                 isOpen ? "rotate-180 text-[#a8dadc]" : ""
               }`}
             />
           </button>
         </div>
 
-        {isOpen && (
-          <div className="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex items-stretch divide-x divide-zinc-800 animate-in fade-in slide-in-from-top-1 duration-150">
-            {statusOptions.map((opt) => {
-              const Icon = opt.icon;
-              const isSelected = status === opt.statusKey;
-              return (
-                <button
-                  key={opt.statusKey}
-                  type="button"
-                  onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
-                  title={opt.label}
-                  className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
-                    isSelected
-                      ? "text-[#a8dadc] bg-zinc-800/80"
-                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                  }`}
-                >
-                  <Icon
-                    className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
-                      isSelected
-                        ? opt.statusKey === "watchlist"
-                          ? "fill-[#a8dadc] stroke-[2]"
-                          : "stroke-[2.2]"
-                        : "stroke-[1.75]"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={onToggleFavorite}
-              title="Favourite"
-              className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
-                isFavorite
-                  ? "text-[#a8dadc] bg-zinc-800/80"
-                  : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+        <div
+          className={`grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isOpen
+              ? "grid-rows-[1fr] opacity-100 mt-2"
+              : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div
+              className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex items-stretch divide-x divide-zinc-800 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isOpen
+                  ? "translate-y-0 scale-100"
+                  : "-translate-y-3 scale-95"
               }`}
             >
-              <Heart
-                className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+              {statusOptions.map((opt) => {
+                const Icon = opt.icon;
+                const isSelected = status === opt.statusKey;
+                return (
+                  <button
+                    key={opt.statusKey}
+                    type="button"
+                    tabIndex={isOpen ? 0 : -1}
+                    onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
+                    title={opt.label}
+                    className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
+                      isSelected
+                        ? "text-[#a8dadc] bg-zinc-800/80"
+                        : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                    }`}
+                  >
+                    <Icon
+                      className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                        isSelected
+                          ? opt.statusKey === "watchlist"
+                            ? "fill-[#a8dadc] stroke-[2]"
+                            : "stroke-[2.2]"
+                          : "stroke-[1.75]"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                tabIndex={isOpen ? 0 : -1}
+                onClick={onToggleFavorite}
+                title="Favourite"
+                className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                   isFavorite
-                    ? "fill-[#a8dadc] stroke-[2]"
-                    : "stroke-[1.75]"
+                    ? "text-[#a8dadc] bg-zinc-800/80"
+                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                 }`}
-              />
-            </button>
+              >
+                <Heart
+                  className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                    isFavorite
+                      ? "fill-[#a8dadc] stroke-[2]"
+                      : "stroke-[1.75]"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

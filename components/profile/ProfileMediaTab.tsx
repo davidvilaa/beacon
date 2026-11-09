@@ -39,7 +39,7 @@ export default function ProfileMediaTab({
 }: ProfileMediaTabProps) {
   return (
     <div>
-      <div className="pb-4 mb-6 border-b border-zinc-800/80 flex items-center gap-2.5 flex-wrap">
+      <div className="mb-6 flex items-center gap-2.5 flex-wrap">
         <Select
           value={statusValue}
           onChange={onStatusChange}

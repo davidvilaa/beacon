@@ -10,8 +10,6 @@ import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
 function ProfileSubNav({ activeTab }: { activeTab: string }) {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "overview";
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-  const tabRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const getSubTabs = (tab: string) => {
     switch (tab) {
@@ -45,73 +43,38 @@ function ProfileSubNav({ activeTab }: { activeTab: string }) {
   };
 
   const subTabs = getSubTabs(activeTab);
-
-  useEffect(() => {
-    const updateIndicator = () => {
-      const currentTabEl = tabRefs.current[currentTab];
-      if (currentTabEl) {
-        setIndicatorStyle({
-          left: currentTabEl.offsetLeft,
-          width: currentTabEl.offsetWidth,
-        });
-      }
-    };
-
-    updateIndicator();
-    const rafId = requestAnimationFrame(updateIndicator);
-    window.addEventListener("resize", updateIndicator);
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", updateIndicator);
-    };
-  }, [currentTab, activeTab]);
-
   if (subTabs.length === 0) return null;
 
   return (
-    <div className="relative border-b border-zinc-800/60 mt-4">
-      <div className="flex items-center gap-6 overflow-x-auto scrollbar-none">
-        {subTabs.map((subTab) => {
-          if (subTab.disabled) {
-            return (
-              <span
-                key={subTab.id}
-                className="text-xs font-bold uppercase tracking-wider text-zinc-600 opacity-40 select-none cursor-not-allowed shrink-0 pb-2.5"
-              >
-                {subTab.label}
-              </span>
-            );
-          }
-
-          const isActive = currentTab === subTab.id;
-
+    <div className="border-b border-zinc-700/80 rounded-b-lg py-3 px-2 flex items-center gap-6 overflow-x-auto scrollbar-none">
+      {subTabs.map((subTab) => {
+        if (subTab.disabled) {
           return (
-            <Link
+            <span
               key={subTab.id}
-              ref={(el) => {
-                tabRefs.current[subTab.id] = el;
-              }}
-              href={subTab.href}
-              className={`text-xs font-bold uppercase tracking-wider pb-2.5 transition-colors shrink-0 cursor-pointer ${
-                isActive
-                  ? "text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
+              className="text-xs font-bold uppercase tracking-wider text-zinc-600 opacity-40 select-none cursor-not-allowed shrink-0"
             >
               {subTab.label}
-            </Link>
+            </span>
           );
-        })}
-      </div>
+        }
 
-      <span
-        className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out pointer-events-none"
-        style={{
-          left: `${indicatorStyle.left}px`,
-          width: `${indicatorStyle.width}px`,
-          opacity: indicatorStyle.width > 0 ? 1 : 0,
-        }}
-      />
+        const isActive = currentTab === subTab.id;
+
+        return (
+          <Link
+            key={subTab.id}
+            href={subTab.href}
+            className={`text-xs font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer ${
+              isActive
+                ? "text-[#a8dadc]"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {subTab.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -298,7 +261,7 @@ export default function ProfileLayout({
       </div>
 
       {activeTab !== "overview" && (
-        <Suspense fallback={<div className="h-9 mt-4 border-b border-zinc-800/60" />}>
+        <Suspense fallback={<div className="h-10 border-b border-zinc-700/80 rounded-b-lg px-2" />}>
           <ProfileSubNav activeTab={activeTab} />
         </Suspense>
       )}

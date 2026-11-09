@@ -69,5 +69,23 @@ Full DDL script is located in `supabase/schema.sql`.
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id, season_number)`
 
+- **`public.lists`**:
+  - `id`: uuid primary key default gen_random_uuid()
+  - `user_id`: uuid references public.users(id) on delete cascade
+  - `title`: text not null
+  - `description`: text default ''
+  - `is_private`: boolean default false
+  - `created_at`, `updated_at`: timestamptz
+
+- **`public.list_items`**:
+  - `id`: uuid primary key default gen_random_uuid()
+  - `list_id`: uuid references public.lists(id) on delete cascade
+  - `media_type`: text not null check (media_type in ('movie', 'tv', 'anime', 'game'))
+  - `media_id`: bigint not null
+  - `position`: integer default 0
+  - `notes`: text
+  - `created_at`: timestamptz
+  - Unique constraint: `(list_id, media_type, media_id)`
+
 - **Favorites Limit**:
   - Maximum of 5 favorites per user for each media type (`public.user_movies` and `public.user_series`). Enforced via triggers `check_user_movies_favorites_limit` and `check_user_series_favorites_limit`, as well as client-side checks and user toasts.

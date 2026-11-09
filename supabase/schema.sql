@@ -1,3 +1,5 @@
+drop table if exists public.list_items cascade;
+drop table if exists public.lists cascade;
 drop table if exists public.user_movies cascade;
 drop table if exists public.user_series cascade;
 drop table if exists public.movies cascade;
@@ -194,3 +196,88 @@ $$ language plpgsql;
 create trigger trigger_user_series_favorites_limit
   before insert or update on public.user_series
   for each row execute function public.check_user_series_favorites_limit();
+
+create table public.lists (
+  id uuid not null default gen_random_uuid() primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  title text not null,
+  description text null default '',
+  is_private boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index idx_lists_user_id on public.lists (user_id);
+create index idx_lists_is_private on public.lists (is_private);
+create index idx_lists_updated_at on public.lists (updated_at desc);
+
+alter table public.lists enable row level security;
+
+create policy "lists_select_policy"
+  on public.lists for select using (is_private = false or auth.uid() = user_id);
+
+create policy "lists_insert_policy"
+  on public.lists for insert with check (auth.uid() = user_id);
+
+create policy "lists_update_policy"
+  on public.lists for update using (auth.uid() = user_id);
+
+create policy "lists_delete_policy"
+  on public.lists for delete using (auth.uid() = user_id);
+
+create trigger trigger_lists_updated_at
+  before update on public.lists
+  for each row execute function public.handle_updated_at();
+
+create table public.list_items (
+  id uuid not null default gen_random_uuid() primary key,
+  list_id uuid not null references public.lists(id) on delete cascade,
+  media_type text not null check (media_type in ('movie', 'tv', 'anime', 'game')),
+  media_id bigint not null,
+  position integer not null default 0,
+  notes text null,
+  created_at timestamptz not null default now(),
+  constraint list_items_unique unique (list_id, media_type, media_id)
+);
+
+create index idx_list_items_list_id on public.list_items (list_id);
+create index idx_list_items_media on public.list_items (media_type, media_id);
+create index idx_list_items_position on public.list_items (list_id, position);
+
+alter table public.list_items enable row level security;
+
+create policy "list_items_select_policy"
+  on public.list_items for select using (
+    exists (
+      select 1 from public.lists
+      where lists.id = list_items.list_id
+        and (lists.is_private = false or lists.user_id = auth.uid())
+    )
+  );
+
+create policy "list_items_insert_policy"
+  on public.list_items for insert with check (
+    exists (
+      select 1 from public.lists
+      where lists.id = list_items.list_id
+        and lists.user_id = auth.uid()
+    )
+  );
+
+create policy "list_items_update_policy"
+  on public.list_items for update using (
+    exists (
+      select 1 from public.lists
+      where lists.id = list_items.list_id
+        and lists.user_id = auth.uid()
+    )
+  );
+
+create policy "list_items_delete_policy"
+  on public.list_items for delete using (
+    exists (
+      select 1 from public.lists
+      where lists.id = list_items.list_id
+        and lists.user_id = auth.uid()
+    )
+  );

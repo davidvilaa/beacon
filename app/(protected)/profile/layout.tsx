@@ -17,25 +17,21 @@ function ProfileSubNav({ activeTab }: { activeTab: string }) {
         return [
           { id: "overview", label: "Overview", href: "/profile/movies", disabled: false },
           { id: "movies", label: "Movies", href: "/profile/movies?tab=movies", disabled: false },
-          { id: "lists", label: "Lists", href: "#", disabled: true },
         ];
       case "series":
         return [
           { id: "overview", label: "Overview", href: "/profile/series", disabled: false },
           { id: "series", label: "Series", href: "/profile/series?tab=series", disabled: false },
-          { id: "lists", label: "Lists", href: "#", disabled: true },
         ];
       case "anime":
         return [
           { id: "overview", label: "Overview", href: "/profile/anime", disabled: false },
           { id: "anime", label: "Anime", href: "/profile/anime?tab=anime", disabled: true },
-          { id: "lists", label: "Lists", href: "#", disabled: true },
         ];
       case "games":
         return [
           { id: "overview", label: "Overview", href: "/profile/games", disabled: false },
           { id: "games", label: "Games", href: "/profile/games?tab=games", disabled: true },
-          { id: "lists", label: "Lists", href: "#", disabled: true },
         ];
       default:
         return [];
@@ -122,6 +118,7 @@ export default function ProfileLayout({
     if (path.startsWith("/profile/series")) return "series";
     if (path.startsWith("/profile/anime")) return "anime";
     if (path.startsWith("/profile/games")) return "games";
+    if (path.startsWith("/profile/lists")) return "lists";
     return "overview";
   };
 
@@ -168,6 +165,7 @@ export default function ProfileLayout({
     { id: "series", label: "Series", href: "/profile/series" },
     { id: "anime", label: "Anime", href: "/profile/anime" },
     { id: "games", label: "Games", href: "/profile/games" },
+    { id: "lists", label: "Lists", href: "/profile/lists" },
   ];
 
   return (
@@ -260,7 +258,7 @@ export default function ProfileLayout({
         />
       </div>
 
-      {activeTab !== "overview" && (
+      {activeTab !== "overview" && activeTab !== "lists" && (
         <Suspense fallback={<div className="h-10 border-b border-zinc-700/80 rounded-b-lg px-2" />}>
           <ProfileSubNav activeTab={activeTab} />
         </Suspense>

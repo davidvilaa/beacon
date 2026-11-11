@@ -18,6 +18,7 @@ import MediaLayout from "@/components/modules/MediaLayout";
 import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
 import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
+import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
@@ -61,6 +62,7 @@ function TvDetailContent() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"cast" | "crew" | "details" | "episodes">("cast");
@@ -731,6 +733,7 @@ function TvDetailContent() {
             isFavorite={isFavorite}
             hasLog={Boolean(seriesStatus)}
             onOpenLogModal={() => setIsLogModalOpen(true)}
+            onOpenListModal={() => setIsListModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
               handleQuickAction(newStatus, isFavorite);
             }}
@@ -857,6 +860,21 @@ function TvDetailContent() {
         isSaving={isSaving}
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
+      />
+
+      <ListModal
+        isOpen={isListModalOpen}
+        onClose={() => setIsListModalOpen(false)}
+        media={{
+          mediaType: "tv",
+          mediaId: tv.id,
+          title: tv.name,
+          overview: tv.overview,
+          posterPath: tv.poster_path,
+          backdropPath: tv.backdrop_path,
+          numberOfSeasons: tv.number_of_seasons,
+          numberOfEpisodes: tv.number_of_episodes,
+        }}
       />
     </>
   );

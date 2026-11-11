@@ -11,6 +11,7 @@ import MediaLayout from "@/components/modules/MediaLayout";
 import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
 import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
+import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
@@ -33,6 +34,7 @@ function MovieDetailContent() {
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
 
   const supabase = createClient();
   const { addToast } = useToast();
@@ -562,6 +564,7 @@ function MovieDetailContent() {
             isFavorite={isFavorite}
             hasLog={Boolean(movieStatus)}
             onOpenLogModal={() => setIsLogModalOpen(true)}
+            onOpenListModal={() => setIsListModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
               handleQuickAction(newStatus, isFavorite);
             }}
@@ -671,6 +674,19 @@ function MovieDetailContent() {
         isSaving={isSaving}
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
+      />
+
+      <ListModal
+        isOpen={isListModalOpen}
+        onClose={() => setIsListModalOpen(false)}
+        media={{
+          mediaType: "movie",
+          mediaId: movie.id,
+          title: movie.title,
+          overview: movie.overview,
+          posterPath: movie.poster_path,
+          backdropPath: movie.backdrop_path,
+        }}
       />
     </>
   );

@@ -13,6 +13,7 @@ import {
   PauseCircle,
   XCircle,
   Film,
+  ListPlus,
 } from "lucide-react";
 
 export type MediaStatus =
@@ -35,6 +36,7 @@ interface MediaActionColumnProps {
   onOpenLogModal: () => void;
   onQuickStatusChange: (newStatus: MediaStatus) => void;
   onToggleFavorite: () => void;
+  onOpenListModal?: () => void;
   children?: React.ReactNode;
   className?: string;
 }
@@ -51,6 +53,7 @@ export default function MediaActionColumn({
   onOpenLogModal,
   onQuickStatusChange,
   onToggleFavorite,
+  onOpenListModal,
   children,
   className = "",
 }: MediaActionColumnProps) {
@@ -176,60 +179,78 @@ export default function MediaActionColumn({
         >
           <div className="min-h-0 overflow-hidden">
             <div
-              className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex items-stretch divide-x divide-zinc-800 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 isOpen
                   ? "translate-y-0 scale-100"
                   : "-translate-y-3 scale-95"
               }`}
             >
-              {statusOptions.map((opt) => {
-                const Icon = opt.icon;
-                const isSelected = status === opt.statusKey;
-                return (
-                  <button
-                    key={opt.statusKey}
-                    type="button"
-                    tabIndex={isOpen ? 0 : -1}
-                    onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
-                    title={opt.label}
-                    className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
-                      isSelected
-                        ? "text-[#a8dadc] bg-zinc-800/80"
-                        : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                    }`}
-                  >
-                    <Icon
-                      className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+              <div className="flex items-stretch divide-x divide-zinc-800">
+                {statusOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const isSelected = status === opt.statusKey;
+                  return (
+                    <button
+                      key={opt.statusKey}
+                      type="button"
+                      tabIndex={isOpen ? 0 : -1}
+                      onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
+                      title={opt.label}
+                      className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                         isSelected
-                          ? opt.statusKey === "watchlist"
-                            ? "fill-[#a8dadc] stroke-[2]"
-                            : "stroke-[2.2]"
-                          : "stroke-[1.75]"
+                          ? "text-[#a8dadc] bg-zinc-800/80"
+                          : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                       }`}
-                    />
-                  </button>
-                );
-              })}
+                    >
+                      <Icon
+                        className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                          isSelected
+                            ? opt.statusKey === "watchlist"
+                              ? "fill-[#a8dadc] stroke-[2]"
+                              : "stroke-[2.2]"
+                            : "stroke-[1.75]"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
 
-              <button
-                type="button"
-                tabIndex={isOpen ? 0 : -1}
-                onClick={onToggleFavorite}
-                title="Favourite"
-                className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
-                  isFavorite
-                    ? "text-[#a8dadc] bg-zinc-800/80"
-                    : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
-                }`}
-              >
-                <Heart
-                  className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                <button
+                  type="button"
+                  tabIndex={isOpen ? 0 : -1}
+                  onClick={onToggleFavorite}
+                  title="Favourite"
+                  className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                     isFavorite
-                      ? "fill-[#a8dadc] stroke-[2]"
-                      : "stroke-[1.75]"
+                      ? "text-[#a8dadc] bg-zinc-800/80"
+                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
                   }`}
-                />
-              </button>
+                >
+                  <Heart
+                    className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                      isFavorite
+                        ? "fill-[#a8dadc] stroke-[2]"
+                        : "stroke-[1.75]"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {onOpenListModal && (
+                <button
+                  type="button"
+                  tabIndex={isOpen ? 0 : -1}
+                  onClick={() => {
+                    setIsOpen(false);
+                    onOpenListModal();
+                  }}
+                  title="Add to list"
+                  aria-label="Add to list"
+                  className="w-full border-t border-zinc-800 flex items-center justify-center py-2.5 sm:py-3 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
+                >
+                  <ListPlus className="w-5 h-5 stroke-[1.9] transition-transform group-hover:scale-110" />
+                </button>
+              )}
             </div>
           </div>
         </div>

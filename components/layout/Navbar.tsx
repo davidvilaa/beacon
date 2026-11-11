@@ -11,6 +11,7 @@ import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
 export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,24 +58,41 @@ export default function Navbar() {
   }, [isSearchOpen]);
 
   useEffect(() => {
+    const fetchUserMeta = async (userId: string) => {
+      const { data } = await supabase
+        .from("users")
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+      setUsername(data?.username ?? null);
+      setAvatarUrl(data?.avatar_url ?? null);
+    };
+
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        const { data } = await supabase
-          .from("users")
-          .select("avatar_url")
-          .eq("id", session.user.id)
-          .single();
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        await fetchUserMeta(session.user.id);
+      } else {
+        setUsername(null);
+        setAvatarUrl(null);
       }
     };
     checkUser();
 
+    const handleProfileUpdated = () => {
+      checkUser();
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (!session) setAvatarUrl(null);
+      if (session?.user) {
+        fetchUserMeta(session.user.id);
+      } else {
+        setUsername(null);
+        setAvatarUrl(null);
+      }
     });
 
     let lastScroll = window.scrollY;
@@ -90,11 +108,15 @@ export default function Navbar() {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("profile-updated", handleProfileUpdated);
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("profile-updated", handleProfileUpdated);
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  const profileHref = username ? `/profile/${encodeURIComponent(username)}` : "/profile";
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
@@ -129,7 +151,7 @@ export default function Navbar() {
 
             {user ? (
               <div className="relative group">
-                <Link href="/profile">
+                <Link href={profileHref}>
                   <button className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors overflow-hidden border border-zinc-700 cursor-pointer">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
@@ -141,7 +163,7 @@ export default function Navbar() {
 
                 <div className="absolute right-0 top-full pt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
-                    <Link href="/profile" className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                    <Link href={profileHref} className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
                       <CircleUserRound className="w-4 h-4" />
                       Profile
                     </Link>

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, Bookmark, PlayCircle, PauseCircle, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
+import { useProfile } from "@/components/profile/ProfileContext";
 import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
 import ProfileMediaTab, { ProfileMediaItem } from "@/components/profile/ProfileMediaTab";
 
@@ -54,6 +55,7 @@ const SORT_OPTIONS: Option[] = [
 function ProfileSeriesContent() {
   const searchParams = useSearchParams();
   const currentSubTab = searchParams.get("tab") || "overview";
+  const { profileUser, isLoadingProfile } = useProfile();
 
   const [series, setSeries] = useState<UserSeriesEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,13 +67,16 @@ function ProfileSeriesContent() {
     let ignore = false;
 
     async function fetchUserSeries() {
+      if (isLoadingProfile) return;
+
+      if (!profileUser?.id) {
+        setSeries([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) return;
 
         const { data } = await supabase
           .from("user_series")
@@ -100,7 +105,7 @@ function ProfileSeriesContent() {
               number_of_episodes
             )
           `)
-          .eq("user_id", session.user.id)
+          .eq("user_id", profileUser.id)
           .order("updated_at", { ascending: false });
 
         if (ignore) return;
@@ -121,7 +126,7 @@ function ProfileSeriesContent() {
     return () => {
       ignore = true;
     };
-  }, [supabase]);
+  }, [supabase, profileUser?.id, isLoadingProfile]);
 
   const favoriteItems = useMemo<FavoriteMediaItem[]>(() => {
     return series
@@ -182,12 +187,14 @@ function ProfileSeriesContent() {
     }));
   }, [filteredSeries]);
 
+  const isEffectiveLoading = loading || isLoadingProfile;
+
   if (currentSubTab === "overview") {
     return (
       <ProfileOverviewTab
         title="Favorite series"
         items={favoriteItems}
-        isLoading={loading}
+        isLoading={isEffectiveLoading}
       />
     );
   }
@@ -201,7 +208,7 @@ function ProfileSeriesContent() {
       sortValue={sortBy}
       onSortChange={setSortBy}
       sortOptions={SORT_OPTIONS}
-      isLoading={loading}
+      isLoading={isEffectiveLoading}
       emptyTitle="No series found"
       emptyDescription="No series match your selected filters. Try changing or clearing your filters."
     />

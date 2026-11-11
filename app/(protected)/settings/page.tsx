@@ -125,6 +125,7 @@ export default function Settings() {
       addToast("Error updating profile", "error");
     } else {
       setSocialLinks(cleanLinks);
+      window.dispatchEvent(new Event("profile-updated"));
       addToast("Profile saved successfully", "success");
     }
   };

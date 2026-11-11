@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, Bookmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Option } from "@/components/ui/Select";
+import { useProfile } from "@/components/profile/ProfileContext";
 import ProfileOverviewTab, { FavoriteMediaItem } from "@/components/profile/ProfileOverviewTab";
 import ProfileMediaTab, { ProfileMediaItem } from "@/components/profile/ProfileMediaTab";
 
@@ -47,6 +48,7 @@ const SORT_OPTIONS: Option[] = [
 function ProfileMoviesContent() {
   const searchParams = useSearchParams();
   const currentSubTab = searchParams.get("tab") || "overview";
+  const { profileUser, isLoadingProfile } = useProfile();
 
   const [movies, setMovies] = useState<UserMovieEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +60,16 @@ function ProfileMoviesContent() {
     let ignore = false;
 
     async function fetchUserMovies() {
+      if (isLoadingProfile) return;
+
+      if (!profileUser?.id) {
+        setMovies([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) return;
 
         const { data } = await supabase
           .from("user_movies")
@@ -89,7 +94,7 @@ function ProfileMoviesContent() {
               overview
             )
           `)
-          .eq("user_id", session.user.id)
+          .eq("user_id", profileUser.id)
           .order("updated_at", { ascending: false });
 
         if (ignore) return;
@@ -110,7 +115,7 @@ function ProfileMoviesContent() {
     return () => {
       ignore = true;
     };
-  }, [supabase]);
+  }, [supabase, profileUser?.id, isLoadingProfile]);
 
   const favoriteItems = useMemo<FavoriteMediaItem[]>(() => {
     return movies
@@ -171,12 +176,14 @@ function ProfileMoviesContent() {
     }));
   }, [filteredMovies]);
 
+  const isEffectiveLoading = loading || isLoadingProfile;
+
   if (currentSubTab === "overview") {
     return (
       <ProfileOverviewTab
         title="Favorite movies"
         items={favoriteItems}
-        isLoading={loading}
+        isLoading={isEffectiveLoading}
       />
     );
   }
@@ -190,7 +197,7 @@ function ProfileMoviesContent() {
       sortValue={sortBy}
       onSortChange={setSortBy}
       sortOptions={SORT_OPTIONS}
-      isLoading={loading}
+      isLoading={isEffectiveLoading}
       emptyTitle="No movies found"
       emptyDescription="No movies match your selected filters. Try changing or clearing your filters."
     />

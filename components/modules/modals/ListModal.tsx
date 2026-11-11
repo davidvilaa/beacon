@@ -14,6 +14,8 @@ export interface ListMediaPayload {
   overview?: string | null;
   posterPath?: string | null;
   backdropPath?: string | null;
+  customPosterPath?: string | null;
+  customBackdropPath?: string | null;
   numberOfSeasons?: number | null;
   numberOfEpisodes?: number | null;
 }
@@ -211,6 +213,8 @@ export default function ListModal({
             media_type: media.mediaType,
             media_id: media.mediaId,
             position: foundList ? foundList.itemCount : 0,
+            custom_poster_path: media.customPosterPath ?? null,
+            custom_backdrop_path: media.customBackdropPath ?? null,
           };
         });
 

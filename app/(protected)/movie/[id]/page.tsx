@@ -686,6 +686,8 @@ function MovieDetailContent() {
           overview: movie.overview,
           posterPath: movie.poster_path,
           backdropPath: movie.backdrop_path,
+          customPosterPath: selectedPoster,
+          customBackdropPath: selectedBackdrop,
         }}
       />
     </>

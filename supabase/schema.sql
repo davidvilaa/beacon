@@ -236,6 +236,8 @@ create table public.list_items (
   media_id bigint not null,
   position integer not null default 0,
   notes text null,
+  custom_poster_path text null,
+  custom_backdrop_path text null,
   created_at timestamptz not null default now(),
   constraint list_items_unique unique (list_id, media_type, media_id)
 );

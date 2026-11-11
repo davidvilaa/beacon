@@ -84,6 +84,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `media_id`: bigint not null
   - `position`: integer default 0
   - `notes`: text
+  - `custom_poster_path`, `custom_backdrop_path`: text
   - `created_at`: timestamptz
   - Unique constraint: `(list_id, media_type, media_id)`
 

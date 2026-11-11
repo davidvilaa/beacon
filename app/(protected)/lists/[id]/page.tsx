@@ -96,6 +96,8 @@ function ListDetailContent() {
                   media_type,
                   media_id,
                   position,
+                  custom_poster_path,
+                  custom_backdrop_path,
                   created_at
                 )
               `)
@@ -135,7 +137,7 @@ function ListDetailContent() {
             mediaType: item.media_type,
             mediaId: item.media_id,
             title: cached?.title || "Media",
-            posterPath: cached?.posterPath || null,
+            posterPath: item.custom_poster_path || cached?.posterPath || null,
           };
         });
 

@@ -872,6 +872,8 @@ function TvDetailContent() {
           overview: tv.overview,
           posterPath: tv.poster_path,
           backdropPath: tv.backdrop_path,
+          customPosterPath: posterPath,
+          customBackdropPath: selectedBackdrop,
           numberOfSeasons: tv.number_of_seasons,
           numberOfEpisodes: tv.number_of_episodes,
         }}

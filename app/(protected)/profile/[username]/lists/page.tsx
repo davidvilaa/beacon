@@ -23,6 +23,7 @@ interface RawListRow {
     media_type: string;
     media_id: number;
     position: number;
+    custom_poster_path: string | null;
     created_at: string;
   }[];
 }
@@ -61,6 +62,7 @@ export default function ProfileListsPage() {
               media_type,
               media_id,
               position,
+              custom_poster_path,
               created_at
             )
           `)
@@ -103,7 +105,7 @@ export default function ProfileListsPage() {
                 mediaType: item.media_type,
                 mediaId: item.media_id,
                 title: cached?.title || "Media",
-                posterPath: cached?.posterPath || null,
+                posterPath: item.custom_poster_path || cached?.posterPath || null,
               };
             });
 

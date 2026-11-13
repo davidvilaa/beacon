@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Plus, Lock, Check, ListPlus, Film } from "lucide-react";
+import { X, Plus, Film } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import Loading from "@/components/ui/Loading";
 import { useToast } from "@/components/ui/Toast";
 import CreateListModal, { CreatedOrUpdatedList } from "./CreateListModal";
 import ArtworkPickerModal from "./ArtworkPickerModal";
 import BackdropPickerModal from "./BackdropPickerModal";
+import ListCard from "@/components/ui/ListCard";
+import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 
 export interface ListMediaPayload {
@@ -29,9 +30,11 @@ export interface ListMediaPayload {
 interface UserListSummary {
   id: string;
   title: string;
+  description?: string | null;
   is_private: boolean;
   updated_at: string;
   itemCount: number;
+  previewPosters?: (string | null)[];
 }
 
 interface ListModalProps {
@@ -116,7 +119,21 @@ export default function ListModal({
           await Promise.all([
             supabase
               .from("lists")
-              .select("id, title, is_private, updated_at, list_items(count)")
+              .select(`
+                id,
+                title,
+                description,
+                is_private,
+                updated_at,
+                list_items (
+                  id,
+                  media_type,
+                  media_id,
+                  position,
+                  custom_poster_path,
+                  created_at
+                )
+              `)
               .eq("user_id", session.user.id)
               .order("updated_at", { ascending: false }),
             membershipQuery,
@@ -130,13 +147,46 @@ export default function ListModal({
           return;
         }
 
-        const formattedLists: UserListSummary[] = (listsData || []).map((row: any) => ({
-          id: row.id,
-          title: row.title,
-          is_private: Boolean(row.is_private),
-          updated_at: row.updated_at,
-          itemCount: row.list_items?.[0]?.count ?? 0,
-        }));
+        const rawLists = (listsData || []) as any[];
+        const previewRefs: RawListItemRef[] = [];
+        const sortedItemsByList = new Map<string, any[]>();
+
+        for (const list of rawLists) {
+          const sorted = [...(list.list_items || [])].sort((a: any, b: any) => {
+            if (a.position !== b.position) return a.position - b.position;
+            return (
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+          });
+          sortedItemsByList.set(list.id, sorted);
+          for (const item of sorted.slice(0, 5)) {
+            previewRefs.push({
+              media_type: item.media_type,
+              media_id: item.media_id,
+            });
+          }
+        }
+
+        const mediaMap = await fetchCachedMediaMap(supabase, previewRefs);
+        if (ignore) return;
+
+        const formattedLists: UserListSummary[] = rawLists.map((row: any) => {
+          const allItems = sortedItemsByList.get(row.id) || [];
+          const previewPosters = allItems.slice(0, 5).map((item: any) => {
+            const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
+            return item.custom_poster_path || cached?.posterPath || null;
+          });
+
+          return {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            is_private: Boolean(row.is_private),
+            updated_at: row.updated_at,
+            itemCount: allItems.length,
+            previewPosters,
+          };
+        });
 
         const ownedIds = new Set(formattedLists.map((l) => l.id));
         const activeIds = new Set<string>(
@@ -216,9 +266,11 @@ export default function ListModal({
       {
         id: newList.id,
         title: newList.title,
+        description: newList.description,
         is_private: newList.is_private,
         updated_at: newList.updated_at,
         itemCount: 0,
+        previewPosters: [],
       },
       ...prev,
     ]);
@@ -477,65 +529,47 @@ export default function ListModal({
             <div className="mt-4 border-t border-zinc-800/80 pt-4">
               <div className="max-h-[42vh] overflow-y-auto pr-1">
                 {isLoading ? (
-                  <div className="py-12 flex items-center justify-center">
-                    <Loading />
+                  <div className="flex flex-col gap-3 py-2 animate-pulse">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center gap-3.5 p-2 -mx-2">
+                        <div className="w-5 h-5 rounded-md bg-zinc-800/60 shrink-0" />
+                        <div className="flex items-center shrink-0">
+                          {Array.from({ length: 4 }).map((__, idx) => (
+                            <div
+                              key={idx}
+                              className={`relative w-12 sm:w-14 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                                idx > 0 ? "-ml-6 sm:-ml-7" : ""
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-1/2 bg-zinc-800/60 rounded" />
+                          <div className="h-3 w-3/4 bg-zinc-800/40 rounded" />
+                          <div className="h-2.5 w-1/4 bg-zinc-800/30 rounded" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ) : lists.length === 0 ? (
-                  <div className="py-10 px-4 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 flex flex-col items-center justify-center text-center">
-                    <ListPlus className="w-9 h-9 text-zinc-700 mb-2.5 stroke-[1.5]" />
-                    <p className="text-sm font-semibold text-zinc-300 mb-1">
-                      No lists yet
-                    </p>
-                    <p className="text-xs text-zinc-500 mb-4 max-w-xs">
-                      Create your first list to organize movies, series, and more.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setIsCreateModalOpen(true)}
-                      className="px-4 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer"
-                    >
-                      Create list
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ) : lists.length === 0 ? null : (
+                  <div className="flex flex-col gap-2">
                     {lists.map((list) => {
                       const isChecked = selectedIds.has(list.id);
                       return (
-                        <button
+                        <ListCard
                           key={list.id}
-                          type="button"
+                          list={{
+                            id: list.id,
+                            title: list.title,
+                            description: list.description,
+                            isPrivate: list.is_private,
+                            itemCount: list.itemCount,
+                            previewPosters: list.previewPosters,
+                          }}
+                          selectable
+                          selected={isChecked}
                           onClick={() => toggleList(list.id)}
-                          className={`w-full flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl border text-left transition-colors cursor-pointer ${
-                            isChecked
-                              ? "bg-zinc-900/90 border-[#a8dadc]/50"
-                              : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900/80 hover:border-zinc-700"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span
-                              className={`w-4 h-4 rounded border transition-all flex items-center justify-center shrink-0 ${
-                                isChecked
-                                  ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
-                                  : "bg-zinc-950 border-zinc-700"
-                              }`}
-                            >
-                              {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
-                            </span>
-                            <span className="text-sm font-semibold text-zinc-200 truncate">
-                              {list.title}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0 text-xs text-zinc-500">
-                            {list.is_private && (
-                              <Lock className="w-3.5 h-3.5 text-zinc-500" />
-                            )}
-                            <span>
-                              {list.itemCount} {list.itemCount === 1 ? "item" : "items"}
-                            </span>
-                          </div>
-                        </button>
+                        />
                       );
                     })}
                   </div>

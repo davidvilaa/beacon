@@ -1,10 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { Lock, Plus, Film } from "lucide-react";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
-import { getPosterUrl } from "@/lib/tmdb";
+import { Plus } from "lucide-react";
+import ListCard from "@/components/ui/ListCard";
 
 export interface ProfileListPreviewItem {
   id: string;
@@ -53,104 +50,43 @@ export default function ProfileListsTab({
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="rounded-xl bg-zinc-900/40 border border-zinc-800/40 overflow-hidden animate-pulse"
-            >
-              <div className="grid grid-cols-4 gap-1.5 p-2.5 bg-zinc-950/60 border-b border-zinc-800/60">
-                {Array.from({ length: 4 }).map((__, slotIdx) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3.5 sm:gap-4 p-2 -mx-2 animate-pulse">
+              <div className="flex items-center shrink-0">
+                {Array.from({ length: 4 }).map((__, idx) => (
                   <div
-                    key={slotIdx}
-                    className="aspect-[2/3] w-full rounded-md bg-zinc-800/50"
+                    key={idx}
+                    className={`relative w-12 sm:w-14 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                      idx > 0 ? "-ml-6 sm:-ml-7" : ""
+                    }`}
                   />
                 ))}
               </div>
-              <div className="p-4 space-y-2">
-                <div className="h-4 w-2/3 bg-zinc-800/60 rounded" />
-                <div className="h-3 w-1/3 bg-zinc-800/40 rounded" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-3/4 bg-zinc-800/60 rounded" />
+                <div className="h-3 w-full bg-zinc-800/40 rounded" />
+                <div className="h-2.5 w-1/3 bg-zinc-800/30 rounded" />
               </div>
             </div>
           ))}
         </div>
       ) : lists.length === 0 ? null : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {lists.map((list) => {
-            const slots = Array.from({ length: 4 });
-
-            return (
-              <Link
-                key={list.id}
-                href={`/lists/${list.id}`}
-                className="relative flex flex-col rounded-xl bg-zinc-900/40 border border-zinc-800 hover:bg-zinc-900/80 transition-all overflow-hidden group cursor-pointer"
-              >
-                <CardGradientBorder roundedClassName="rounded-xl" />
-
-                <div className="grid grid-cols-4 gap-1.5 p-2.5 bg-zinc-950/60 border-b border-zinc-800/70">
-                  {slots.map((_, index) => {
-                    const item = list.previewItems[index];
-                    if (item) {
-                      const posterUrl = getPosterUrl(item.posterPath, "w342");
-                      return (
-                        <div
-                          key={item.id}
-                          className="relative aspect-[2/3] w-full rounded-md overflow-hidden bg-zinc-900 border border-zinc-800/80"
-                        >
-                          {posterUrl ? (
-                            <Image
-                              src={posterUrl}
-                              alt={item.title}
-                              fill
-                              sizes="(max-width: 640px) 22vw, (max-width: 1024px) 11vw, 90px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-700">
-                              <Film className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div
-                        key={index}
-                        className="aspect-[2/3] w-full rounded-md border border-dashed border-zinc-800/70 bg-zinc-900/20"
-                      />
-                    );
-                  })}
-                </div>
-
-                <div className="p-4 flex-1 flex flex-col justify-between gap-2">
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-sm font-bold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
-                        {list.title}
-                      </h4>
-                      {list.isPrivate && (
-                        <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                      )}
-                    </div>
-
-                    {list.description && (
-                      <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-1">
-                        {list.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-medium text-zinc-500 pt-1">
-                    <span>
-                      {list.itemCount} {list.itemCount === 1 ? "item" : "items"}
-                    </span>
-                    {list.isPrivate && <span>Private</span>}
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          {lists.map((list) => (
+            <ListCard
+              key={list.id}
+              list={{
+                id: list.id,
+                title: list.title,
+                description: list.description,
+                isPrivate: list.isPrivate,
+                itemCount: list.itemCount,
+                previewPosters: list.previewItems.map((p) => p.posterPath),
+              }}
+              href={`/lists/${list.id}`}
+            />
+          ))}
         </div>
       )}
     </div>

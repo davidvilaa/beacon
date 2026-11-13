@@ -83,7 +83,7 @@ export default function ProfileListsPage() {
             );
           });
           sortedItemsByList.set(list.id, sorted);
-          for (const item of sorted.slice(0, 4)) {
+          for (const item of sorted.slice(0, 5)) {
             previewRefs.push({
               media_type: item.media_type,
               media_id: item.media_id,
@@ -97,7 +97,7 @@ export default function ProfileListsPage() {
         const formatted: ProfileListCard[] = rawLists.map((list) => {
           const allItems = sortedItemsByList.get(list.id) || [];
           const previewItems: ProfileListPreviewItem[] = allItems
-            .slice(0, 4)
+            .slice(0, 5)
             .map((item) => {
               const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
               return {

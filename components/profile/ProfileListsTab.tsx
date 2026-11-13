@@ -37,7 +37,7 @@ export default function ProfileListsTab({
   return (
     <div>
       {isOwner && onCreateList && (
-        <div className="mb-6 flex items-center justify-end">
+        <div className="mb-6 flex items-center justify-start">
           <button
             type="button"
             onClick={onCreateList}

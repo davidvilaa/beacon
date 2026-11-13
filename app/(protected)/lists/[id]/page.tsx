@@ -314,7 +314,6 @@ function ListDetailContent() {
       backdropAlt={list.title}
       isBackdropLoaded={isBackdropLoaded}
       onBackdropLoaded={() => setIsBackdropLoaded(true)}
-      backdropFadePercent={70}
       bottomPaddingClassName="pb-32 sm:pb-40"
     >
       <div className="pb-6 mb-8 border-b border-zinc-800/80 flex flex-col md:flex-row md:items-end justify-between gap-5">

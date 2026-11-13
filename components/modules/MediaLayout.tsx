@@ -14,7 +14,6 @@ interface MediaLayoutProps {
   children: React.ReactNode;
   socialColumn?: React.ReactNode;
   bottomPaddingClassName?: string;
-  backdropFadePercent?: number;
 }
 
 export default function MediaLayout({
@@ -28,15 +27,8 @@ export default function MediaLayout({
   children,
   socialColumn,
   bottomPaddingClassName = "pb-72 sm:pb-80",
-  backdropFadePercent,
 }: MediaLayoutProps) {
   const isBackdropClickable = hasMultipleBackdrops && Boolean(onOpenBackdropPicker);
-  const fadeUntil = backdropFadePercent ?? 35;
-  const verticalMask =
-    fadeUntil >= 70
-      ? "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.65) 85%, rgba(0,0,0,0.2) 94%, rgba(0,0,0,0) 98%)"
-      : "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)";
-  const bottomFadeHeight = fadeUntil >= 70 ? "h-28 sm:h-36" : "h-48";
 
   return (
     <div
@@ -64,8 +56,10 @@ export default function MediaLayout({
             <div
               className="relative w-full h-full"
               style={{
-                maskImage: verticalMask,
-                WebkitMaskImage: verticalMask,
+                maskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.65) 65%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 98%)",
               }}
             >
               <Image
@@ -86,9 +80,7 @@ export default function MediaLayout({
             </div>
           </div>
 
-          <div
-            className={`absolute bottom-0 left-0 right-0 ${bottomFadeHeight} bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none`}
-          />
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none" />
           <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-zinc-950/60 to-transparent pointer-events-none" />
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, Check, Layers, CalendarSync, ListOrdered } from "lucide-react";
+import { Lock, Check, Layers, CalendarSync } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";
 
@@ -96,9 +96,6 @@ export default function ListCard({
           </h3>
           {list.isPrivate && (
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 shrink-0" />
-          )}
-          {list.isNumbered && (
-            <ListOrdered className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 shrink-0" />
           )}
         </div>
 

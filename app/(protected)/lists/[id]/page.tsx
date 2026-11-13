@@ -11,7 +11,6 @@ import {
   User,
   CalendarSync,
   Layers,
-  ListOrdered,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Loading from "@/components/ui/Loading";
@@ -331,12 +330,6 @@ function ListDetailContent() {
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-zinc-800 border border-zinc-700/80 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 <Lock className="w-3 h-3" />
                 <span>Private</span>
-              </span>
-            )}
-            {list.is_numbered && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-zinc-800 border border-zinc-700/80 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                <ListOrdered className="w-3 h-3" />
-                <span>Numbered</span>
               </span>
             )}
           </div>

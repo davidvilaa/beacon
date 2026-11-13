@@ -901,6 +901,14 @@ function TvDetailContent() {
           numberOfSeasons: tv.number_of_seasons,
           numberOfEpisodes: tv.number_of_episodes,
         }}
+        availablePosters={availablePosters[activeSeason] || []}
+        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
+        selectedPoster={posterPath}
+        selectedBackdrop={selectedBackdrop}
+        onSelectPoster={handleSelectPoster}
+        onSelectBackdrop={handleSelectBackdrop}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
       />
     </>
   );

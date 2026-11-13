@@ -710,6 +710,14 @@ function MovieDetailContent() {
           customPosterPath: selectedPoster,
           customBackdropPath: selectedBackdrop,
         }}
+        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
+        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
+        selectedPoster={selectedPoster}
+        selectedBackdrop={selectedBackdrop}
+        onSelectPoster={handleSelectPoster}
+        onSelectBackdrop={handleSelectBackdrop}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
       />
     </>
   );

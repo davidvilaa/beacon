@@ -572,12 +572,10 @@ function ReviewDetailContent() {
               <CardGradientBorder roundedClassName="rounded-sm" />
               <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
                 {review.users?.avatar_url ? (
-                  <Image
+                  <img
                     src={review.users.avatar_url}
                     alt={authorName}
-                    fill
-                    sizes="48px"
-                    className="object-cover"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <User className="w-4 h-4 text-zinc-500" />

@@ -19,7 +19,7 @@ import {
   AlertTriangle,
   Film,
   Tv,
-  UserCircle,
+  User,
   Calendar,
   ExternalLink,
 } from "lucide-react";
@@ -27,7 +27,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import Loading from "@/components/ui/Loading";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/modules/modals/MediaReviewModal";
@@ -421,6 +421,25 @@ function ReviewDetailContent() {
     }
   };
 
+  const reviewDateText = useMemo(() => {
+    if (!review) return "";
+    if (review.media_type === "tv") {
+      if (review.start_date && review.end_date) {
+        return `${formatFullDate(review.start_date)} - ${formatFullDate(review.end_date)}`;
+      }
+      if (review.end_date) {
+        return formatFullDate(review.end_date);
+      }
+      if (review.start_date) {
+        return formatFullDate(review.start_date);
+      }
+    }
+    if (review.watched_date) {
+      return formatFullDate(review.watched_date);
+    }
+    return formatFullDate(review.created_at.split("T")[0]);
+  }, [review]);
+
   if (loading) {
     return (
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
@@ -452,9 +471,6 @@ function ReviewDetailContent() {
 
   const ratingVal = review.rating ? Number(review.rating) : 0;
   const authorName = review.users?.username || "User";
-  const displayDate = review.watched_date
-    ? `Watched on ${formatFullDate(review.watched_date)}`
-    : `Logged on ${formatFullDate(review.created_at.split("T")[0])}`;
 
   const resolvedTitle = tmdbMeta?.title || review.title;
   const resolvedTypeLabel =
@@ -525,24 +541,6 @@ function ReviewDetailContent() {
           <span>Back to {authorName}&apos;s profile</span>
         </Link>
       </div>
-
-      {tmdbMeta?.genres && tmdbMeta.genres.length > 0 && (
-        <div className="mt-5 w-56 sm:w-full p-4 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
-            Genres
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {tmdbMeta.genres.map((genre) => (
-              <span
-                key={genre}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-sm bg-zinc-800/80 border border-zinc-700/60 text-zinc-300"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -556,117 +554,102 @@ function ReviewDetailContent() {
         posterColumn={posterColumnNode}
         bottomPaddingClassName="pb-32 sm:pb-40"
       >
-        <MediaInfoColumn
-          typeLabel={resolvedTypeLabel}
-          title={resolvedTitle}
-          originalTitle={tmdbMeta?.original_title}
-          releaseDate={tmdbMeta?.release_date}
-          runtimeMinutes={tmdbMeta?.runtime}
-          episodesCount={tmdbMeta?.episodesCount}
-          tagline={tmdbMeta?.tagline}
-          overview={review.overview || tmdbMeta?.overview}
-        >
-          <div className="pt-2">
-            <div className="p-4 sm:p-5 rounded-sm bg-zinc-900/60 border border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/profile/${authorName}`}
-                  className="shrink-0 transition-opacity hover:opacity-80"
-                >
-                  {review.users?.avatar_url ? (
-                    <img
-                      src={review.users.avatar_url}
-                      alt={authorName}
-                      className="w-11 h-11 rounded-full object-cover border border-zinc-700"
-                    />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
-                      <UserCircle className="w-7 h-7 text-zinc-500" />
-                    </div>
-                  )}
-                </Link>
+        <div className="flex-1 min-w-0 w-full">
+          <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
+            {resolvedTypeLabel}
+          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+            <Link href={mediaHref} className="hover:text-[#a8dadc] transition-colors">
+              {resolvedTitle}
+            </Link>
+          </h1>
 
-                <div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xs text-zinc-400 font-medium">Review by</span>
-                    <Link
-                      href={`/profile/${authorName}`}
-                      className="text-sm sm:text-base font-bold text-zinc-100 hover:text-[#a8dadc] transition-colors"
-                    >
-                      {authorName}
-                    </Link>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-zinc-500 mt-0.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>{displayDate}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700 text-xs font-semibold uppercase tracking-wider text-zinc-300">
-                  {review.status === "watched" && (
-                    <Eye className="w-3.5 h-3.5 text-[#a8dadc]" />
-                  )}
-                  {review.status === "watching" && (
-                    <PlayCircle className="w-3.5 h-3.5 text-[#a8dadc]" />
-                  )}
-                  {review.status === "paused" && (
-                    <PauseCircle className="w-3.5 h-3.5 text-amber-400" />
-                  )}
-                  {review.status === "dropped" && (
-                    <XCircle className="w-3.5 h-3.5 text-red-400" />
-                  )}
-                  {review.status === "watchlist" && (
-                    <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" />
-                  )}
-                  <span className="capitalize">{review.status}</span>
-                </span>
-
-                {review.is_favorite && (
-                  <span
-                    title="Favorite"
-                    className="p-1.5 rounded-sm bg-zinc-800 border border-zinc-700 text-[#a8dadc]"
-                  >
-                    <Heart className="w-4 h-4 fill-[#a8dadc]" />
-                  </span>
+          <div className="mt-5 flex items-center">
+            <Link
+              href={`/profile/${authorName}`}
+              className="relative inline-flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11 max-w-full"
+            >
+              <CardGradientBorder roundedClassName="rounded-sm" />
+              <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                {review.users?.avatar_url ? (
+                  <Image
+                    src={review.users.avatar_url}
+                    alt={authorName}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <User className="w-4 h-4 text-zinc-500" />
                 )}
               </div>
-            </div>
 
-            {ratingVal > 0 && (
-              <div className="mt-5 flex items-center gap-3">
-                <div
-                  className="flex items-center gap-1 shrink-0"
-                  title={`${ratingVal} / 5`}
-                >
-                  {Array.from({ length: Math.ceil(ratingVal) }).map((_, idx) => {
-                    const star = idx + 1;
-                    const isFull = ratingVal >= star;
-                    const isHalf = !isFull && ratingVal >= star - 0.5;
-
-                    return (
-                      <div key={star} className="relative w-5 sm:w-6 h-5 sm:h-6 shrink-0">
-                        {isFull && (
-                          <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                        )}
-                        {isHalf && (
-                          <StarHalf className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <span className="text-base sm:text-lg font-bold text-zinc-100 font-mono">
-                  {ratingVal}
-                  <span className="text-xs text-zinc-500 font-normal"> / 5</span>
-                </span>
+              <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors whitespace-nowrap">
+                <span className="text-zinc-400 font-normal">by</span>
+                <span>{authorName}</span>
               </div>
-            )}
 
+              <div
+                title={review.status ? review.status.charAt(0).toUpperCase() + review.status.slice(1) : ""}
+                className="border-l border-zinc-700/60 px-3 flex items-center justify-center text-zinc-300 shrink-0"
+              >
+                {review.status === "watched" && (
+                  <Eye className="w-4 h-4 text-[#a8dadc]" />
+                )}
+                {review.status === "watching" && (
+                  <PlayCircle className="w-4 h-4 text-[#a8dadc]" />
+                )}
+                {review.status === "paused" && (
+                  <PauseCircle className="w-4 h-4 text-amber-400" />
+                )}
+                {review.status === "dropped" && (
+                  <XCircle className="w-4 h-4 text-red-400" />
+                )}
+                {review.status === "watchlist" && (
+                  <Bookmark className="w-4 h-4 text-[#a8dadc] fill-[#a8dadc]" />
+                )}
+              </div>
+
+              {review.is_favorite && (
+                <div
+                  title="Favorite"
+                  className="border-l border-zinc-700/60 px-2.5 flex items-center justify-center text-[#a8dadc] shrink-0"
+                >
+                  <Heart className="w-4 h-4 fill-[#a8dadc]" />
+                </div>
+              )}
+
+              <div className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs text-zinc-400 font-medium whitespace-nowrap shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                <span>{reviewDateText}</span>
+              </div>
+            </Link>
+          </div>
+
+          {ratingVal > 0 && (
+            <div className="mt-4 flex items-center gap-1 shrink-0" title={`Rating: ${ratingVal} / 5`}>
+              {Array.from({ length: Math.ceil(ratingVal) }).map((_, idx) => {
+                const star = idx + 1;
+                const isFull = ratingVal >= star;
+                const isHalf = !isFull && ratingVal >= star - 0.5;
+
+                return (
+                  <div key={star} className="relative w-5 sm:w-6 h-5 sm:h-6 shrink-0">
+                    {isFull && (
+                      <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                    )}
+                    {isHalf && (
+                      <StarHalf className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-5 max-w-3xl">
             {review.has_spoilers && (
-              <div className="mt-5 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">
+              <div className="mb-4 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-amber-300 font-semibold">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
                   <span>This review contains spoilers for {resolvedTitle}.</span>
@@ -681,65 +664,17 @@ function ReviewDetailContent() {
               </div>
             )}
 
-            <div className="mt-4">
-              <div
-                className={`p-6 sm:p-8 rounded-sm bg-zinc-900/40 border border-zinc-800/80 shadow-xl transition-all ${
-                  review.has_spoilers && !showSpoilers
-                    ? "blur-md select-none pointer-events-none"
-                    : ""
-                }`}
-              >
-                {review.review && review.review.trim() ? (
-                  <p className="text-zinc-200 leading-relaxed whitespace-pre-wrap text-base sm:text-lg font-normal">
-                    {review.review}
-                  </p>
-                ) : (
-                  <p className="text-zinc-500 italic text-sm">
-                    No written review was provided for this log entry.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {review.media_type === "tv" && (
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {typeof review.last_watched_episode === "number" &&
-                  review.last_watched_episode > 0 && (
-                    <div className="p-3.5 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
-                        Last Watched
-                      </span>
-                      <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-                        Episode {review.last_watched_episode}
-                      </p>
-                    </div>
-                  )}
-
-                {review.start_date && (
-                  <div className="p-3.5 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
-                      Started
-                    </span>
-                    <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-                      {formatFullDate(review.start_date)}
-                    </p>
-                  </div>
-                )}
-
-                {review.end_date && (
-                  <div className="p-3.5 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
-                      Finished
-                    </span>
-                    <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-                      {formatFullDate(review.end_date)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+            <p
+              className={`text-zinc-200 leading-relaxed whitespace-pre-wrap text-base sm:text-lg font-normal transition-all ${
+                review.has_spoilers && !showSpoilers
+                  ? "blur-md select-none pointer-events-none"
+                  : ""
+              }`}
+            >
+              {review.review || "No written review was provided for this log entry."}
+            </p>
           </div>
-        </MediaInfoColumn>
+        </div>
       </MediaLayout>
 
       {isOwner && (

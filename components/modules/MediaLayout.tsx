@@ -10,7 +10,7 @@ interface MediaLayoutProps {
   onBackdropLoaded?: () => void;
   hasMultipleBackdrops?: boolean;
   onOpenBackdropPicker?: () => void;
-  posterColumn: React.ReactNode;
+  posterColumn?: React.ReactNode;
   children: React.ReactNode;
   socialColumn?: React.ReactNode;
   bottomPaddingClassName?: string;
@@ -87,13 +87,17 @@ export default function MediaLayout({
 
       <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pointer-events-none">
         <div
-          className={`flex flex-col md:flex-row gap-8 items-start pointer-events-auto ${
+          className={`flex flex-col ${
+            posterColumn ? "md:flex-row gap-8 items-start" : "w-full"
+          } pointer-events-auto ${
             backdropUrl ? "mt-64 sm:mt-80 md:mt-96 lg:mt-[460px]" : ""
           }`}
         >
-          <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
-            {posterColumn}
-          </div>
+          {posterColumn && (
+            <div className="w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center">
+              {posterColumn}
+            </div>
+          )}
 
           <div className="flex-1 min-w-0 w-full">{children}</div>
 

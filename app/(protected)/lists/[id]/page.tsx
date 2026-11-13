@@ -8,17 +8,22 @@ import {
   Pencil,
   Trash2,
   X,
-  UserCircle,
-  ArrowLeft,
+  User,
+  Calendar,
+  Layers,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Loading from "@/components/ui/Loading";
 import MediaCard from "@/components/ui/MediaCard";
+import MediaLayout from "@/components/modules/MediaLayout";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { useToast } from "@/components/ui/Toast";
 import CreateListModal, {
   CreatedOrUpdatedList,
 } from "@/components/modules/modals/CreateListModal";
 import { fetchCachedMediaMap } from "@/lib/lists";
+import { getBackdropUrl } from "@/lib/tmdb";
+import { formatFullDate } from "@/lib/media-utils";
 
 interface ListOwner {
   id: string;
@@ -60,6 +65,8 @@ function ListDetailContent() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [backdropUrl, setBackdropUrl] = useState<string | null>(null);
+  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -130,6 +137,29 @@ function ListDetailContent() {
 
         const mediaMap = await fetchCachedMediaMap(supabase, sortedRawItems);
         if (ignore) return;
+
+        const customBackdrops = sortedRawItems
+          .map((item: any) => item.custom_backdrop_path)
+          .filter(Boolean);
+        const fallbackBackdrops = sortedRawItems
+          .map(
+            (item: any) =>
+              item.custom_backdrop_path ||
+              mediaMap.get(`${item.media_type}-${item.media_id}`)?.backdropPath
+          )
+          .filter(Boolean);
+
+        const candidateBackdrops =
+          customBackdrops.length > 0 ? customBackdrops : fallbackBackdrops;
+
+        if (candidateBackdrops.length > 0) {
+          const randomIndex = Math.floor(
+            Math.random() * candidateBackdrops.length
+          );
+          setBackdropUrl(getBackdropUrl(candidateBackdrops[randomIndex], "original"));
+        } else {
+          setBackdropUrl(null);
+        }
 
         const mappedItems: ListGridItem[] = sortedRawItems.map((item: any) => {
           const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
@@ -273,46 +303,23 @@ function ListDetailContent() {
     );
   }
 
-  const ownerListsHref = list.owner?.username
-    ? `/profile/${encodeURIComponent(list.owner.username)}/lists`
-    : "/profile";
+  const authorName = list.owner?.username || "User";
+  const updatedDateText = formatFullDate(
+    (list.updated_at || list.created_at).split("T")[0]
+  );
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="mb-6">
-        <Link
-          href={ownerListsHref}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-[#a8dadc] transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to lists</span>
-        </Link>
-      </div>
-
-      <div className="pb-6 mb-8 border-b border-zinc-800/70 flex flex-col md:flex-row md:items-end justify-between gap-5">
-        <div className="space-y-2.5 min-w-0">
-          {list.owner && (
-            <Link
-              href={`/profile/${encodeURIComponent(list.owner.username)}`}
-              className="inline-flex items-center gap-2 group"
-            >
-              {list.owner.avatar_url ? (
-                <img
-                  src={list.owner.avatar_url}
-                  alt={list.owner.username}
-                  className="w-6 h-6 rounded-full object-cover border border-zinc-800"
-                />
-              ) : (
-                <UserCircle className="w-6 h-6 text-zinc-600" />
-              )}
-              <span className="text-xs font-semibold text-zinc-400 group-hover:text-[#a8dadc] transition-colors">
-                {list.owner.username}
-              </span>
-            </Link>
-          )}
-
+    <MediaLayout
+      backdropUrl={backdropUrl}
+      backdropAlt={list.title}
+      isBackdropLoaded={isBackdropLoaded}
+      onBackdropLoaded={() => setIsBackdropLoaded(true)}
+      bottomPaddingClassName="pb-32 sm:pb-40"
+    >
+      <div className="pb-6 mb-8 border-b border-zinc-800/80 flex flex-col md:flex-row md:items-end justify-between gap-5">
+        <div className="space-y-3 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-4xl font-black text-zinc-100 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
               {list.title}
             </h1>
             {list.is_private && (
@@ -324,14 +331,52 @@ function ListDetailContent() {
           </div>
 
           {list.description && (
-            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-2xl whitespace-pre-wrap">
+            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-3xl whitespace-pre-wrap">
               {list.description}
             </p>
           )}
 
-          <p className="text-xs font-semibold text-zinc-500">
-            {items.length} {items.length === 1 ? "item" : "items"}
-          </p>
+          {list.owner && (
+            <div className="pt-2 flex items-center">
+              <Link
+                href={`/profile/${encodeURIComponent(list.owner.username)}`}
+                className="relative inline-flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11 max-w-full"
+              >
+                <CardGradientBorder roundedClassName="rounded-sm" />
+                <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                  {list.owner.avatar_url ? (
+                    <img
+                      src={list.owner.avatar_url}
+                      alt={authorName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-4 h-4 text-zinc-500" />
+                  )}
+                </div>
+
+                <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors whitespace-nowrap">
+                  <span className="text-zinc-400 font-normal">by</span>
+                  <span>{authorName}</span>
+                </div>
+
+                <div
+                  title={`${items.length} ${items.length === 1 ? "item" : "items"}`}
+                  className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-300 shrink-0"
+                >
+                  <Layers className="w-4 h-4 text-[#a8dadc]" />
+                  <span>
+                    {items.length} {items.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
+
+                <div className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs text-zinc-400 font-medium whitespace-nowrap shrink-0">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                  <span>Updated on {updatedDateText}</span>
+                </div>
+              </Link>
+            </div>
+          )}
         </div>
 
         {isOwner && (
@@ -424,7 +469,7 @@ function ListDetailContent() {
           }}
         />
       )}
-    </div>
+    </MediaLayout>
   );
 }
 

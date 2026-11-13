@@ -440,7 +440,7 @@ export default function ListModal({
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto overflow-x-hidden">
-        <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+        <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
           <div
             onClick={canChangeBackdrop ? () => setIsBackdropPickerOpen(true) : undefined}
             title={canChangeBackdrop ? "Click to change banner" : undefined}
@@ -526,7 +526,7 @@ export default function ListModal({
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-[#a8dadc] transition-colors cursor-pointer shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-bold bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-[#a8dadc] transition-colors cursor-pointer shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>New list</span>
@@ -541,7 +541,7 @@ export default function ListModal({
                   <div className="divide-y divide-zinc-700/80">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div key={index} className="flex items-start gap-4 sm:gap-6 py-4 sm:py-5 px-3 w-full animate-pulse">
-                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-zinc-800/60 shrink-0 mt-1" />
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-sm bg-zinc-800/60 shrink-0 mt-1" />
                         <div className="flex items-center shrink-0">
                           {Array.from({ length: 5 }).map((__, idx) => (
                             <div
@@ -553,8 +553,8 @@ export default function ListModal({
                           ))}
                         </div>
                         <div className="flex-1 space-y-3 min-w-0 pt-0.5">
-                          <div className="h-6 sm:h-7 w-2/5 bg-zinc-800/60 rounded-md" />
-                          <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
+                          <div className="h-6 sm:h-7 w-2/5 bg-zinc-800/60 rounded-sm" />
+                          <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded-sm" />
                         </div>
                       </div>
                     ))}
@@ -590,7 +590,7 @@ export default function ListModal({
                 type="button"
                 onClick={onClose}
                 disabled={isSaving}
-                className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-sm text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -598,7 +598,7 @@ export default function ListModal({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving || isLoading}
-                className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save"}
               </button>

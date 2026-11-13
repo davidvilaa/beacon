@@ -166,7 +166,7 @@ export default function DatePicker({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-800 border text-xs font-medium transition-all cursor-pointer ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-sm bg-zinc-800 border text-xs font-medium transition-all cursor-pointer ${
           isOpen
             ? "border-[#a8dadc] text-zinc-100 bg-zinc-700/60"
             : "border-zinc-700/80 text-zinc-300 hover:border-[#a8dadc]/60 hover:text-white hover:bg-zinc-700/50"
@@ -179,7 +179,7 @@ export default function DatePicker({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-64 bg-zinc-950 border border-zinc-700/80 rounded-lg shadow-2xl p-3 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute top-full left-0 mt-2 z-50 w-64 bg-zinc-950 border border-zinc-700/80 rounded-sm shadow-2xl p-3 animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-800 mb-2">
             <span className="text-xs font-bold text-zinc-200">
               {MONTH_NAMES[viewMonth]} {viewYear}
@@ -189,7 +189,7 @@ export default function DatePicker({
                 type="button"
                 onClick={handlePrevMonth}
                 title="Previous month"
-                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1 rounded-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -197,7 +197,7 @@ export default function DatePicker({
                 type="button"
                 onClick={handleNextMonth}
                 title="Next month"
-                className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1 rounded-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -233,7 +233,7 @@ export default function DatePicker({
                   key={`cur-${d}`}
                   type="button"
                   onClick={() => handleSelectDay(d)}
-                  className={`h-7 rounded-md text-[11px] font-medium transition-all flex items-center justify-center cursor-pointer ${
+                  className={`h-7 rounded-sm text-[11px] font-medium transition-all flex items-center justify-center cursor-pointer ${
                     active
                       ? "bg-[#a8dadc] text-zinc-950 font-bold"
                       : current

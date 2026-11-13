@@ -260,7 +260,7 @@ function CompanyDetailContent() {
 
           <div className="mt-6">
             {displayedWorks.length === 0 ? (
-              <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
+              <div className="py-20 rounded-sm border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
                 {displayedWorks.map((work, idx) => (

@@ -39,7 +39,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50">
-      <div className="w-full max-w-md p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
+      <div className="w-full max-w-md p-8 border border-zinc-800 bg-zinc-900 rounded-sm shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />
           <p className="text-zinc-400 mt-1">Sign in</p>
@@ -55,7 +55,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>
@@ -65,7 +65,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
                 required
               />
             </div>

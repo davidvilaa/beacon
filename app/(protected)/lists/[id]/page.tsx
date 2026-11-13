@@ -316,7 +316,7 @@ function ListDetailContent() {
               {list.title}
             </h1>
             {list.is_private && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700/80 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-zinc-800 border border-zinc-700/80 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 <Lock className="w-3 h-3" />
                 <span>Private</span>
               </span>
@@ -339,7 +339,7 @@ function ListDetailContent() {
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
             >
               <Pencil className="w-3.5 h-3.5" />
               <span>Edit</span>
@@ -351,7 +351,7 @@ function ListDetailContent() {
                   type="button"
                   onClick={handleDeleteList}
                   disabled={isDeleting}
-                  className="px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-500/40 text-xs font-bold text-rose-300 hover:bg-rose-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-2 rounded-sm bg-rose-500/20 border border-rose-500/40 text-xs font-bold text-rose-300 hover:bg-rose-500/30 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {isDeleting ? "Deleting..." : "Confirm delete"}
                 </button>
@@ -359,7 +359,7 @@ function ListDetailContent() {
                   type="button"
                   onClick={() => setIsConfirmingDelete(false)}
                   disabled={isDeleting}
-                  className="px-2.5 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                  className="px-2.5 py-2 rounded-sm text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -368,7 +368,7 @@ function ListDetailContent() {
               <button
                 type="button"
                 onClick={() => setIsConfirmingDelete(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 text-xs font-semibold text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 text-xs font-semibold text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete</span>

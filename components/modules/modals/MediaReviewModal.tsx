@@ -274,7 +274,7 @@ export default function MediaReviewModal({
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto overflow-x-hidden">
-        <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+        <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
           <div
             onClick={canChangeBackdrop ? () => setIsBackdropPickerOpen(true) : undefined}
             title={canChangeBackdrop ? "Click to change banner" : undefined}
@@ -408,7 +408,7 @@ export default function MediaReviewModal({
               )}
 
               <div className="mt-3">
-                <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg divide-x divide-zinc-800/80">
+                <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-sm divide-x divide-zinc-800/80">
                   <div className="flex items-center gap-1 pr-1">
                     {statusOptions.map((opt) => {
                       const Icon = opt.icon;
@@ -419,7 +419,7 @@ export default function MediaReviewModal({
                           type="button"
                           onClick={() => setDraftStatus(opt.key)}
                           title={opt.label}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                             isSelected
                               ? "bg-[#a8dadc] text-zinc-950 font-bold"
                               : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
@@ -450,7 +450,7 @@ export default function MediaReviewModal({
                       title={
                         draftFavorite ? "Remove from favourites" : "Mark as favourite"
                       }
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                         draftFavorite
                           ? "bg-[#a8dadc] text-zinc-950 font-bold"
                           : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
@@ -470,7 +470,7 @@ export default function MediaReviewModal({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
               <textarea
                 value={draftReview}
                 onChange={(e) => setDraftReview(e.target.value)}
@@ -495,7 +495,7 @@ export default function MediaReviewModal({
                     type="button"
                     onClick={onDelete}
                     disabled={isSaving}
-                    className="px-3 py-1.5 rounded-md text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-sm text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     Delete entry
                   </button>
@@ -506,7 +506,7 @@ export default function MediaReviewModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-sm text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -514,7 +514,7 @@ export default function MediaReviewModal({
                   type="button"
                   onClick={handleSaveClick}
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? "Saving..." : "Save review"}
                 </button>

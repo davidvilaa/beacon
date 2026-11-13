@@ -162,7 +162,7 @@ export default function Navbar() {
                 </Link>
 
                 <div className="absolute right-0 top-full pt-3 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="bg-zinc-900 border border-zinc-700 rounded-md shadow-xl overflow-hidden flex flex-col">
+                  <div className="bg-zinc-900 border border-zinc-700 rounded-sm shadow-xl overflow-hidden flex flex-col">
                     <Link href={profileHref} className="px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
                       <CircleUserRound className="w-4 h-4" />
                       Profile
@@ -238,7 +238,7 @@ export default function Navbar() {
                 setIsSearchOpen(false);
                 setSearchQuery("");
               }}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800/60 transition-colors shrink-0 cursor-pointer"
+              className="p-1.5 text-zinc-400 hover:text-white rounded-sm hover:bg-zinc-800/60 transition-colors shrink-0 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

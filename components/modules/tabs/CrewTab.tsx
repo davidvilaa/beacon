@@ -27,7 +27,7 @@ export default function CrewTab({
       {sections.map((section, idx) => (
         <div
           key={section.key || `${section.label}-${idx}`}
-          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
+          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors"
         >
           <div className="w-36 sm:w-44 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
@@ -40,9 +40,9 @@ export default function CrewTab({
               <Link
                 key={person.id}
                 href={`/person/${person.id}`}
-                className="relative inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
+                className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
               >
-                <CardGradientBorder roundedClassName="rounded-md" />
+                <CardGradientBorder roundedClassName="rounded-sm" />
                 <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                   {person.name}
                 </span>

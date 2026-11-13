@@ -44,7 +44,7 @@ export default function DetailsTab({
 
   return (
     <div className="divide-y divide-zinc-700/80">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
         <div className="w-36 sm:w-44 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
             {companiesLabel}
@@ -56,14 +56,14 @@ export default function DetailsTab({
               <Link
                 key={company.id}
                 href={`/company/${company.id}`}
-                className="relative inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
+                className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
               >
-                <CardGradientBorder roundedClassName="rounded-md" />
+                <CardGradientBorder roundedClassName="rounded-sm" />
                 <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                   {company.name}
                 </span>
                 {company.origin_country && (
-                  <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
+                  <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded-sm bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
                     {company.origin_country}
                   </span>
                 )}
@@ -75,14 +75,14 @@ export default function DetailsTab({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
         <div className="w-36 sm:w-44 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
             Original title
           </span>
         </div>
         <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80 max-w-full">
+          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 max-w-full">
             <span
               className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
               title={originalTitle || "—"}
@@ -93,14 +93,14 @@ export default function DetailsTab({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
         <div className="w-36 sm:w-44 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
             Status
           </span>
         </div>
         <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
             <span className="text-xs sm:text-sm font-medium text-zinc-200">
               {status || "—"}
             </span>
@@ -108,14 +108,14 @@ export default function DetailsTab({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
         <div className="w-36 sm:w-44 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
             Original language
           </span>
         </div>
         <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
             <span className="text-xs font-bold uppercase text-zinc-200">
               {originalLanguage?.toUpperCase() || "—"}
             </span>
@@ -124,14 +124,14 @@ export default function DetailsTab({
       </div>
 
       {typeof seasonsCount === "number" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
           <div className="w-36 sm:w-44 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
               Seasons & Episodes
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {seasonsCount} Seasons • {episodesCount ?? 0} Episodes
               </span>
@@ -141,14 +141,14 @@ export default function DetailsTab({
       )}
 
       {typeof budget === "number" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
           <div className="w-36 sm:w-44 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
               Budget
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {formatCurrency(budget)}
               </span>
@@ -158,14 +158,14 @@ export default function DetailsTab({
       )}
 
       {typeof revenue === "number" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
           <div className="w-36 sm:w-44 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
               Revenue
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-md bg-zinc-800 border border-zinc-700/80">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {formatCurrency(revenue)}
               </span>
@@ -174,7 +174,7 @@ export default function DetailsTab({
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
         <div className="w-36 sm:w-44 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
             Genres
@@ -185,7 +185,7 @@ export default function DetailsTab({
             genres.map((g) => (
               <div
                 key={g.id}
-                className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700/80"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {g.name}

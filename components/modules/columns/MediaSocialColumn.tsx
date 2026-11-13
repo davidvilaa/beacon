@@ -13,7 +13,7 @@ export default function MediaSocialColumn({
 }: MediaSocialColumnProps) {
   return (
     <aside className={`w-full flex flex-col gap-4 ${className}`}>
-      <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4">
+      <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-sm p-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
           Friends Activity
         </h3>

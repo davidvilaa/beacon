@@ -171,7 +171,7 @@ export default function FranchiseSlider({
             onClick={() => handleStep("left")}
             disabled={scrollProgress <= 0.01}
             aria-label="Scroll left"
-            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="p-1.5 rounded-sm text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -202,7 +202,7 @@ export default function FranchiseSlider({
             onClick={() => handleStep("right")}
             disabled={scrollProgress >= 0.99}
             aria-label="Scroll right"
-            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
+            className="p-1.5 rounded-sm text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 disabled:opacity-20 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

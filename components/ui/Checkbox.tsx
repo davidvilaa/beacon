@@ -39,7 +39,7 @@ export default function Checkbox({
           e.preventDefault();
           if (!disabled) onChange(!checked);
         }}
-        className={`w-4 h-4 rounded border transition-all flex items-center justify-center shrink-0 ${
+        className={`w-4 h-4 rounded-sm border transition-all flex items-center justify-center shrink-0 ${
           checked
             ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
             : "bg-zinc-900 border-zinc-700 hover:border-zinc-500"

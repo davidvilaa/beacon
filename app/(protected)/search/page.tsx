@@ -146,13 +146,13 @@ function SearchContent() {
                 onClick={() => handleModuleClick(mod.id)}
                 title={mod.title}
                 aria-label={mod.title}
-                className={`group relative w-14 h-14 rounded-md border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden ${
+                className={`group relative w-14 h-14 rounded-sm border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden ${
                   isSelected
                     ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc]"
                     : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
                 }`}
               >
-                {!isSelected && <CardGradientBorder roundedClassName="rounded-md" />}
+                {!isSelected && <CardGradientBorder roundedClassName="rounded-sm" />}
                 <Icon className="w-6 h-6" />
               </button>
             );
@@ -177,12 +177,12 @@ function SearchContent() {
                 <div className="w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm bg-zinc-900 border border-zinc-800/80 shrink-0" />
                 <div className="flex-1 min-w-0 pt-0.5 sm:pt-1 space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 bg-zinc-800/70 rounded w-1/3" />
-                    <div className="h-3 bg-zinc-800/40 rounded w-10" />
+                    <div className="h-4 bg-zinc-800/70 rounded-sm w-1/3" />
+                    <div className="h-3 bg-zinc-800/40 rounded-sm w-10" />
                   </div>
-                  <div className="h-3 bg-zinc-800/30 rounded w-full" />
-                  <div className="h-3 bg-zinc-800/20 rounded w-4/5" />
-                  <div className="h-3 bg-zinc-800/20 rounded w-2/3" />
+                  <div className="h-3 bg-zinc-800/30 rounded-sm w-full" />
+                  <div className="h-3 bg-zinc-800/20 rounded-sm w-4/5" />
+                  <div className="h-3 bg-zinc-800/20 rounded-sm w-2/3" />
                 </div>
               </div>
             ))
@@ -208,7 +208,7 @@ function SearchContent() {
               );
             })
           ) : (
-            <div className="py-16 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20" />
+            <div className="py-16 rounded-sm border border-dashed border-zinc-800 bg-zinc-900/20" />
           )}
         </div>
 
@@ -219,7 +219,7 @@ function SearchContent() {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
               aria-label="Previous page"
-              className="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-8 h-8 rounded-sm border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -244,7 +244,7 @@ function SearchContent() {
                   key={pageNum}
                   type="button"
                   onClick={() => handlePageChange(pageNum)}
-                  className={`w-8 h-8 rounded-md text-xs font-medium transition-all cursor-pointer active:scale-95 ${
+                  className={`w-8 h-8 rounded-sm text-xs font-medium transition-all cursor-pointer active:scale-95 ${
                     isActive
                       ? "bg-[#a8dadc] text-zinc-950 font-bold border border-[#a8dadc]"
                       : "border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
@@ -260,7 +260,7 @@ function SearchContent() {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
               aria-label="Next page"
-              className="w-8 h-8 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-8 h-8 rounded-sm border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

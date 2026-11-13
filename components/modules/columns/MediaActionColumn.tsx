@@ -179,7 +179,7 @@ export default function MediaActionColumn({
         >
           <div className="min-h-0 overflow-hidden">
             <div
-              className={`w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              className={`w-full bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden shadow-xl flex flex-col transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 isOpen
                   ? "translate-y-0 scale-100"
                   : "-translate-y-3 scale-95"

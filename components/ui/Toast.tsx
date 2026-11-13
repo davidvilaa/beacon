@@ -99,7 +99,7 @@ function ToastItem({
 
   return (
     <div
-      className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-lg shadow-2xl min-w-[300px] max-w-sm sm:max-w-md transition-all duration-300 transform ${
+      className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-sm shadow-2xl min-w-[300px] max-w-sm sm:max-w-md transition-all duration-300 transform ${
         !isMounted ? 'opacity-0 translate-x-8 scale-95' :
         isExiting ? 'opacity-0 translate-x-8 scale-95' :
         'opacity-100 translate-x-0 scale-100'
@@ -126,7 +126,7 @@ function ToastItem({
 
       <button 
         onClick={handleClose} 
-        className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors shrink-0 p-0.5 rounded hover:bg-zinc-800 mt-0.5"
+        className="ml-2 text-zinc-500 hover:text-zinc-200 transition-colors shrink-0 p-0.5 rounded-sm hover:bg-zinc-800 mt-0.5"
       >
         <X className="w-3.5 h-3.5" />
       </button>

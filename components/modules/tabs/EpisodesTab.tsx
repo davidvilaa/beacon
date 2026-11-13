@@ -57,7 +57,7 @@ export default function EpisodesTab({
           return (
             <div
               key={ep.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors"
             >
               <div className="flex-1 min-w-0 pr-0 sm:pr-6">
                 <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-200">
@@ -109,7 +109,7 @@ export default function EpisodesTab({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <span>{isExpanded ? "less..." : "more..."}</span>
             {isExpanded ? (

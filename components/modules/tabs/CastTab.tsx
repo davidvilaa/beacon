@@ -42,9 +42,9 @@ export default function CastTab({
             <Link
               key={`${actor.id}-${idx}`}
               href={`/person/${actor.id}`}
-              className="relative flex items-stretch rounded-lg bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
+              className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
             >
-              <CardGradientBorder roundedClassName="rounded-lg" />
+              <CardGradientBorder roundedClassName="rounded-sm" />
               <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
                 {profileUrl ? (
                   <Image
@@ -78,7 +78,7 @@ export default function CastTab({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <span>{isExpanded ? "less..." : "more..."}</span>
             {isExpanded ? (

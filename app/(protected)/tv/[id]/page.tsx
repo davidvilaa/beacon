@@ -790,7 +790,7 @@ function TvDetailContent() {
                     onSelectSeason={handleSelectSeason}
                   />
                 </div>
-                <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
+                <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-sm bg-zinc-900 border border-zinc-800">
                   <SeasonRevolver
                     seasons={regularSeasons}
                     activeSeason={activeSeason}

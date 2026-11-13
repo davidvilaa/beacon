@@ -41,7 +41,7 @@ export default function ProfileListsTab({
           <button
             type="button"
             onClick={onCreateList}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>New list</span>
@@ -67,9 +67,9 @@ export default function ProfileListsTab({
                 ))}
               </div>
               <div className="flex-1 space-y-3 min-w-0 pt-0.5 sm:pt-1">
-                <div className="h-6 sm:h-8 w-2/5 bg-zinc-800/60 rounded-md" />
-                <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
-                <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/30 rounded" />
+                <div className="h-6 sm:h-8 w-2/5 bg-zinc-800/60 rounded-sm" />
+                <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded-sm" />
+                <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/30 rounded-sm" />
               </div>
             </div>
           ))}

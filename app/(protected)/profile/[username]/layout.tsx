@@ -49,7 +49,7 @@ function ProfileSubNav({
   if (subTabs.length === 0) return null;
 
   return (
-    <div className="border-b border-zinc-700/80 rounded-b-lg py-3 px-2 flex items-center gap-6 overflow-x-auto scrollbar-none">
+    <div className="border-b border-zinc-700/80 rounded-b-sm py-3 px-2 flex items-center gap-6 overflow-x-auto scrollbar-none">
       {subTabs.map((subTab) => {
         if (subTab.disabled) {
           return (
@@ -88,8 +88,8 @@ function ProfileSkeleton() {
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-6 md:pb-8 animate-pulse">
         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-800/80 shrink-0" />
         <div className="space-y-3 flex-1 pt-2">
-          <div className="h-7 w-48 bg-zinc-800 rounded" />
-          <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+          <div className="h-7 w-48 bg-zinc-800 rounded-sm" />
+          <div className="h-4 w-72 bg-zinc-800/60 rounded-sm" />
         </div>
       </div>
     </div>
@@ -246,8 +246,8 @@ function UserProfileContent({
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start pb-6 md:pb-8 animate-pulse">
             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-zinc-800/80 shrink-0" />
             <div className="space-y-3 flex-1 pt-2">
-              <div className="h-7 w-48 bg-zinc-800 rounded" />
-              <div className="h-4 w-72 bg-zinc-800/60 rounded" />
+              <div className="h-7 w-48 bg-zinc-800 rounded-sm" />
+              <div className="h-4 w-72 bg-zinc-800/60 rounded-sm" />
             </div>
           </div>
         ) : profile ? (
@@ -331,7 +331,7 @@ function UserProfileContent({
         </div>
 
         {activeTab !== "overview" && activeTab !== "lists" && (
-          <Suspense fallback={<div className="h-10 border-b border-zinc-700/80 rounded-b-lg px-2" />}>
+          <Suspense fallback={<div className="h-10 border-b border-zinc-700/80 rounded-b-sm px-2" />}>
             <ProfileSubNav activeTab={activeTab} basePath={basePath} />
           </Suspense>
         )}

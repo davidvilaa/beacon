@@ -35,7 +35,7 @@ export default function BackdropPickerModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-5xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        className="bg-zinc-950 border border-zinc-800 rounded-sm w-full max-w-5xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
       >
         <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
@@ -45,7 +45,7 @@ export default function BackdropPickerModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="text-zinc-400 hover:text-white p-1.5 rounded-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

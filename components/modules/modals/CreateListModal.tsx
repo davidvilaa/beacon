@@ -123,7 +123,7 @@ export default function CreateListModal({
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto overflow-x-hidden">
-      <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+      <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
         <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
             {isEditMode ? "EDIT LIST" : "NEW LIST"}
@@ -133,7 +133,7 @@ export default function CreateListModal({
             onClick={onClose}
             disabled={isSaving}
             aria-label="Close"
-            className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="text-zinc-400 hover:text-white p-1.5 rounded-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -151,7 +151,7 @@ export default function CreateListModal({
               maxLength={100}
               placeholder="e.g. Best Sci-Fi Movies, Weekend Binge..."
               autoFocus
-              className="w-full bg-zinc-900/90 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#a8dadc]/80 transition-colors"
+              className="w-full bg-zinc-900/90 border border-zinc-800 rounded-sm px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#a8dadc]/80 transition-colors"
             />
           </div>
 
@@ -159,7 +159,7 @@ export default function CreateListModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
               Description
             </label>
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -185,14 +185,14 @@ export default function CreateListModal({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-sm text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-5 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
             >
               {isSaving
                 ? "Saving..."

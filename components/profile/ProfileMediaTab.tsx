@@ -67,7 +67,7 @@ export default function ProfileMediaTab({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 flex flex-col items-center justify-center text-center p-6 min-h-[260px]">
+        <div className="py-20 rounded-sm border border-zinc-800/40 bg-zinc-900/10 flex flex-col items-center justify-center text-center p-6 min-h-[260px]">
           <Film className="w-10 h-10 text-zinc-700 mb-3 stroke-[1.5]" />
           <h4 className="text-sm font-bold text-zinc-300 mb-1">{emptyTitle}</h4>
           <p className="text-xs text-zinc-500 max-w-sm leading-relaxed">

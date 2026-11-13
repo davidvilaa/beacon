@@ -156,7 +156,7 @@ export default function Settings() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-zinc-50 py-12">
-      <div className="w-full max-w-2xl p-8 border border-zinc-800 bg-zinc-900 rounded-xl shadow-xl">
+      <div className="w-full max-w-2xl p-8 border border-zinc-800 bg-zinc-900 rounded-sm shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />
           <p className="text-zinc-400 mt-1">Profile settings</p>
@@ -201,7 +201,7 @@ export default function Settings() {
                   maxLength={20}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
                 />
               </div>
               <div>
@@ -210,7 +210,7 @@ export default function Settings() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell us a bit about yourself..."
-                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none resize-none h-24"
+                  className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none resize-none h-24"
                   maxLength={300}
                 />
               </div>
@@ -237,7 +237,7 @@ export default function Settings() {
                         disabled={!link.platform}
                         placeholder={!link.platform ? "Choose platform..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
                         onChange={(e) => handleLinkChange(index, 'value', e.target.value)}
-                        className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-md focus:border-[#a8dadc] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <button 
                         type="button"
@@ -253,7 +253,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={addLink}
-                      className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#a8dadc] rounded-md hover:bg-[#a8dadc]/10 transition-colors w-max"
+                      className="mt-2 flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#a8dadc] rounded-sm hover:bg-[#a8dadc]/10 transition-colors w-max"
                     >
                       <Plus className="w-4 h-4" />
                       Add link

@@ -47,7 +47,7 @@ export default function Select({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between rounded-md focus:outline-none text-left transition-all cursor-pointer ${
+        className={`w-full flex items-center justify-between rounded-sm focus:outline-none text-left transition-all cursor-pointer ${
           isCompact
             ? `px-2.5 py-1 bg-zinc-800 border ${
                 isOpen ? "border-[#a8dadc]" : "border-zinc-700/80"
@@ -75,7 +75,7 @@ export default function Select({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-700/80 rounded-md shadow-xl py-1 max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-zinc-900 border border-zinc-700/80 rounded-sm shadow-xl py-1 max-h-60 overflow-auto">
           {options.map((option) => (
             <button
               key={option.id}

@@ -37,7 +37,7 @@ export default function ReleasesTab({
         {displayedGroups.map((group) => (
           <div
             key={group.date}
-            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors"
+            className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors"
           >
             <div className="w-32 sm:w-36 shrink-0">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
@@ -49,7 +49,7 @@ export default function ReleasesTab({
               {group.countries.map((c) => (
                 <div
                   key={c.code}
-                  className="inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
+                  className="inline-flex items-center rounded-sm bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
                 >
                   <img
                     src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
@@ -67,7 +67,7 @@ export default function ReleasesTab({
                       {c.country}
                     </span>
                     {c.certification && (
-                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded-sm bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
                         {c.certification}
                       </span>
                     )}
@@ -84,7 +84,7 @@ export default function ReleasesTab({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <span>{isExpanded ? "less..." : "more..."}</span>
             {isExpanded ? (

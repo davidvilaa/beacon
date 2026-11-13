@@ -58,7 +58,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
           ref={ref}
           href={resolvedHref}
           title={title}
-          className={`group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
+          className={`group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors cursor-pointer min-w-0 ${className}`}
         >
           <div className="relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
             {posterUrl ? (

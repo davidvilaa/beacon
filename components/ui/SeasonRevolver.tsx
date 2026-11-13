@@ -175,7 +175,7 @@ export default function SeasonRevolver({
         onClick={() => handleStep("up")}
         disabled={currentIndex <= 0}
         aria-label="Previous Season"
-        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mb-1"
+        className="p-1 rounded-sm text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mb-1"
       >
         <ChevronUp className="w-4 h-4" />
       </button>
@@ -195,7 +195,7 @@ export default function SeasonRevolver({
             "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
         }}
       >
-        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-lg border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-0" />
+        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-sm border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-0" />
 
         <div
           className="relative w-full h-full flex items-center justify-center"
@@ -226,7 +226,7 @@ export default function SeasonRevolver({
                   }
                 }}
                 title={s.name}
-                className={`absolute inset-x-1 h-10 flex items-center justify-center rounded-md pointer-events-auto z-10 ${
+                className={`absolute inset-x-1 h-10 flex items-center justify-center rounded-sm pointer-events-auto z-10 ${
                   isSelected
                     ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
                     : "text-zinc-400 font-bold text-xs sm:text-sm tracking-wider hover:text-white cursor-pointer"
@@ -252,7 +252,7 @@ export default function SeasonRevolver({
         onClick={() => handleStep("down")}
         disabled={currentIndex >= sortedSeasons.length - 1}
         aria-label="Next Season"
-        className="p-1 rounded text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1"
+        className="p-1 rounded-sm text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1"
       >
         <ChevronDown className="w-4 h-4" />
       </button>

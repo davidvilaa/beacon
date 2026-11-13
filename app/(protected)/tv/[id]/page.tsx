@@ -693,6 +693,24 @@ function TvDetailContent() {
     return getTvCrewSections(crewList, tv?.created_by);
   }, [crewList, tv?.created_by]);
 
+  const posterPath =
+    customPosters[activeSeason] ||
+    currentSeasonDetails?.poster_path ||
+    currentSeasonSummary?.poster_path ||
+    tv?.poster_path ||
+    null;
+  const posterUrl = getPosterUrl(posterPath, "w500");
+  const backdropPath =
+    customBackdrops[activeSeason] ||
+    fallbackBackdrop ||
+    tv?.backdrop_path ||
+    null;
+  const backdropUrl = getBackdropUrl(backdropPath, "original");
+
+  useEffect(() => {
+    setIsBackdropLoaded(false);
+  }, [backdropPath]);
+
   if (loading) {
     return (
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
@@ -711,22 +729,6 @@ function TvDetailContent() {
       </div>
     );
   }
-
-  const posterPath =
-    customPosters[activeSeason] ||
-    currentSeasonDetails?.poster_path ||
-    currentSeasonSummary?.poster_path ||
-    tv.poster_path;
-  const posterUrl = getPosterUrl(posterPath, "w500");
-  const backdropPath =
-    customBackdrops[activeSeason] ||
-    fallbackBackdrop ||
-    tv.backdrop_path;
-  const backdropUrl = getBackdropUrl(backdropPath, "original");
-
-  useEffect(() => {
-    setIsBackdropLoaded(false);
-  }, [backdropPath]);
 
   const overviewText =
     currentSeasonDetails?.overview ||

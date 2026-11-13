@@ -22,9 +22,12 @@ import Loading from "@/components/ui/Loading";
 import MediaCard from "@/components/ui/MediaCard";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
-interface SearchMovieItem extends Movie {
+interface SearchMovieItem extends Omit<Movie, "id"> {
+  id: number | string;
   moduleType?: string;
   media_type?: string;
+  username?: string;
+  href?: string;
 }
 
 const allFilters = [
@@ -197,15 +200,41 @@ function SearchContent() {
           ) : filteredMovies.length > 0 ? (
             filteredMovies.map((movie) => {
               const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
-              const releaseYear = movie.release_date
-                ? movie.release_date.slice(0, 4)
-                : "";
+              const releaseYear =
+                movie.moduleType === "users"
+                  ? "User"
+                  : movie.moduleType === "people"
+                  ? "Person"
+                  : movie.moduleType === "companies"
+                  ? "Company"
+                  : movie.moduleType === "lists"
+                  ? "List"
+                  : movie.release_date
+                  ? movie.release_date.slice(0, 4)
+                  : isMovie
+                  ? "Movie"
+                  : "Series";
+
+              const resolvedHref =
+                movie.href ||
+                (movie.media_type === "person" || movie.moduleType === "people"
+                  ? `/person/${movie.id}`
+                  : movie.media_type === "company" || movie.moduleType === "companies"
+                  ? `/company/${movie.id}`
+                  : movie.media_type === "user" || movie.moduleType === "users"
+                  ? `/profile/${encodeURIComponent(movie.username || movie.title)}`
+                  : movie.media_type === "list" || movie.moduleType === "lists"
+                  ? `/lists/${movie.id}`
+                  : isMovie
+                  ? `/movie/${movie.id}`
+                  : `/tv/${movie.id}`);
 
               return (
                 <MediaCard
                   key={`${movie.moduleType || "media"}-${movie.id}`}
                   variant="horizontal"
                   id={movie.id}
+                  href={resolvedHref}
                   mediaType={isMovie ? "movie" : "tv"}
                   title={movie.title}
                   posterPath={movie.poster_path}
@@ -220,7 +249,7 @@ function SearchContent() {
           )}
         </div>
 
-        {!loading && totalPages > 1 && (!selectedFilter || selectedFilter === "movies" || selectedFilter === "series") && (
+        {!loading && totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-zinc-800/60">
             <button
               type="button"

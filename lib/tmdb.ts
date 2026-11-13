@@ -29,6 +29,7 @@ export function getPosterUrl(
   size: "w92" | "w185" | "w342" | "w500" | "original" = "w500"
 ): string | null {
   if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
@@ -37,6 +38,7 @@ export function getBackdropUrl(
   size: "w780" | "w1280" | "original" = "w1280"
 ): string | null {
   if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
@@ -136,13 +138,16 @@ export interface MultiSearchItem {
   name?: string;
   original_title?: string;
   original_name?: string;
-  overview: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
+  overview?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  profile_path?: string | null;
+  known_for_department?: string;
+  known_for?: any[];
   release_date?: string;
   first_air_date?: string;
-  vote_average: number;
-  vote_count: number;
+  vote_average?: number;
+  vote_count?: number;
   popularity?: number;
   genre_ids?: number[];
 }
@@ -196,13 +201,52 @@ export async function searchMulti(
   });
 
   const filtered = (data.results || []).filter(
-    (item) => item.media_type !== "person" && !isExcludedTmdbMedia(item)
+    (item) => !isExcludedTmdbMedia(item)
   );
 
   return {
     ...data,
     results: filtered,
   };
+}
+
+export async function searchPerson(
+  query: string,
+  page: number = 1
+): Promise<TmdbPaginatedResponse<any>> {
+  if (!query.trim()) {
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+
+  return fetchFromTmdb<TmdbPaginatedResponse<any>>("/search/person", {
+    query: query.trim(),
+    page,
+    include_adult: "false",
+  });
+}
+
+export async function searchCompany(
+  query: string,
+  page: number = 1
+): Promise<TmdbPaginatedResponse<any>> {
+  if (!query.trim()) {
+    return {
+      page: 1,
+      results: [],
+      total_pages: 0,
+      total_results: 0,
+    };
+  }
+
+  return fetchFromTmdb<TmdbPaginatedResponse<any>>("/search/company", {
+    query: query.trim(),
+    page,
+  });
 }
 
 export interface MovieCast {

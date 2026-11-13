@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
-    const moduleType = searchParams.get("module") || "";
+    const moduleType = searchParams.get("filter") || searchParams.get("module") || "";
     const uiPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
 
     const tmdbPage = Math.floor((uiPage - 1) / 2) + 1;

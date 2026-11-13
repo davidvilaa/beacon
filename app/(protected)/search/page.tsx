@@ -10,6 +10,10 @@ import {
   Gamepad2,
   BookOpen,
   BookCopy,
+  User,
+  Clapperboard,
+  Building2,
+  Layers,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -23,13 +27,17 @@ interface SearchMovieItem extends Movie {
   media_type?: string;
 }
 
-const allModules = [
+const allFilters = [
   { id: "movies", title: "Movies", icon: Film },
   { id: "series", title: "Series", icon: Tv },
   { id: "anime", title: "Anime", icon: Sparkles },
   { id: "games", title: "Games", icon: Gamepad2 },
   { id: "manga", title: "Manga", icon: BookOpen },
   { id: "comics", title: "Comics", icon: BookCopy },
+  { id: "users", title: "Users", icon: User },
+  { id: "people", title: "People", icon: Clapperboard },
+  { id: "companies", title: "Companies", icon: Building2 },
+  { id: "lists", title: "Lists", icon: Layers },
 ];
 
 function getPageNumbers(current: number, total: number): (number | string)[] {
@@ -53,7 +61,7 @@ function SearchContent() {
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [movies, setMovies] = useState<SearchMovieItem[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
@@ -71,10 +79,10 @@ function SearchContent() {
     let isCancelled = false;
     setLoading(true);
 
-    const moduleParam = selectedModule ? `&module=${encodeURIComponent(selectedModule)}` : "";
+    const filterParam = selectedFilter ? `&module=${encodeURIComponent(selectedFilter)}` : "";
 
     fetch(
-      `/api/movies/search?q=${encodeURIComponent(query.trim())}&page=${currentPage}${moduleParam}`
+      `/api/movies/search?q=${encodeURIComponent(query.trim())}&page=${currentPage}${filterParam}`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -98,7 +106,7 @@ function SearchContent() {
     return () => {
       isCancelled = true;
     };
-  }, [query, currentPage, selectedModule]);
+  }, [query, currentPage, selectedFilter]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage === currentPage || newPage < 1 || newPage > totalPages) return;
@@ -108,8 +116,8 @@ function SearchContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleModuleClick = (moduleId: string) => {
-    setSelectedModule((prev) => (prev === moduleId ? null : moduleId));
+  const handleFilterClick = (filterId: string) => {
+    setSelectedFilter((prev) => (prev === filterId ? null : filterId));
     if (currentPage !== 1) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", "1");
@@ -131,21 +139,21 @@ function SearchContent() {
       <section className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Modules
+            FILTERS
           </h2>
         </div>
 
         <div className="flex items-center gap-3 overflow-x-auto pb-2">
-          {allModules.map((mod) => {
-            const Icon = mod.icon;
-            const isSelected = selectedModule === mod.id;
+          {allFilters.map((filter) => {
+            const Icon = filter.icon;
+            const isSelected = selectedFilter === filter.id;
             return (
               <button
-                key={mod.id}
+                key={filter.id}
                 type="button"
-                onClick={() => handleModuleClick(mod.id)}
-                title={mod.title}
-                aria-label={mod.title}
+                onClick={() => handleFilterClick(filter.id)}
+                title={filter.title}
+                aria-label={filter.title}
                 className={`group relative w-14 h-14 rounded-sm border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden ${
                   isSelected
                     ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc]"
@@ -212,7 +220,7 @@ function SearchContent() {
           )}
         </div>
 
-        {!loading && totalPages > 1 && (!selectedModule || selectedModule === "movies" || selectedModule === "series") && (
+        {!loading && totalPages > 1 && (!selectedFilter || selectedFilter === "movies" || selectedFilter === "series") && (
           <div className="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-zinc-800/60">
             <button
               type="button"

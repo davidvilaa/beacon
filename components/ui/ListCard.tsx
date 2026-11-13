@@ -26,7 +26,7 @@ interface ListCardProps {
 }
 
 const SLOTS_COUNT = 5;
-const OPACITIES = [1, 0.88, 0.76, 0.65, 0.55];
+const OPACITIES = [1, 0.92, 0.85, 0.77, 0.7];
 
 export default function ListCard({
   list,
@@ -65,7 +65,7 @@ export default function ListCard({
             <div
               key={idx}
               style={{
-                opacity: OPACITIES[idx] ?? 0.55,
+                opacity: OPACITIES[idx] ?? 0.7,
                 zIndex: 10 - idx,
               }}
               className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-sm shrink-0 shadow-md transition-transform ${

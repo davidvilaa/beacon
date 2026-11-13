@@ -538,30 +538,29 @@ export default function ListModal({
             <div className="mt-4 border-t border-zinc-800/80 pt-4">
               <div className="max-h-[50vh] overflow-y-auto overflow-x-hidden pr-1">
                 {isLoading ? (
-                  <div className="flex flex-col gap-3 py-2 animate-pulse">
+                  <div className="flex flex-col gap-4 py-2 animate-pulse">
                     {Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 w-full">
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-zinc-800/60 shrink-0" />
+                      <div key={index} className="flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 w-full">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-zinc-800/60 shrink-0" />
                         <div className="flex items-center shrink-0">
                           {Array.from({ length: 5 }).map((__, idx) => (
                             <div
                               key={idx}
-                              className={`relative w-14 sm:w-18 md:w-20 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
-                                idx > 0 ? "-ml-7 sm:-ml-9 md:-ml-10" : ""
+                              className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-xl bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                                idx > 0 ? "-ml-10 sm:-ml-12 md:-ml-14 lg:-ml-16" : ""
                               }`}
                             />
                           ))}
                         </div>
-                        <div className="flex-1 space-y-2.5 min-w-0">
-                          <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/60 rounded" />
-                          <div className="h-3 sm:h-4 w-3/4 bg-zinc-800/40 rounded" />
-                          <div className="h-3 w-1/4 bg-zinc-800/30 rounded" />
+                        <div className="flex-1 space-y-3 min-w-0">
+                          <div className="h-6 sm:h-7 w-2/5 bg-zinc-800/60 rounded-md" />
+                          <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : lists.length === 0 ? null : (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     {lists.map((list) => {
                       const isChecked = selectedIds.has(list.id);
                       return (

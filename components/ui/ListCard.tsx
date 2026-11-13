@@ -10,7 +10,7 @@ export interface ListCardData {
   title: string;
   description?: string | null;
   isPrivate?: boolean;
-  itemCount: number;
+  itemCount?: number;
   previewPosters?: (string | null)[];
 }
 
@@ -42,13 +42,13 @@ export default function ListCard({
     <>
       {selectable && (
         <span
-          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
             selected
               ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
               : "bg-zinc-950/80 border-zinc-700 group-hover:border-zinc-500"
           }`}
         >
-          {selected && <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />}
+          {selected && <Check className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[3]" />}
         </span>
       )}
 
@@ -62,8 +62,8 @@ export default function ListCard({
                 opacity: OPACITIES[idx] ?? 0.55,
                 zIndex: 10 - idx,
               }}
-              className={`relative w-14 sm:w-18 md:w-20 aspect-[2/3] rounded-lg shrink-0 shadow-md transition-transform ${
-                idx > 0 ? "-ml-7 sm:-ml-9 md:-ml-10" : ""
+              className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-xl shrink-0 shadow-md transition-transform ${
+                idx > 0 ? "-ml-10 sm:-ml-12 md:-ml-14 lg:-ml-16" : ""
               } ${
                 url
                   ? "overflow-hidden border border-zinc-800/90 bg-zinc-900"
@@ -75,7 +75,7 @@ export default function ListCard({
                   src={url}
                   alt=""
                   fill
-                  sizes="(max-width: 640px) 56px, (max-width: 768px) 72px, 80px"
+                  sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, (max-width: 1024px) 112px, 128px"
                   className="object-cover"
                 />
               )}
@@ -84,30 +84,26 @@ export default function ListCard({
         })}
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <h4 className="text-base sm:text-lg font-bold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-100 tracking-tight leading-tight group-hover:text-[#a8dadc] transition-colors truncate">
             {list.title}
-          </h4>
+          </h3>
           {list.isPrivate && (
-            <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+            <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 shrink-0" />
           )}
         </div>
 
         {list.description && (
-          <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-300 leading-relaxed line-clamp-2 sm:line-clamp-3">
             {list.description}
           </p>
         )}
-
-        <p className="text-xs sm:text-sm text-zinc-500 font-medium">
-          {list.itemCount} {list.itemCount === 1 ? "item" : "items"}
-        </p>
       </div>
     </>
   );
 
-  const containerClasses = `group flex items-center gap-4 sm:gap-5 p-3 rounded-xl hover:bg-zinc-900/40 transition-colors cursor-pointer select-none text-left w-full ${className}`;
+  const containerClasses = `group flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 rounded-2xl hover:bg-zinc-900/40 transition-colors cursor-pointer select-none text-left w-full ${className}`;
 
   if (href) {
     return (

@@ -50,29 +50,29 @@ export default function ProfileListsTab({
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-4 p-3 rounded-xl animate-pulse">
+        <div className="flex flex-col gap-6 sm:gap-8">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 rounded-2xl animate-pulse">
               <div className="flex items-center shrink-0">
                 {Array.from({ length: 5 }).map((__, idx) => (
                   <div
                     key={idx}
-                    className={`relative w-14 sm:w-18 md:w-20 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
-                      idx > 0 ? "-ml-7 sm:-ml-9 md:-ml-10" : ""
+                    className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-xl bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                      idx > 0 ? "-ml-10 sm:-ml-12 md:-ml-14 lg:-ml-16" : ""
                     }`}
                   />
                 ))}
               </div>
-              <div className="flex-1 space-y-2.5 min-w-0">
-                <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/60 rounded" />
-                <div className="h-3 sm:h-4 w-full bg-zinc-800/40 rounded" />
-                <div className="h-3 w-1/3 bg-zinc-800/30 rounded" />
+              <div className="flex-1 space-y-3 min-w-0">
+                <div className="h-6 sm:h-8 w-2/5 bg-zinc-800/60 rounded-md" />
+                <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
+                <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/30 rounded" />
               </div>
             </div>
           ))}
         </div>
       ) : lists.length === 0 ? null : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="flex flex-col gap-6 sm:gap-8">
           {lists.map((list) => (
             <ListCard
               key={list.id}

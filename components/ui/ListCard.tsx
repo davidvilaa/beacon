@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, Layers, Calendar } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
+import { formatFullDate } from "@/lib/media-utils";
 
 export interface ListCardData {
   id: string;
@@ -11,6 +12,7 @@ export interface ListCardData {
   description?: string | null;
   isPrivate?: boolean;
   itemCount?: number;
+  updatedAt?: string;
   previewPosters?: (string | null)[];
 }
 
@@ -37,6 +39,10 @@ export default function ListCard({
   const slots = Array.from({ length: SLOTS_COUNT }).map(
     (_, idx) => list.previewPosters?.[idx] ?? null
   );
+
+  const formattedDate = list.updatedAt
+    ? formatFullDate(list.updatedAt.split("T")[0])
+    : null;
 
   const content = (
     <>
@@ -93,6 +99,26 @@ export default function ListCard({
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 shrink-0" />
           )}
         </div>
+
+        {(typeof list.itemCount === "number" || formattedDate) && (
+          <div className="flex items-center gap-2.5 text-xs text-zinc-400 flex-wrap">
+            {typeof list.itemCount === "number" && (
+              <span className="flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#a8dadc]" />
+                <span>{list.itemCount}</span>
+              </span>
+            )}
+            {typeof list.itemCount === "number" && formattedDate && (
+              <span>•</span>
+            )}
+            {formattedDate && (
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                <span>Updated on {formattedDate}</span>
+              </span>
+            )}
+          </div>
+        )}
 
         {list.description && (
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed line-clamp-2 sm:line-clamp-3">

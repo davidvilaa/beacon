@@ -572,6 +572,7 @@ export default function ListModal({
                             description: list.description,
                             isPrivate: list.is_private,
                             itemCount: list.itemCount,
+                            updatedAt: list.updated_at,
                             previewPosters: list.previewPosters,
                           }}
                           selectable

@@ -85,6 +85,7 @@ export default function ProfileListsTab({
                 description: list.description,
                 isPrivate: list.isPrivate,
                 itemCount: list.itemCount,
+                updatedAt: list.updatedAt,
                 previewPosters: list.previewItems.map((p) => p.posterPath),
               }}
               href={`/lists/${list.id}`}

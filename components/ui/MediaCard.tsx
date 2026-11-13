@@ -60,7 +60,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
           title={title}
           className={`group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-lg transition-colors cursor-pointer min-w-0 ${className}`}
         >
-          <div className="relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+          <div className="relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
             {posterUrl ? (
               <Image
                 src={posterUrl}
@@ -109,13 +109,13 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
         ref={ref}
         href={resolvedHref}
         title={title}
-        className={`group relative flex flex-col rounded-xl overflow-hidden cursor-pointer transition-all duration-200 select-none ${
+        className={`group relative flex flex-col rounded-sm overflow-hidden cursor-pointer transition-all duration-200 select-none ${
           isCurrent
             ? "border-2 border-[#a8dadc]"
             : "border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10"
         } ${hasFooter ? "w-full" : "aspect-[2/3] w-full"} ${className}`}
       >
-        {!isCurrent && <CardGradientBorder />}
+        {!isCurrent && <CardGradientBorder roundedClassName="rounded-sm" />}
 
         <div
           className={`relative bg-zinc-900 overflow-hidden ${

@@ -36,7 +36,7 @@ export default function ProfileOverviewTab({
           ? slots.map((_, index) => (
               <div
                 key={index}
-                className="aspect-[2/3] w-full rounded-xl bg-zinc-900/40 border border-zinc-800/40 animate-pulse"
+                className="aspect-[2/3] w-full rounded-sm bg-zinc-900/40 border border-zinc-800/40 animate-pulse"
               />
             ))
           : slots.map((_, index) => {
@@ -56,7 +56,7 @@ export default function ProfileOverviewTab({
               return (
                 <div
                   key={index}
-                  className="aspect-[2/3] w-full rounded-xl border border-dashed border-zinc-800/80 bg-zinc-900/10"
+                  className="aspect-[2/3] w-full rounded-sm border border-dashed border-zinc-800/80 bg-zinc-900/10"
                 />
               );
             })}

@@ -317,7 +317,7 @@ export default function MediaReviewModal({
                 <div
                   onClick={canChangePoster ? () => setIsPosterPickerOpen(true) : undefined}
                   title={canChangePoster ? "Click to change poster" : undefined}
-                  className={`relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl ${
+                  className={`relative w-28 sm:w-36 aspect-[2/3] rounded-sm overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl ${
                     canChangePoster ? "cursor-pointer group" : ""
                   }`}
                 >

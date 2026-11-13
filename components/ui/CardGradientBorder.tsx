@@ -7,7 +7,7 @@ interface CardGradientBorderProps {
 
 export default function CardGradientBorder({
   className = "",
-  roundedClassName = "rounded-xl",
+  roundedClassName = "rounded-sm",
 }: CardGradientBorderProps) {
   return (
     <div

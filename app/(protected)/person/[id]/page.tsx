@@ -260,7 +260,7 @@ function PersonDetailContent() {
     <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         <aside className="w-full lg:w-80 shrink-0">
-          <div className="w-56 sm:w-64 lg:w-full mx-auto rounded-2xl overflow-hidden bg-zinc-900/40 border border-zinc-800 shadow-xl">
+          <div className="w-56 sm:w-64 lg:w-full mx-auto rounded-sm overflow-hidden bg-zinc-900/40 border border-zinc-800 shadow-xl">
             <div className="relative aspect-[2/3] w-full bg-zinc-900 border-b border-zinc-800">
               {profileUrl ? (
                 <Image

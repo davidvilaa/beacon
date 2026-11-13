@@ -105,7 +105,7 @@ export default function MediaActionColumn({
       <div
         onClick={isClickable ? onOpenPosterPicker : undefined}
         title={isClickable ? "Click to change poster" : undefined}
-        className={`relative aspect-[2/3] w-56 sm:w-full rounded-t-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl ${
+        className={`relative aspect-[2/3] w-56 sm:w-full rounded-t-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl ${
           isClickable ? "cursor-pointer group" : ""
         }`}
       >
@@ -131,7 +131,7 @@ export default function MediaActionColumn({
       </div>
 
       <div ref={containerRef} className="relative w-56 sm:w-full">
-        <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-2xl overflow-hidden shadow-xl">
+        <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-sm overflow-hidden shadow-xl">
           <button
             type="button"
             onClick={() => {

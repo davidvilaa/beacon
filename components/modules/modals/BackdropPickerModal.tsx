@@ -74,7 +74,7 @@ export default function BackdropPickerModal({
                       onSelectImage(img.file_path);
                       onClose();
                     }}
-                    className={`relative w-full aspect-video rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    className={`relative w-full aspect-video rounded-sm overflow-hidden border-2 transition-all cursor-pointer ${
                       isSelected
                         ? "border-[#a8dadc]"
                         : "border-zinc-800 hover:border-zinc-600 hover:opacity-90"

@@ -62,7 +62,7 @@ export default function ListCard({
                 opacity: OPACITIES[idx] ?? 0.55,
                 zIndex: 10 - idx,
               }}
-              className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-xl shrink-0 shadow-md transition-transform ${
+              className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-sm shrink-0 shadow-md transition-transform ${
                 idx > 0 ? "-ml-10 sm:-ml-12 md:-ml-14 lg:-ml-16" : ""
               } ${
                 url

@@ -62,7 +62,7 @@ export default function ProfileMediaTab({
           {Array.from({ length: 20 }).map((_, index) => (
             <div
               key={index}
-              className="aspect-[2/3] w-full rounded-xl bg-zinc-900/40 border border-zinc-800/40 animate-pulse"
+              className="aspect-[2/3] w-full rounded-sm bg-zinc-900/40 border border-zinc-800/40 animate-pulse"
             />
           ))}
         </div>

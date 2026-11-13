@@ -60,7 +60,7 @@ export default function ProfileListsTab({
                 {Array.from({ length: 5 }).map((__, idx) => (
                   <div
                     key={idx}
-                    className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-xl bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                    className={`relative w-20 sm:w-24 md:w-28 lg:w-32 aspect-[2/3] rounded-sm bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
                       idx > 0 ? "-ml-10 sm:-ml-12 md:-ml-14 lg:-ml-16" : ""
                     }`}
                   />

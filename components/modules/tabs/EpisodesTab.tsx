@@ -81,7 +81,7 @@ export default function EpisodesTab({
                 )}
               </div>
 
-              <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+              <div className="relative w-full sm:w-44 md:w-48 aspect-video rounded-sm overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
                 {stillUrl ? (
                   <Image
                     src={stillUrl}

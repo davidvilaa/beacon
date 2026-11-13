@@ -174,7 +174,7 @@ function SearchContent() {
                 key={index}
                 className="flex items-start gap-4 sm:gap-5 py-4 px-2 animate-pulse"
               >
-                <div className="w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-lg bg-zinc-900 border border-zinc-800/80 shrink-0" />
+                <div className="w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm bg-zinc-900 border border-zinc-800/80 shrink-0" />
                 <div className="flex-1 min-w-0 pt-0.5 sm:pt-1 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <div className="h-4 bg-zinc-800/70 rounded w-1/3" />

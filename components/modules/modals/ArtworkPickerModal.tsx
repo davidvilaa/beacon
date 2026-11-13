@@ -82,7 +82,7 @@ export default function ArtworkPickerModal({
                       onSelectImage(img.file_path);
                       onClose();
                     }}
-                    className={`relative w-full rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    className={`relative w-full rounded-sm overflow-hidden border-2 transition-all cursor-pointer ${
                       isPoster ? "aspect-[2/3]" : "aspect-[16/9]"
                     } ${
                       isSelected

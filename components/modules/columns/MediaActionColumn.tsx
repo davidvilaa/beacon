@@ -99,38 +99,41 @@ export default function MediaActionColumn({
       : "w-4.5 h-4.5 sm:w-5 sm:h-5";
 
   return (
-    <div className={`relative w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center ${className}`}>
-      {children}
+    <div
+      ref={containerRef}
+      className={`relative w-full sm:w-64 md:w-72 shrink-0 flex flex-col items-center ${className}`}
+    >
+      <div className="relative w-56 sm:w-full">
+        {children}
 
-      <div
-        onClick={isClickable ? onOpenPosterPicker : undefined}
-        title={isClickable ? "Click to change poster" : undefined}
-        className={`relative aspect-[2/3] w-56 sm:w-full rounded-t-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl ${
-          isClickable ? "cursor-pointer group" : ""
-        }`}
-      >
-        {posterUrl ? (
-          <Image
-            src={posterUrl}
-            alt={title}
-            fill
-            priority
-            sizes="(max-width: 640px) 224px, 288px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700">
-            <Film className="w-12 h-12 mb-2" />
-            <span className="text-xs text-zinc-500">No poster</span>
-          </div>
-        )}
+        <div
+          onClick={isClickable ? onOpenPosterPicker : undefined}
+          title={isClickable ? "Click to change poster" : undefined}
+          className={`relative aspect-[2/3] w-full rounded-t-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl ${
+            isClickable ? "cursor-pointer group" : ""
+          }`}
+        >
+          {posterUrl ? (
+            <Image
+              src={posterUrl}
+              alt={title}
+              fill
+              priority
+              sizes="(max-width: 640px) 224px, 288px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700">
+              <Film className="w-12 h-12 mb-2" />
+              <span className="text-xs text-zinc-500">No poster</span>
+            </div>
+          )}
 
-        {isClickable && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        )}
-      </div>
+          {isClickable && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          )}
+        </div>
 
-      <div ref={containerRef} className="relative w-56 sm:w-full">
         <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-sm overflow-hidden shadow-xl">
           <button
             type="button"
@@ -169,7 +172,9 @@ export default function MediaActionColumn({
             />
           </button>
         </div>
+      </div>
 
+      <div className="w-56 sm:w-full">
         <div
           className={`grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             isOpen

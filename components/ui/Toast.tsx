@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none font-[family-name:var(--font-geist-sans)]">
+      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-2.5 pointer-events-none font-[family-name:var(--font-geist-sans)] max-w-[calc(100vw-2.5rem)]">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
         ))}
@@ -99,7 +99,7 @@ function ToastItem({
 
   return (
     <div
-      className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-sm shadow-2xl min-w-[300px] max-w-sm sm:max-w-md transition-all duration-300 transform ${
+      className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-sm shadow-2xl min-w-[280px] sm:min-w-[300px] max-w-sm sm:max-w-md transition-all duration-300 transform ${
         !isMounted ? 'opacity-0 translate-x-8 scale-95' :
         isExiting ? 'opacity-0 translate-x-8 scale-95' :
         'opacity-100 translate-x-0 scale-100'

@@ -892,9 +892,11 @@ function TvDetailContent() {
         media={{
           mediaType: "tv",
           mediaId: tv.id,
+          seasonNumber: activeSeason,
+          seasonTitle: currentSeasonSummary?.name || `Season ${activeSeason}`,
           title: tv.name,
-          overview: tv.overview,
-          posterPath: tv.poster_path,
+          overview: currentSeasonDetails?.overview || currentSeasonSummary?.overview || tv.overview,
+          posterPath: currentSeasonDetails?.poster_path || currentSeasonSummary?.poster_path || tv.poster_path,
           backdropPath: tv.backdrop_path,
           customPosterPath: posterPath,
           customBackdropPath: selectedBackdrop,
@@ -905,8 +907,6 @@ function TvDetailContent() {
         availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
         selectedPoster={posterPath}
         selectedBackdrop={selectedBackdrop}
-        onSelectPoster={handleSelectPoster}
-        onSelectBackdrop={handleSelectBackdrop}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

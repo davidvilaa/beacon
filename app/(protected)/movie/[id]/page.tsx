@@ -714,8 +714,6 @@ function MovieDetailContent() {
         availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
         selectedPoster={selectedPoster}
         selectedBackdrop={selectedBackdrop}
-        onSelectPoster={handleSelectPoster}
-        onSelectBackdrop={handleSelectBackdrop}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

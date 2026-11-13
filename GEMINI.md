@@ -82,11 +82,12 @@ Full DDL script is located in `supabase/schema.sql`.
   - `list_id`: uuid references public.lists(id) on delete cascade
   - `media_type`: text not null check (media_type in ('movie', 'tv', 'anime', 'game'))
   - `media_id`: bigint not null
+  - `season_number`: integer (null for movies/anime/games, season number for tv series)
   - `position`: integer default 0
   - `notes`: text
   - `custom_poster_path`, `custom_backdrop_path`: text
   - `created_at`: timestamptz
-  - Unique constraint: `(list_id, media_type, media_id)`
+  - Unique constraint: `(list_id, media_type, media_id, season_number)` (with `nulls not distinct`)
 
 - **Favorites Limit**:
   - Maximum of 5 favorites per user for each media type (`public.user_movies` and `public.user_series`). Enforced via triggers `check_user_movies_favorites_limit` and `check_user_series_favorites_limit`, as well as client-side checks and user toasts.

@@ -15,6 +15,8 @@ export interface ListMediaPayload {
   mediaType: "movie" | "tv";
   mediaId: number;
   title: string;
+  seasonNumber?: number | null;
+  seasonTitle?: string | null;
   overview?: string | null;
   posterPath?: string | null;
   backdropPath?: string | null;
@@ -40,8 +42,6 @@ interface ListModalProps {
   availableBackdrops?: { file_path: string }[];
   selectedPoster?: string | null;
   selectedBackdrop?: string | null;
-  onSelectPoster?: (filePath: string) => void;
-  onSelectBackdrop?: (filePath: string) => void;
   loadingPosters?: boolean;
   loadingBackdrops?: boolean;
 }
@@ -54,8 +54,6 @@ export default function ListModal({
   availableBackdrops,
   selectedPoster,
   selectedBackdrop,
-  onSelectPoster,
-  onSelectBackdrop,
   loadingPosters,
   loadingBackdrops,
 }: ListModalProps) {
@@ -110,6 +108,18 @@ export default function ListModal({
           return;
         }
 
+        let membershipQuery = supabase
+          .from("list_items")
+          .select("list_id, custom_poster_path, custom_backdrop_path")
+          .eq("media_type", media.mediaType)
+          .eq("media_id", media.mediaId);
+
+        if (media.mediaType === "tv" && typeof media.seasonNumber === "number") {
+          membershipQuery = membershipQuery.eq("season_number", media.seasonNumber);
+        } else {
+          membershipQuery = membershipQuery.is("season_number", null);
+        }
+
         const [{ data: listsData, error: listsError }, { data: membershipData }] =
           await Promise.all([
             supabase
@@ -117,11 +127,7 @@ export default function ListModal({
               .select("id, title, is_private, updated_at, list_items(count)")
               .eq("user_id", session.user.id)
               .order("updated_at", { ascending: false }),
-            supabase
-              .from("list_items")
-              .select("list_id")
-              .eq("media_type", media.mediaType)
-              .eq("media_id", media.mediaId),
+            membershipQuery,
           ]);
 
         if (ignore) return;
@@ -147,6 +153,16 @@ export default function ListModal({
             .filter((id: string) => ownedIds.has(id))
         );
 
+        const existingWithCustom = (membershipData || []).find(
+          (m: any) => m.custom_poster_path || m.custom_backdrop_path
+        );
+        if (existingWithCustom?.custom_poster_path) {
+          setDraftPoster(existingWithCustom.custom_poster_path);
+        }
+        if (existingWithCustom?.custom_backdrop_path) {
+          setDraftBackdrop(existingWithCustom.custom_backdrop_path);
+        }
+
         setLists(formattedLists);
         setInitialSelectedIds(activeIds);
         setSelectedIds(new Set(activeIds));
@@ -166,22 +182,16 @@ export default function ListModal({
     return () => {
       ignore = true;
     };
-  }, [isOpen, media.mediaType, media.mediaId, supabase, addToast, onClose]);
+  }, [isOpen, media.mediaType, media.mediaId, media.seasonNumber, supabase, addToast, onClose]);
 
   if (!isOpen) return null;
 
   const handleSelectPosterInternal = (filePath: string) => {
     setDraftPoster(filePath);
-    if (onSelectPoster) {
-      onSelectPoster(filePath);
-    }
   };
 
   const handleSelectBackdropInternal = (filePath: string) => {
     setDraftBackdrop(filePath);
-    if (onSelectBackdrop) {
-      onSelectBackdrop(filePath);
-    }
   };
 
   const currentPosterUrl = draftPoster
@@ -201,10 +211,10 @@ export default function ListModal({
     : null;
 
   const canChangePoster = Boolean(
-    onSelectPoster && ((availablePosters?.length ?? 0) > 0 || loadingPosters)
+    (availablePosters?.length ?? 0) > 0 || loadingPosters
   );
   const canChangeBackdrop = Boolean(
-    onSelectBackdrop && ((availableBackdrops?.length ?? 0) > 0 || loadingBackdrops)
+    (availableBackdrops?.length ?? 0) > 0 || loadingBackdrops
   );
 
   const toggleList = (listId: string) => {
@@ -263,6 +273,11 @@ export default function ListModal({
         return;
       }
 
+      const seasonNum =
+        media.mediaType === "tv" && typeof media.seasonNumber === "number"
+          ? media.seasonNumber
+          : null;
+
       if (toAdd.length > 0) {
         if (media.mediaType === "movie") {
           const { error: cacheError } = await supabase.from("movies").upsert({
@@ -298,6 +313,7 @@ export default function ListModal({
             list_id: listId,
             media_type: media.mediaType,
             media_id: media.mediaId,
+            season_number: seasonNum,
             position: foundList ? foundList.itemCount : 0,
             custom_poster_path: effectivePoster,
             custom_backdrop_path: effectiveBackdrop,
@@ -306,7 +322,9 @@ export default function ListModal({
 
         const { error: insertError } = await supabase
           .from("list_items")
-          .upsert(rowsToInsert, { onConflict: "list_id,media_type,media_id" });
+          .upsert(rowsToInsert, {
+            onConflict: "list_id,media_type,media_id,season_number",
+          });
 
         if (insertError) {
           addToast("Error adding item to lists", "error");
@@ -315,12 +333,20 @@ export default function ListModal({
       }
 
       if (toRemove.length > 0) {
-        const { error: deleteError } = await supabase
+        let deleteQuery = supabase
           .from("list_items")
           .delete()
           .in("list_id", toRemove)
           .eq("media_type", media.mediaType)
           .eq("media_id", media.mediaId);
+
+        if (seasonNum !== null) {
+          deleteQuery = deleteQuery.eq("season_number", seasonNum);
+        } else {
+          deleteQuery = deleteQuery.is("season_number", null);
+        }
+
+        const { error: deleteError } = await deleteQuery;
 
         if (deleteError) {
           addToast("Error removing item from lists", "error");
@@ -330,7 +356,7 @@ export default function ListModal({
 
       const remainingActiveIds = Array.from(selectedIds).filter((id) => !toRemove.includes(id));
       if (hasArtworkChanged && remainingActiveIds.length > 0) {
-        await supabase
+        let updateQuery = supabase
           .from("list_items")
           .update({
             custom_poster_path: effectivePoster,
@@ -339,9 +365,19 @@ export default function ListModal({
           .in("list_id", remainingActiveIds)
           .eq("media_type", media.mediaType)
           .eq("media_id", media.mediaId);
+
+        if (seasonNum !== null) {
+          updateQuery = updateQuery.eq("season_number", seasonNum);
+        } else {
+          updateQuery = updateQuery.is("season_number", null);
+        }
+
+        await updateQuery;
       }
 
-      const touchedListIds = Array.from(new Set([...toAdd, ...toRemove, ...(hasArtworkChanged ? remainingActiveIds : [])]));
+      const touchedListIds = Array.from(
+        new Set([...toAdd, ...toRemove, ...(hasArtworkChanged ? remainingActiveIds : [])])
+      );
       if (touchedListIds.length > 0) {
         await supabase
           .from("lists")
@@ -437,6 +473,11 @@ export default function ListModal({
                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight leading-tight truncate">
                       {media.title}
                     </h2>
+                    {media.mediaType === "tv" && media.seasonNumber && (
+                      <p className="text-xs font-semibold text-[#a8dadc] mt-0.5">
+                        {media.seasonTitle || `Season ${media.seasonNumber}`}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -548,7 +589,7 @@ export default function ListModal({
         onSaved={handleListCreated}
       />
 
-      {availablePosters && onSelectPoster && (
+      {availablePosters && (
         <ArtworkPickerModal
           isOpen={isPosterPickerOpen}
           onClose={() => setIsPosterPickerOpen(false)}
@@ -562,7 +603,7 @@ export default function ListModal({
         />
       )}
 
-      {availableBackdrops && onSelectBackdrop && (
+      {availableBackdrops && (
         <BackdropPickerModal
           isOpen={isBackdropPickerOpen}
           onClose={() => setIsBackdropPickerOpen(false)}

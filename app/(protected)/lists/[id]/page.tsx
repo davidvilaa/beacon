@@ -42,6 +42,7 @@ interface ListGridItem {
   id: string;
   mediaType: "movie" | "tv" | "anime" | "game";
   mediaId: number;
+  seasonNumber?: number | null;
   title: string;
   posterPath: string | null;
 }
@@ -95,6 +96,7 @@ function ListDetailContent() {
                   id,
                   media_type,
                   media_id,
+                  season_number,
                   position,
                   custom_poster_path,
                   custom_backdrop_path,
@@ -132,11 +134,17 @@ function ListDetailContent() {
 
         const mappedItems: ListGridItem[] = sortedRawItems.map((item: any) => {
           const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
+          const displayTitle =
+            item.media_type === "tv" && item.season_number
+              ? `${cached?.title || "Series"} (Season ${item.season_number})`
+              : cached?.title || "Media";
+
           return {
             id: item.id,
             mediaType: item.media_type,
             mediaId: item.media_id,
-            title: cached?.title || "Media",
+            seasonNumber: item.season_number ?? null,
+            title: displayTitle,
             posterPath: item.custom_poster_path || cached?.posterPath || null,
           };
         });
@@ -393,7 +401,17 @@ function ListDetailContent() {
               <MediaCard
                 id={item.mediaId}
                 mediaType={item.mediaType}
+                href={
+                  item.mediaType === "tv" && item.seasonNumber
+                    ? `/tv/${item.mediaId}?season=${item.seasonNumber}`
+                    : undefined
+                }
                 title={item.title}
+                subtitle={
+                  item.mediaType === "tv" && item.seasonNumber
+                    ? `Season ${item.seasonNumber}`
+                    : undefined
+                }
                 posterPath={item.posterPath}
                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 125px"
               />

@@ -234,16 +234,18 @@ create table public.list_items (
   list_id uuid not null references public.lists(id) on delete cascade,
   media_type text not null check (media_type in ('movie', 'tv', 'anime', 'game')),
   media_id bigint not null,
+  season_number integer null,
   position integer not null default 0,
   notes text null,
   custom_poster_path text null,
   custom_backdrop_path text null,
   created_at timestamptz not null default now(),
-  constraint list_items_unique unique (list_id, media_type, media_id)
+  constraint list_items_unique unique nulls not distinct (list_id, media_type, media_id, season_number)
 );
 
 create index idx_list_items_list_id on public.list_items (list_id);
 create index idx_list_items_media on public.list_items (media_type, media_id);
+create index idx_list_items_season on public.list_items (media_type, media_id, season_number);
 create index idx_list_items_position on public.list_items (list_id, position);
 
 alter table public.list_items enable row level security;

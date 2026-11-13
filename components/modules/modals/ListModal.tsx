@@ -538,10 +538,10 @@ export default function ListModal({
             <div className="mt-4 border-t border-zinc-800/80 pt-4">
               <div className="max-h-[50vh] overflow-y-auto overflow-x-hidden pr-1">
                 {isLoading ? (
-                  <div className="flex flex-col gap-4 py-2 animate-pulse">
+                  <div className="divide-y divide-zinc-700/80">
                     {Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 w-full">
-                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-zinc-800/60 shrink-0" />
+                      <div key={index} className="flex items-start gap-4 sm:gap-6 py-4 sm:py-5 px-3 w-full animate-pulse">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-zinc-800/60 shrink-0 mt-1" />
                         <div className="flex items-center shrink-0">
                           {Array.from({ length: 5 }).map((__, idx) => (
                             <div
@@ -552,7 +552,7 @@ export default function ListModal({
                             />
                           ))}
                         </div>
-                        <div className="flex-1 space-y-3 min-w-0">
+                        <div className="flex-1 space-y-3 min-w-0 pt-0.5">
                           <div className="h-6 sm:h-7 w-2/5 bg-zinc-800/60 rounded-md" />
                           <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
                         </div>
@@ -560,7 +560,7 @@ export default function ListModal({
                     ))}
                   </div>
                 ) : lists.length === 0 ? null : (
-                  <div className="flex flex-col gap-3">
+                  <div className="divide-y divide-zinc-700/80">
                     {lists.map((list) => {
                       const isChecked = selectedIds.has(list.id);
                       return (

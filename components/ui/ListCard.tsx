@@ -42,7 +42,7 @@ export default function ListCard({
     <>
       {selectable && (
         <span
-          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg border flex items-center justify-center shrink-0 mt-1 sm:mt-1.5 transition-all ${
             selected
               ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
               : "bg-zinc-950/80 border-zinc-700 group-hover:border-zinc-500"
@@ -84,7 +84,7 @@ export default function ListCard({
         })}
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+      <div className="flex-1 min-w-0 flex flex-col justify-start gap-2 pt-0.5 sm:pt-1">
         <div className="flex items-center gap-2.5 min-w-0">
           <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-100 tracking-tight leading-tight group-hover:text-[#a8dadc] transition-colors truncate">
             {list.title}
@@ -103,7 +103,7 @@ export default function ListCard({
     </>
   );
 
-  const containerClasses = `group flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 rounded-2xl hover:bg-zinc-900/40 transition-colors cursor-pointer select-none text-left w-full ${className}`;
+  const containerClasses = `group flex items-start gap-5 sm:gap-7 py-5 sm:py-6 px-3 sm:px-4 hover:bg-zinc-800/40 rounded-xl transition-colors cursor-pointer select-none text-left w-full ${className}`;
 
   if (href) {
     return (

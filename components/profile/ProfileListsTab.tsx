@@ -36,23 +36,32 @@ export default function ProfileListsTab({
 }: ProfileListsTabProps) {
   return (
     <div>
-      {isOwner && onCreateList && !isLoading && (
-        <div className="mb-6 flex items-center justify-end">
+      <div className="-mt-8 mb-6 border-b border-zinc-700/80 rounded-b-lg py-3 px-2 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#a8dadc] shrink-0">
+            Lists
+          </span>
+        </div>
+
+        {isOwner && onCreateList && (
           <button
             type="button"
             onClick={onCreateList}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>New list</span>
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {isLoading ? (
-        <div className="flex flex-col gap-6 sm:gap-8">
+        <div className="divide-y divide-zinc-700/80">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-5 sm:gap-7 p-3.5 sm:p-5 rounded-2xl animate-pulse">
+            <div
+              key={index}
+              className="flex items-start gap-5 sm:gap-7 py-5 sm:py-6 px-3 sm:px-4 animate-pulse"
+            >
               <div className="flex items-center shrink-0">
                 {Array.from({ length: 5 }).map((__, idx) => (
                   <div
@@ -63,7 +72,7 @@ export default function ProfileListsTab({
                   />
                 ))}
               </div>
-              <div className="flex-1 space-y-3 min-w-0">
+              <div className="flex-1 space-y-3 min-w-0 pt-0.5 sm:pt-1">
                 <div className="h-6 sm:h-8 w-2/5 bg-zinc-800/60 rounded-md" />
                 <div className="h-4 sm:h-5 w-3/4 bg-zinc-800/40 rounded" />
                 <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/30 rounded" />
@@ -72,7 +81,7 @@ export default function ProfileListsTab({
           ))}
         </div>
       ) : lists.length === 0 ? null : (
-        <div className="flex flex-col gap-6 sm:gap-8">
+        <div className="divide-y divide-zinc-700/80">
           {lists.map((list) => (
             <ListCard
               key={list.id}

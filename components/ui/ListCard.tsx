@@ -67,7 +67,7 @@ export default function ListCard({
               } ${
                 url
                   ? "overflow-hidden border border-zinc-800/90 bg-zinc-900 shadow-md"
-                  : "border border-dashed border-zinc-800/70 bg-transparent"
+                  : "border border-dashed border-zinc-700/80 bg-zinc-900"
               }`}
             >
               {url && (

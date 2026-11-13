@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, ListPlus, Lock } from "lucide-react";
+import { X, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
@@ -123,23 +123,19 @@ export default function CreateListModal({
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
-        <div className="px-5 sm:px-6 py-4 border-b border-zinc-800/80 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <ListPlus className="w-4 h-4 text-[#a8dadc]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-200">
-              {isEditMode ? "Edit list" : "New list"}
-            </h3>
-          </div>
-
+      <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+        <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+            {isEditMode ? "EDIT LIST" : "NEW LIST"}
+          </h3>
           <button
             type="button"
             onClick={onClose}
             disabled={isSaving}
             aria-label="Close"
-            className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="text-zinc-400 hover:text-white p-1.5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 

@@ -32,6 +32,7 @@ interface UserListSummary {
   title: string;
   description?: string | null;
   is_private: boolean;
+  is_numbered?: boolean;
   updated_at: string;
   itemCount: number;
   previewPosters?: (string | null)[];
@@ -133,6 +134,7 @@ export default function ListModal({
                 title,
                 description,
                 is_private,
+                is_numbered,
                 updated_at,
                 list_items (
                   id,
@@ -191,6 +193,7 @@ export default function ListModal({
             title: row.title,
             description: row.description,
             is_private: Boolean(row.is_private),
+            is_numbered: Boolean(row.is_numbered),
             updated_at: row.updated_at,
             itemCount: allItems.length,
             previewPosters,
@@ -277,6 +280,7 @@ export default function ListModal({
         title: newList.title,
         description: newList.description,
         is_private: newList.is_private,
+        is_numbered: newList.is_numbered,
         updated_at: newList.updated_at,
         itemCount: 0,
         previewPosters: [],
@@ -571,6 +575,7 @@ export default function ListModal({
                             title: list.title,
                             description: list.description,
                             isPrivate: list.is_private,
+                            isNumbered: list.is_numbered,
                             itemCount: list.itemCount,
                             updatedAt: list.updated_at,
                             previewPosters: list.previewPosters,

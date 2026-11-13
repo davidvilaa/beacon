@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Lock } from "lucide-react";
+import { X, Lock, ListOrdered } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
@@ -12,6 +12,7 @@ export interface CreatedOrUpdatedList {
   title: string;
   description: string | null;
   is_private: boolean;
+  is_numbered: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ interface CreateListModalProps {
     title: string;
     description: string | null;
     is_private: boolean;
+    is_numbered?: boolean;
   } | null;
 }
 
@@ -37,6 +39,7 @@ export default function CreateListModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isNumbered, setIsNumbered] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const supabase = createClient();
   const { addToast } = useToast();
@@ -48,6 +51,7 @@ export default function CreateListModal({
       setTitle(listToEdit?.title || "");
       setDescription(listToEdit?.description || "");
       setIsPrivate(listToEdit?.is_private || false);
+      setIsNumbered(listToEdit?.is_numbered || false);
     }
   }, [isOpen, listToEdit]);
 
@@ -79,10 +83,11 @@ export default function CreateListModal({
             title: trimmedTitle,
             description: description.trim(),
             is_private: isPrivate,
+            is_numbered: isNumbered,
           })
           .eq("id", listToEdit.id)
           .eq("user_id", session.user.id)
-          .select("id, user_id, title, description, is_private, created_at, updated_at")
+          .select("id, user_id, title, description, is_private, is_numbered, created_at, updated_at")
           .single();
 
         if (error || !data) {
@@ -101,8 +106,9 @@ export default function CreateListModal({
             title: trimmedTitle,
             description: description.trim(),
             is_private: isPrivate,
+            is_numbered: isNumbered,
           })
-          .select("id, user_id, title, description, is_private, created_at, updated_at")
+          .select("id, user_id, title, description, is_private, is_numbered, created_at, updated_at")
           .single();
 
         if (error || !data) {
@@ -176,6 +182,15 @@ export default function CreateListModal({
                   label="Private list (only visible to you)"
                 />
                 {isPrivate && <Lock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />}
+              </div>
+
+              <div className="border-t border-zinc-800/80 px-3.5 py-2.5 bg-zinc-900/50 flex items-center justify-between">
+                <Checkbox
+                  checked={isNumbered}
+                  onChange={setIsNumbered}
+                  label="Numbered list (ranks items 1, 2, 3...)"
+                />
+                {isNumbered && <ListOrdered className="w-3.5 h-3.5 text-zinc-500 shrink-0" />}
               </div>
             </div>
           </div>

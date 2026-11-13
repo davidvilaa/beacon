@@ -11,6 +11,7 @@ import {
   User,
   CalendarSync,
   Layers,
+  ListOrdered,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Loading from "@/components/ui/Loading";
@@ -37,6 +38,7 @@ interface ListDetailRecord {
   title: string;
   description: string | null;
   is_private: boolean;
+  is_numbered: boolean;
   created_at: string;
   updated_at: string;
   owner: ListOwner | null;
@@ -91,6 +93,7 @@ function ListDetailContent() {
                 title,
                 description,
                 is_private,
+                is_numbered,
                 created_at,
                 updated_at,
                 users (
@@ -181,6 +184,7 @@ function ListDetailContent() {
           title: listData.title,
           description: listData.description,
           is_private: listData.is_private,
+          is_numbered: Boolean((listData as any).is_numbered),
           created_at: listData.created_at,
           updated_at: listData.updated_at,
           owner: rawOwner || null,
@@ -218,6 +222,7 @@ function ListDetailContent() {
             title: updated.title,
             description: updated.description,
             is_private: updated.is_private,
+            is_numbered: updated.is_numbered,
             updated_at: updated.updated_at,
           }
         : prev
@@ -328,6 +333,12 @@ function ListDetailContent() {
                 <span>Private</span>
               </span>
             )}
+            {list.is_numbered && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-zinc-800 border border-zinc-700/80 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                <ListOrdered className="w-3 h-3" />
+                <span>Numbered</span>
+              </span>
+            )}
           </div>
 
           {list.description && (
@@ -426,31 +437,39 @@ function ListDetailContent() {
 
       {items.length === 0 ? null : (
         <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
-          {items.map((item) => (
-            <div key={item.id} className="relative group/card">
-              <MediaCard
-                id={item.mediaId}
-                mediaType={item.mediaType}
-                href={
-                  item.mediaType === "tv" && item.seasonNumber
-                    ? `/tv/${item.mediaId}?season=${item.seasonNumber}`
-                    : undefined
-                }
-                title={item.title}
-                posterPath={item.posterPath}
-                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 125px"
-              />
+          {items.map((item, idx) => (
+            <div key={item.id} className="relative group/card flex flex-col items-center">
+              <div className="relative w-full">
+                <MediaCard
+                  id={item.mediaId}
+                  mediaType={item.mediaType}
+                  href={
+                    item.mediaType === "tv" && item.seasonNumber
+                      ? `/tv/${item.mediaId}?season=${item.seasonNumber}`
+                      : undefined
+                  }
+                  title={item.title}
+                  posterPath={item.posterPath}
+                  sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 125px"
+                />
 
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveItem(item.id)}
-                  title="Remove from list"
-                  aria-label="Remove from list"
-                  className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-black/80 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:text-rose-400 hover:border-rose-500/60 opacity-0 group-hover/card:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItem(item.id)}
+                    title="Remove from list"
+                    aria-label="Remove from list"
+                    className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-black/80 border border-zinc-700 flex items-center justify-center text-zinc-300 hover:text-rose-400 hover:border-rose-500/60 opacity-0 group-hover/card:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {list.is_numbered && (
+                <span className="text-center text-xs sm:text-sm font-bold text-zinc-400 mt-1.5 select-none tabular-nums">
+                  {idx + 1}
+                </span>
               )}
             </div>
           ))}
@@ -467,6 +486,7 @@ function ListDetailContent() {
             title: list.title,
             description: list.description,
             is_private: list.is_private,
+            is_numbered: list.is_numbered,
           }}
         />
       )}

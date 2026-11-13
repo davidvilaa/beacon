@@ -17,6 +17,7 @@ interface RawListRow {
   title: string;
   description: string | null;
   is_private: boolean;
+  is_numbered?: boolean;
   updated_at: string;
   list_items: {
     id: string;
@@ -56,6 +57,7 @@ export default function ProfileListsPage() {
             title,
             description,
             is_private,
+            is_numbered,
             updated_at,
             list_items (
               id,
@@ -114,6 +116,7 @@ export default function ProfileListsPage() {
             title: list.title,
             description: list.description,
             isPrivate: list.is_private,
+            isNumbered: Boolean(list.is_numbered),
             itemCount: allItems.length,
             updatedAt: list.updated_at,
             previewItems,
@@ -143,6 +146,7 @@ export default function ProfileListsPage() {
         title: newList.title,
         description: newList.description,
         isPrivate: newList.is_private,
+        isNumbered: newList.is_numbered,
         itemCount: 0,
         updatedAt: newList.updated_at,
         previewItems: [],

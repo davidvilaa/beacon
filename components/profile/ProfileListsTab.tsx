@@ -16,6 +16,7 @@ export interface ProfileListCard {
   title: string;
   description: string | null;
   isPrivate: boolean;
+  isNumbered?: boolean;
   itemCount: number;
   updatedAt: string;
   previewItems: ProfileListPreviewItem[];
@@ -84,6 +85,7 @@ export default function ProfileListsTab({
                 title: list.title,
                 description: list.description,
                 isPrivate: list.isPrivate,
+                isNumbered: list.isNumbered,
                 itemCount: list.itemCount,
                 updatedAt: list.updatedAt,
                 previewPosters: list.previewItems.map((p) => p.posterPath),

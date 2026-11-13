@@ -75,6 +75,7 @@ Full DDL script is located in `supabase/schema.sql`.
   - `title`: text not null
   - `description`: text default ''
   - `is_private`: boolean default false
+  - `is_numbered`: boolean default false
   - `created_at`, `updated_at`: timestamptz
 
 - **`public.list_items`**:

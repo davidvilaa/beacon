@@ -203,6 +203,7 @@ create table public.lists (
   title text not null,
   description text null default '',
   is_private boolean not null default false,
+  is_numbered boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

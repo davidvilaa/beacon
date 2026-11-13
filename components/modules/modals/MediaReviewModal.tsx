@@ -14,7 +14,6 @@ import {
   PauseCircle,
   XCircle,
   Star,
-  ImageIcon,
 } from "lucide-react";
 import { MediaStatus } from "../columns/MediaActionColumn";
 import { formatRuntime, formatFullDate } from "@/lib/media-utils";
@@ -290,7 +289,13 @@ export default function MediaReviewModal({
     <>
       <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
         <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
-          <div className="relative h-36 sm:h-48 md:h-52 w-full bg-zinc-900 overflow-hidden">
+          <div
+            onClick={canChangeBackdrop ? () => setIsBackdropPickerOpen(true) : undefined}
+            title={canChangeBackdrop ? "Click to change banner" : undefined}
+            className={`relative h-36 sm:h-48 md:h-52 w-full bg-zinc-900 overflow-hidden ${
+              canChangeBackdrop ? "cursor-pointer group" : ""
+            }`}
+          >
             {currentBackdropUrl ? (
               <Image
                 src={currentBackdropUrl}
@@ -304,30 +309,15 @@ export default function MediaReviewModal({
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/30" />
 
             {canChangeBackdrop && (
-              <button
-                type="button"
-                onClick={() => setIsBackdropPickerOpen(true)}
-                aria-label="Change banner"
-                className="absolute inset-0 z-0 cursor-pointer group"
-              >
-                <div className="absolute inset-0 group-hover:bg-black/20 transition-colors" />
-              </button>
-            )}
-
-            {canChangeBackdrop && (
-              <button
-                type="button"
-                onClick={() => setIsBackdropPickerOpen(true)}
-                className="absolute bottom-3 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 hover:bg-black/90 border border-zinc-700/70 hover:border-zinc-500 text-xs font-medium text-zinc-300 hover:text-white transition-colors backdrop-blur-sm shadow-md cursor-pointer"
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Change banner</span>
-              </button>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             )}
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
               aria-label="Close"
               className="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
@@ -338,7 +328,13 @@ export default function MediaReviewModal({
           <div className="px-5 sm:px-8 pb-6 sm:pb-8">
             <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start -mt-14 sm:-mt-20 relative z-10 mb-5">
               <div className="flex flex-col items-center gap-3 shrink-0">
-                <div className="relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
+                <div
+                  onClick={canChangePoster ? () => setIsPosterPickerOpen(true) : undefined}
+                  title={canChangePoster ? "Click to change poster" : undefined}
+                  className={`relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl ${
+                    canChangePoster ? "cursor-pointer group" : ""
+                  }`}
+                >
                   {currentPosterUrl ? (
                     <Image
                       src={currentPosterUrl}
@@ -353,22 +349,7 @@ export default function MediaReviewModal({
                   )}
 
                   {canChangePoster && (
-                    <button
-                      type="button"
-                      onClick={() => setIsPosterPickerOpen(true)}
-                      aria-label="Change artwork"
-                      className="absolute inset-0 z-10 group cursor-pointer text-left"
-                    >
-                      <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2 text-center text-white">
-                        <ImageIcon className="w-5 h-5 text-zinc-200" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-200 leading-tight">
-                          Change artwork
-                        </span>
-                      </div>
-                      <div className="absolute bottom-1.5 right-1.5 p-1 rounded-md bg-black/70 border border-zinc-700/60 text-zinc-300 group-hover:opacity-0 transition-opacity">
-                        <ImageIcon className="w-3 h-3" />
-                      </div>
-                    </button>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                   )}
                 </div>
 

@@ -36,14 +36,8 @@ export default function ProfileListsTab({
 }: ProfileListsTabProps) {
   return (
     <div>
-      <div className="-mt-8 mb-6 border-b border-zinc-700/80 rounded-b-lg py-3 px-2 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#a8dadc] shrink-0">
-            Lists
-          </span>
-        </div>
-
-        {isOwner && onCreateList && (
+      {isOwner && onCreateList && (
+        <div className="mb-6 flex items-center justify-end">
           <button
             type="button"
             onClick={onCreateList}
@@ -52,8 +46,8 @@ export default function ProfileListsTab({
             <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>New list</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="divide-y divide-zinc-700/80">

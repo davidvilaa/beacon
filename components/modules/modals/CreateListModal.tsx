@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Lock, ListOrdered } from "lucide-react";
+import { X, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
@@ -190,7 +190,6 @@ export default function CreateListModal({
                   onChange={setIsNumbered}
                   label="Numbered list (ranks items 1, 2, 3...)"
                 />
-                {isNumbered && <ListOrdered className="w-3.5 h-3.5 text-zinc-500 shrink-0" />}
               </div>
             </div>
           </div>

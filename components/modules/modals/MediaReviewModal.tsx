@@ -186,20 +186,7 @@ export default function MediaReviewModal({
       setDraftPoster(selectedPoster ?? null);
       setDraftBackdrop(selectedBackdrop ?? null);
     }
-  }, [
-    isOpen,
-    status,
-    isFavorite,
-    rating,
-    review,
-    hasSpoilers,
-    watchedDate,
-    startDate,
-    endDate,
-    selectedPoster,
-    selectedBackdrop,
-    fallbackStatus,
-  ]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

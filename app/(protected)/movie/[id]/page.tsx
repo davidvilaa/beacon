@@ -28,8 +28,10 @@ function MovieDetailContent() {
 
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPoster, setSelectedPoster] = useState<string | null>(null);
-  const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
+  const [customPoster, setCustomPoster] = useState<string | null>(null);
+  const [customBackdrop, setCustomBackdrop] = useState<string | null>(null);
+  const [fallbackPoster, setFallbackPoster] = useState<string | null>(null);
+  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
@@ -73,8 +75,8 @@ function MovieDetailContent() {
           setReview(data.review || "");
           setHasSpoilers(Boolean(data.has_spoilers));
           setWatchedDate(data.watched_date || "");
-          if (data.custom_poster_path) setSelectedPoster(data.custom_poster_path);
-          if (data.custom_backdrop_path) setSelectedBackdrop(data.custom_backdrop_path);
+          if (data.custom_poster_path) setCustomPoster(data.custom_poster_path);
+          if (data.custom_backdrop_path) setCustomBackdrop(data.custom_backdrop_path);
         } else {
           setMovieStatus(null);
           setIsFavorite(false);
@@ -132,6 +134,8 @@ function MovieDetailContent() {
         setHasSpoilers(false);
         setWatchedDate("");
         setCanAddFavorite(true);
+        setCustomPoster(null);
+        setCustomBackdrop(null);
         addToast("Removed from your library", "info");
         return;
       }
@@ -169,8 +173,8 @@ function MovieDetailContent() {
           review: review.trim() || null,
           has_spoilers: hasSpoilers,
           watched_date: watchedDate || null,
-          custom_poster_path: selectedPoster,
-          custom_backdrop_path: selectedBackdrop,
+          custom_poster_path: customPoster || null,
+          custom_backdrop_path: customBackdrop || null,
         },
         { onConflict: "user_id,movie_id" }
       );
@@ -223,6 +227,8 @@ function MovieDetailContent() {
       setReview("");
       setHasSpoilers(false);
       setWatchedDate("");
+      setCustomPoster(null);
+      setCustomBackdrop(null);
 
       addToast("Log deleted successfully", "info");
       setIsLogModalOpen(false);
@@ -288,11 +294,11 @@ function MovieDetailContent() {
           custom_poster_path:
             reviewData.customPosterPath !== undefined
               ? reviewData.customPosterPath
-              : selectedPoster,
+              : (customPoster || fallbackPoster || movie.poster_path),
           custom_backdrop_path:
             reviewData.customBackdropPath !== undefined
               ? reviewData.customBackdropPath
-              : selectedBackdrop,
+              : (customBackdrop || fallbackBackdrop || movie.backdrop_path),
         },
         { onConflict: "user_id,movie_id" }
       );
@@ -304,10 +310,10 @@ function MovieDetailContent() {
       }
 
       if (reviewData.customPosterPath) {
-        setSelectedPoster(reviewData.customPosterPath);
+        setCustomPoster(reviewData.customPosterPath);
       }
       if (reviewData.customBackdropPath) {
-        setSelectedBackdrop(reviewData.customBackdropPath);
+        setCustomBackdrop(reviewData.customBackdropPath);
       }
 
       setMovieStatus(reviewData.status);
@@ -390,8 +396,8 @@ function MovieDetailContent() {
 
           const chosenPoster = sortedPosters[0]?.file_path || data.poster_path;
 
-          setSelectedBackdrop(chosenBackdrop);
-          setSelectedPoster(chosenPoster);
+          setFallbackBackdrop(chosenBackdrop);
+          setFallbackPoster(chosenPoster);
           setMovie(data);
         }
       } catch (err) {
@@ -413,10 +419,6 @@ function MovieDetailContent() {
       ignore = true;
     };
   }, [id]);
-
-  useEffect(() => {
-    setIsBackdropLoaded(false);
-  }, [selectedBackdrop]);
 
   const [dedupedPosters, setDedupedPosters] = useState<MovieImage[] | null>(null);
   const [loadingPosters, setLoadingPosters] = useState(false);
@@ -495,11 +497,11 @@ function MovieDetailContent() {
   }, [id, dedupedBackdrops]);
 
   const handleSelectPoster = (path: string) => {
-    setSelectedPoster(path);
+    setCustomPoster(path);
   };
 
   const handleSelectBackdrop = (path: string) => {
-    setSelectedBackdrop(path);
+    setCustomBackdrop(path);
   };
 
   const sectionCrew = useMemo(() => {
@@ -509,6 +511,15 @@ function MovieDetailContent() {
   const releaseDateGroups = useMemo(() => {
     return getReleaseDateGroups(movie?.release_dates?.results);
   }, [movie]);
+
+  const posterPath = customPoster || fallbackPoster || movie?.poster_path || null;
+  const posterUrl = getPosterUrl(posterPath, "w500");
+  const backdropPath = customBackdrop || fallbackBackdrop || movie?.backdrop_path || null;
+  const backdropUrl = getBackdropUrl(backdropPath, "original");
+
+  useEffect(() => {
+    setIsBackdropLoaded(false);
+  }, [backdropPath]);
 
   if (loading) {
     return (
@@ -532,8 +543,6 @@ function MovieDetailContent() {
     );
   }
 
-  const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
-  const posterUrl = getPosterUrl(selectedPoster, "w500");
   const hasMultiplePosters = (dedupedPosters?.length || movie.images?.posters?.length || 0) > 1;
   const hasMultipleBackdrops = (dedupedBackdrops?.length || movie.images?.backdrops?.length || 0) > 1;
 
@@ -631,7 +640,7 @@ function MovieDetailContent() {
         title="CHANGE ARTWORK"
         type="poster"
         images={dedupedPosters || []}
-        selectedImage={selectedPoster}
+        selectedImage={posterPath}
         onSelectImage={handleSelectPoster}
         isLoading={loadingPosters}
       />
@@ -641,7 +650,7 @@ function MovieDetailContent() {
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
         images={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
-        selectedImage={selectedBackdrop}
+        selectedImage={backdropPath}
         onSelectImage={handleSelectBackdrop}
         isLoading={loadingBackdrops}
       />
@@ -669,8 +678,8 @@ function MovieDetailContent() {
         onDelete={handleDeleteReview}
         availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
         availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
-        selectedPoster={selectedPoster}
-        selectedBackdrop={selectedBackdrop}
+        selectedPoster={posterPath}
+        selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />
@@ -685,13 +694,13 @@ function MovieDetailContent() {
           overview: movie.overview,
           posterPath: movie.poster_path,
           backdropPath: movie.backdrop_path,
-          customPosterPath: selectedPoster,
-          customBackdropPath: selectedBackdrop,
+          customPosterPath: posterPath,
+          customBackdropPath: backdropPath,
         }}
         availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
         availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
-        selectedPoster={selectedPoster}
-        selectedBackdrop={selectedBackdrop}
+        selectedPoster={posterPath}
+        selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

@@ -44,7 +44,8 @@ function TvDetailContent() {
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
 
   const [customPosters, setCustomPosters] = useState<Record<number, string>>({});
-  const [selectedBackdrop, setSelectedBackdrop] = useState<string | null>(null);
+  const [customBackdrops, setCustomBackdrops] = useState<Record<number, string>>({});
+  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
@@ -102,7 +103,10 @@ function TvDetailContent() {
             }));
           }
           if (data.custom_backdrop_path) {
-            setSelectedBackdrop(data.custom_backdrop_path);
+            setCustomBackdrops((prev) => ({
+              ...prev,
+              [activeSeason]: data.custom_backdrop_path,
+            }));
           }
         } else {
           setSeriesStatus(null);
@@ -164,6 +168,16 @@ function TvDetailContent() {
         setStartDate("");
         setEndDate("");
         setCanAddFavorite(true);
+        setCustomPosters((prev) => {
+          const next = { ...prev };
+          delete next[activeSeason];
+          return next;
+        });
+        setCustomBackdrops((prev) => {
+          const next = { ...prev };
+          delete next[activeSeason];
+          return next;
+        });
         addToast("Removed from your library", "info");
         return;
       }
@@ -209,7 +223,7 @@ function TvDetailContent() {
           start_date: startDate || null,
           end_date: endDate || null,
           custom_poster_path: customPosters[activeSeason] || null,
-          custom_backdrop_path: selectedBackdrop,
+          custom_backdrop_path: customBackdrops[activeSeason] || null,
         },
         { onConflict: "user_id,series_id,season_number" }
       );
@@ -267,6 +281,16 @@ function TvDetailContent() {
       setHasSpoilers(false);
       setStartDate("");
       setEndDate("");
+      setCustomPosters((prev) => {
+        const next = { ...prev };
+        delete next[activeSeason];
+        return next;
+      });
+      setCustomBackdrops((prev) => {
+        const next = { ...prev };
+        delete next[activeSeason];
+        return next;
+      });
 
       addToast("Season log deleted successfully", "info");
       setIsLogModalOpen(false);
@@ -343,7 +367,7 @@ function TvDetailContent() {
           custom_backdrop_path:
             reviewData.customBackdropPath !== undefined
               ? reviewData.customBackdropPath
-              : selectedBackdrop,
+              : (customBackdrops[activeSeason] || fallbackBackdrop || tv.backdrop_path),
         },
         { onConflict: "user_id,series_id,season_number" }
       );
@@ -361,7 +385,10 @@ function TvDetailContent() {
         }));
       }
       if (reviewData.customBackdropPath) {
-        setSelectedBackdrop(reviewData.customBackdropPath);
+        setCustomBackdrops((prev) => ({
+          ...prev,
+          [activeSeason]: reviewData.customBackdropPath!,
+        }));
       }
 
       setSeriesStatus(reviewData.status);
@@ -443,7 +470,7 @@ function TvDetailContent() {
         if (candidates.length > 0) {
           chosenBackdrop = candidates[Math.floor(Math.random() * candidates.length)];
         }
-        setSelectedBackdrop(chosenBackdrop);
+        setFallbackBackdrop(chosenBackdrop);
       } catch (err) {
         if (!ignore) {
           console.error(err);
@@ -581,7 +608,10 @@ function TvDetailContent() {
   };
 
   const handleSelectBackdrop = (path: string) => {
-    setSelectedBackdrop(path);
+    setCustomBackdrops((prev) => ({
+      ...prev,
+      [activeSeason]: path,
+    }));
   };
 
   useEffect(() => {
@@ -688,7 +718,15 @@ function TvDetailContent() {
     currentSeasonSummary?.poster_path ||
     tv.poster_path;
   const posterUrl = getPosterUrl(posterPath, "w500");
-  const backdropUrl = getBackdropUrl(selectedBackdrop, "original");
+  const backdropPath =
+    customBackdrops[activeSeason] ||
+    fallbackBackdrop ||
+    tv.backdrop_path;
+  const backdropUrl = getBackdropUrl(backdropPath, "original");
+
+  useEffect(() => {
+    setIsBackdropLoaded(false);
+  }, [backdropPath]);
 
   const overviewText =
     currentSeasonDetails?.overview ||
@@ -826,7 +864,7 @@ function TvDetailContent() {
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
         images={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
-        selectedImage={selectedBackdrop}
+        selectedImage={backdropPath}
         onSelectImage={handleSelectBackdrop}
         isLoading={loadingBackdrops}
       />
@@ -857,7 +895,7 @@ function TvDetailContent() {
         availablePosters={availablePosters[activeSeason] || []}
         availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
         selectedPoster={posterPath}
-        selectedBackdrop={selectedBackdrop}
+        selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />
@@ -875,14 +913,14 @@ function TvDetailContent() {
           posterPath: currentSeasonDetails?.poster_path || currentSeasonSummary?.poster_path || tv.poster_path,
           backdropPath: tv.backdrop_path,
           customPosterPath: posterPath,
-          customBackdropPath: selectedBackdrop,
+          customBackdropPath: backdropPath,
           numberOfSeasons: tv.number_of_seasons,
           numberOfEpisodes: tv.number_of_episodes,
         }}
         availablePosters={availablePosters[activeSeason] || []}
         availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
         selectedPoster={posterPath}
-        selectedBackdrop={selectedBackdrop}
+        selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

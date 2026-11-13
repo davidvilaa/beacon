@@ -80,15 +80,7 @@ export default function ListModal({
       setDraftPoster(selectedPoster ?? media.customPosterPath ?? media.posterPath ?? null);
       setDraftBackdrop(selectedBackdrop ?? media.customBackdropPath ?? media.backdropPath ?? null);
     }
-  }, [
-    isOpen,
-    selectedPoster,
-    selectedBackdrop,
-    media.customPosterPath,
-    media.customBackdropPath,
-    media.posterPath,
-    media.backdropPath,
-  ]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -110,7 +102,7 @@ export default function ListModal({
 
         let membershipQuery = supabase
           .from("list_items")
-          .select("list_id, custom_poster_path, custom_backdrop_path")
+          .select("list_id")
           .eq("media_type", media.mediaType)
           .eq("media_id", media.mediaId);
 
@@ -152,16 +144,6 @@ export default function ListModal({
             .map((m: { list_id: string }) => m.list_id)
             .filter((id: string) => ownedIds.has(id))
         );
-
-        const existingWithCustom = (membershipData || []).find(
-          (m: any) => m.custom_poster_path || m.custom_backdrop_path
-        );
-        if (existingWithCustom?.custom_poster_path) {
-          setDraftPoster(existingWithCustom.custom_poster_path);
-        }
-        if (existingWithCustom?.custom_backdrop_path) {
-          setDraftBackdrop(existingWithCustom.custom_backdrop_path);
-        }
 
         setLists(formattedLists);
         setInitialSelectedIds(activeIds);

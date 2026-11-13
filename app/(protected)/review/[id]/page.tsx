@@ -634,38 +634,36 @@ function ReviewDetailContent() {
               </div>
             </div>
 
-            <div className="mt-5 flex items-center gap-3">
-              <div
-                className="flex items-center gap-1 shrink-0"
-                title={ratingVal > 0 ? `${ratingVal} / 5` : "Unrated"}
-              >
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const isFull = ratingVal >= star;
-                  const isHalf = !isFull && ratingVal >= star - 0.5;
+            {ratingVal > 0 && (
+              <div className="mt-5 flex items-center gap-3">
+                <div
+                  className="flex items-center gap-1 shrink-0"
+                  title={`${ratingVal} / 5`}
+                >
+                  {Array.from({ length: Math.ceil(ratingVal) }).map((_, idx) => {
+                    const star = idx + 1;
+                    const isFull = ratingVal >= star;
+                    const isHalf = !isFull && ratingVal >= star - 0.5;
 
-                  return (
-                    <div key={star} className="relative w-5 sm:w-6 h-5 sm:h-6 shrink-0">
-                      <Star className="w-full h-full text-zinc-700 stroke-[1.5]" />
-                      {isFull && (
-                        <div className="absolute inset-0">
+                    return (
+                      <div key={star} className="relative w-5 sm:w-6 h-5 sm:h-6 shrink-0">
+                        {isFull && (
                           <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                        </div>
-                      )}
-                      {isHalf && (
-                        <StarHalf className="absolute inset-0 w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                        )}
+                        {isHalf && (
+                          <StarHalf className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {ratingVal > 0 && (
                 <span className="text-base sm:text-lg font-bold text-zinc-100 font-mono">
                   {ratingVal}
                   <span className="text-xs text-zinc-500 font-normal"> / 5</span>
                 </span>
-              )}
-            </div>
+              </div>
+            )}
 
             {review.has_spoilers && (
               <div className="mt-5 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">

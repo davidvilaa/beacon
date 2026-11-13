@@ -87,6 +87,15 @@ export default function ListModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
 
     let ignore = false;
 
@@ -430,7 +439,7 @@ export default function ListModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto overflow-x-hidden">
         <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
           <div
             onClick={canChangeBackdrop ? () => setIsBackdropPickerOpen(true) : undefined}
@@ -527,26 +536,26 @@ export default function ListModal({
             </div>
 
             <div className="mt-4 border-t border-zinc-800/80 pt-4">
-              <div className="max-h-[42vh] overflow-y-auto pr-1">
+              <div className="max-h-[50vh] overflow-y-auto overflow-x-hidden pr-1">
                 {isLoading ? (
                   <div className="flex flex-col gap-3 py-2 animate-pulse">
                     {Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="flex items-center gap-3.5 p-2 -mx-2">
-                        <div className="w-5 h-5 rounded-md bg-zinc-800/60 shrink-0" />
+                      <div key={index} className="flex items-center gap-4 p-3 w-full">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-zinc-800/60 shrink-0" />
                         <div className="flex items-center shrink-0">
-                          {Array.from({ length: 4 }).map((__, idx) => (
+                          {Array.from({ length: 5 }).map((__, idx) => (
                             <div
                               key={idx}
-                              className={`relative w-12 sm:w-14 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
-                                idx > 0 ? "-ml-6 sm:-ml-7" : ""
+                              className={`relative w-14 sm:w-18 md:w-20 aspect-[2/3] rounded-lg bg-zinc-800/40 border border-zinc-800/60 shrink-0 ${
+                                idx > 0 ? "-ml-7 sm:-ml-9 md:-ml-10" : ""
                               }`}
                             />
                           ))}
                         </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 w-1/2 bg-zinc-800/60 rounded" />
-                          <div className="h-3 w-3/4 bg-zinc-800/40 rounded" />
-                          <div className="h-2.5 w-1/4 bg-zinc-800/30 rounded" />
+                        <div className="flex-1 space-y-2.5 min-w-0">
+                          <div className="h-4 sm:h-5 w-1/2 bg-zinc-800/60 rounded" />
+                          <div className="h-3 sm:h-4 w-3/4 bg-zinc-800/40 rounded" />
+                          <div className="h-3 w-1/4 bg-zinc-800/30 rounded" />
                         </div>
                       </div>
                     ))}

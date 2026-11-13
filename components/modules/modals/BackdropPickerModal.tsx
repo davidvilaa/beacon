@@ -51,7 +51,7 @@ export default function BackdropPickerModal({
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto min-h-[300px]">
+        <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden min-h-[300px]">
           {isLoading ? (
             <div className="flex items-center justify-center py-24">
               <Loading />

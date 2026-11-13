@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, Film, Check } from "lucide-react";
+import { Lock, Check } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
 
 export interface ListCardData {
@@ -23,6 +23,7 @@ interface ListCardProps {
   className?: string;
 }
 
+const SLOTS_COUNT = 5;
 const OPACITIES = [1, 0.85, 0.7, 0.55, 0.4];
 
 export default function ListCard({
@@ -33,63 +34,59 @@ export default function ListCard({
   selectable = false,
   className = "",
 }: ListCardProps) {
-  const posters = (list.previewPosters || []).slice(0, 5);
+  const slots = Array.from({ length: SLOTS_COUNT }).map(
+    (_, idx) => list.previewPosters?.[idx] ?? null
+  );
 
   const content = (
     <>
       {selectable && (
         <span
-          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border flex items-center justify-center shrink-0 transition-all ${
             selected
               ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
               : "bg-zinc-950/80 border-zinc-700 group-hover:border-zinc-500"
           }`}
         >
-          {selected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+          {selected && <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />}
         </span>
       )}
 
       <div className="flex items-center shrink-0">
-        {posters.length === 0 ? (
-          <div className="relative w-12 sm:w-14 aspect-[2/3] rounded-lg border border-dashed border-zinc-800 bg-zinc-900/30 flex items-center justify-center text-zinc-700 shrink-0">
-            <Film className="w-4 h-4 stroke-[1.5]" />
-          </div>
-        ) : (
-          posters.map((posterPath, idx) => {
-            const url = posterPath ? getPosterUrl(posterPath, "w342") : null;
-            return (
-              <div
-                key={idx}
-                style={{
-                  opacity: OPACITIES[idx] ?? 0.4,
-                  zIndex: 10 - idx,
-                }}
-                className={`relative w-12 sm:w-14 aspect-[2/3] rounded-lg overflow-hidden border border-zinc-800/90 bg-zinc-900 shadow-md shrink-0 transition-transform ${
-                  idx > 0 ? "-ml-6 sm:-ml-7" : ""
-                }`}
-              >
-                {url ? (
-                  <Image
-                    src={url}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 48px, 56px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-700">
-                    <Film className="w-4 h-4 stroke-[1.5]" />
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+        {slots.map((posterPath, idx) => {
+          const url = posterPath ? getPosterUrl(posterPath, "w342") : null;
+          return (
+            <div
+              key={idx}
+              style={{
+                opacity: OPACITIES[idx] ?? 0.4,
+                zIndex: 10 - idx,
+              }}
+              className={`relative w-14 sm:w-18 md:w-20 aspect-[2/3] rounded-lg shrink-0 transition-transform ${
+                idx > 0 ? "-ml-7 sm:-ml-9 md:-ml-10" : ""
+              } ${
+                url
+                  ? "overflow-hidden border border-zinc-800/90 bg-zinc-900 shadow-md"
+                  : "border border-dashed border-zinc-800/70 bg-transparent"
+              }`}
+            >
+              {url && (
+                <Image
+                  src={url}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 56px, (max-width: 768px) 72px, 80px"
+                  className="object-cover"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
         <div className="flex items-center gap-2 min-w-0">
-          <h4 className="text-sm sm:text-base font-bold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+          <h4 className="text-base sm:text-lg font-bold text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
             {list.title}
           </h4>
           {list.isPrivate && (
@@ -98,19 +95,19 @@ export default function ListCard({
         </div>
 
         {list.description && (
-          <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed">
             {list.description}
           </p>
         )}
 
-        <p className="text-[11px] sm:text-xs text-zinc-500 font-medium">
+        <p className="text-xs sm:text-sm text-zinc-500 font-medium">
           {list.itemCount} {list.itemCount === 1 ? "item" : "items"}
         </p>
       </div>
     </>
   );
 
-  const containerClasses = `group flex items-center gap-3.5 sm:gap-4.5 p-2 -mx-2 rounded-xl hover:bg-zinc-900/30 transition-colors cursor-pointer select-none text-left ${className}`;
+  const containerClasses = `group flex items-center gap-4 sm:gap-5 p-3 rounded-xl hover:bg-zinc-900/40 transition-colors cursor-pointer select-none text-left w-full ${className}`;
 
   if (href) {
     return (

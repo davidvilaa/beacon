@@ -122,15 +122,11 @@ export default function ProfileMediaTab({
                   </div>
                 )}
 
-                {item.entryLogId ? (
+                {item.entryLogId && item.review && item.review.trim() ? (
                   <Link
                     href={`/review/${item.entryLogId}?type=${item.mediaType}`}
-                    title={item.review ? "Read review" : "View review"}
-                    className={`p-0.5 transition-colors cursor-pointer shrink-0 ml-auto ${
-                      item.review
-                        ? "text-zinc-400 hover:text-[#a8dadc]"
-                        : "text-zinc-600 hover:text-[#a8dadc]"
-                    }`}
+                    title="Read review"
+                    className="p-0.5 transition-colors cursor-pointer shrink-0 ml-auto text-zinc-400 hover:text-[#a8dadc]"
                   >
                     <AlignJustify className="w-3.5 h-3.5" />
                   </Link>

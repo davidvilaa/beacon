@@ -634,8 +634,10 @@ function ReviewDetailContent() {
             </Link>
           </div>
 
+          <div className="my-5 border-t border-zinc-800/80" />
+
           {ratingVal > 0 && (
-            <div className="mt-4 flex items-center gap-1 shrink-0" title={`Rating: ${ratingVal} / 5`}>
+            <div className="mb-5 flex items-center gap-1 shrink-0" title={`Rating: ${ratingVal} / 5`}>
               {Array.from({ length: Math.ceil(ratingVal) }).map((_, idx) => {
                 const star = idx + 1;
                 const isFull = ratingVal >= star;
@@ -655,7 +657,7 @@ function ReviewDetailContent() {
             </div>
           )}
 
-          <div className="mt-5 max-w-3xl">
+          <div className="max-w-3xl">
             {review.has_spoilers && (
               <div className="mb-4 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-amber-300 font-semibold">

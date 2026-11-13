@@ -68,7 +68,7 @@ export default function ProfileMediaTab({
           {Array.from({ length: 20 }).map((_, index) => (
             <div key={index} className="flex flex-col min-w-0">
               <div className="aspect-[2/3] w-full rounded-sm bg-zinc-900/40 border border-zinc-800/40 animate-pulse" />
-              <div className="flex items-center justify-between mt-1.5 px-0.5 animate-pulse">
+              <div className="flex items-center justify-between mt-1.5 px-0.5 animate-pulse min-h-[18px]">
                 <div className="h-3 w-16 bg-zinc-800/50 rounded-sm" />
                 <div className="h-3.5 w-3.5 bg-zinc-800/50 rounded-sm" />
               </div>
@@ -122,11 +122,15 @@ export default function ProfileMediaTab({
                   </div>
                 )}
 
-                {item.entryLogId && item.review && item.review.trim() ? (
+                {item.entryLogId ? (
                   <Link
                     href={`/review/${item.entryLogId}?type=${item.mediaType}`}
-                    title="Read review"
-                    className="p-0.5 transition-colors cursor-pointer shrink-0 text-zinc-400 hover:text-[#a8dadc] ml-auto"
+                    title={item.review ? "Read review" : "View review"}
+                    className={`p-0.5 transition-colors cursor-pointer shrink-0 ml-auto ${
+                      item.review
+                        ? "text-zinc-400 hover:text-[#a8dadc]"
+                        : "text-zinc-600 hover:text-[#a8dadc]"
+                    }`}
                   >
                     <AlignJustify className="w-3.5 h-3.5" />
                   </Link>

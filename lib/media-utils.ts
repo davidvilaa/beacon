@@ -301,3 +301,41 @@ export function getReleaseDateGroups(results?: any[]) {
 
   return groups.sort((a, b) => a.date.localeCompare(b.date));
 }
+
+export function isMediaReleased(
+  mediaType: "movie" | "tv",
+  status?: string | null,
+  releaseOrAirDate?: string | null
+): boolean {
+  if (mediaType === "movie") {
+    if (!status) {
+      if (releaseOrAirDate) {
+        const parsed = new Date(releaseOrAirDate);
+        if (!isNaN(parsed.getTime())) return parsed.getTime() <= Date.now();
+      }
+      return true;
+    }
+    return status.toLowerCase() === "released";
+  }
+
+  if (mediaType === "tv") {
+    if (!status) return true;
+    const s = status.toLowerCase();
+    if (s === "returning series" || s === "ended") {
+      if (releaseOrAirDate) {
+        const parsed = new Date(releaseOrAirDate);
+        if (!isNaN(parsed.getTime())) return parsed.getTime() <= Date.now();
+      }
+      return true;
+    }
+    if (s === "canceled") {
+      if (!releaseOrAirDate) return true;
+      const parsed = new Date(releaseOrAirDate);
+      if (!isNaN(parsed.getTime())) return parsed.getTime() <= Date.now();
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}

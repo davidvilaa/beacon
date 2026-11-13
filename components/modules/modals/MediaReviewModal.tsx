@@ -120,6 +120,7 @@ interface MediaReviewModalProps {
   selectedBackdrop?: string | null;
   loadingPosters?: boolean;
   loadingBackdrops?: boolean;
+  isReleased?: boolean;
 }
 
 export default function MediaReviewModal({
@@ -152,13 +153,16 @@ export default function MediaReviewModal({
   selectedBackdrop,
   loadingPosters,
   loadingBackdrops,
+  isReleased = true,
 }: MediaReviewModalProps) {
   const { addToast } = useToast();
   const fallbackStatus: Exclude<MediaStatus, null> =
-    mediaType === "movie" ? "watched" : "watched";
+    isReleased ? "watched" : "watchlist";
 
   const [draftStatus, setDraftStatus] = useState<Exclude<MediaStatus, null>>(
-    (status as Exclude<MediaStatus, null>) || fallbackStatus
+    !isReleased && status !== "watchlist"
+      ? "watchlist"
+      : (status as Exclude<MediaStatus, null>) || fallbackStatus
   );
   const [draftFavorite, setDraftFavorite] = useState<boolean>(isFavorite);
   const [draftRating, setDraftRating] = useState<number>(rating);
@@ -174,7 +178,11 @@ export default function MediaReviewModal({
 
   useEffect(() => {
     if (isOpen) {
-      setDraftStatus((status as Exclude<MediaStatus, null>) || fallbackStatus);
+      const initialStatus =
+        !isReleased && status !== "watchlist"
+          ? "watchlist"
+          : (status as Exclude<MediaStatus, null>) || fallbackStatus;
+      setDraftStatus(initialStatus);
       setDraftFavorite(isFavorite);
       setDraftRating(rating);
       setDraftReview(review);
@@ -185,7 +193,7 @@ export default function MediaReviewModal({
       setDraftPoster(selectedPoster ?? null);
       setDraftBackdrop(selectedBackdrop ?? null);
     }
-  }, [isOpen]);
+  }, [isOpen, isReleased]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -254,17 +262,20 @@ export default function MediaReviewModal({
   );
 
   const handleSaveClick = () => {
-    const finalStatus: Exclude<MediaStatus, null> =
+    let finalStatus: Exclude<MediaStatus, null> =
       draftStatus || fallbackStatus;
+    if (!isReleased && finalStatus !== "watchlist") {
+      finalStatus = "watchlist";
+    }
     onSave({
       status: finalStatus,
       isFavorite: draftFavorite,
-      rating: draftRating,
+      rating: finalStatus === "watchlist" ? 0 : draftRating,
       review: draftReview,
       hasSpoilers: draftSpoilers,
-      watchedDate: draftWatchedDate,
-      startDate: draftStartDate,
-      endDate: draftEndDate,
+      watchedDate: finalStatus === "watchlist" ? "" : draftWatchedDate,
+      startDate: finalStatus === "watchlist" ? "" : draftStartDate,
+      endDate: finalStatus === "watchlist" ? "" : draftEndDate,
       customPosterPath: draftPoster,
       customBackdropPath: draftBackdrop,
     });
@@ -340,8 +351,15 @@ export default function MediaReviewModal({
                   )}
                 </div>
 
-                <div className="mt-1 flex justify-center w-full">
-                  <StarRating value={draftRating} onChange={setDraftRating} />
+                <div
+                  className={`mt-1 flex justify-center w-full transition-opacity ${
+                    draftStatus === "watchlist" ? "opacity-30 pointer-events-none" : ""
+                  }`}
+                >
+                  <StarRating
+                    value={draftStatus === "watchlist" ? 0 : draftRating}
+                    onChange={setDraftRating}
+                  />
                 </div>
               </div>
 
@@ -378,34 +396,36 @@ export default function MediaReviewModal({
                 )}
               </div>
 
-              {mediaType === "tv" ? (
-                <div className="mt-4 flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-400">Start</span>
-                    <DatePicker
-                      value={draftStartDate}
-                      onChange={setDraftStartDate}
-                      placeholder="dd/mm/yyyy"
-                    />
-                  </div>
+              {draftStatus !== "watchlist" && (
+                mediaType === "tv" ? (
+                  <div className="mt-4 flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-zinc-400">Start</span>
+                      <DatePicker
+                        value={draftStartDate}
+                        onChange={setDraftStartDate}
+                        placeholder="dd/mm/yyyy"
+                      />
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-zinc-400">End</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-zinc-400">End</span>
+                      <DatePicker
+                        value={draftEndDate}
+                        onChange={setDraftEndDate}
+                        placeholder="dd/mm/yyyy"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4">
                     <DatePicker
-                      value={draftEndDate}
-                      onChange={setDraftEndDate}
+                      value={draftWatchedDate}
+                      onChange={setDraftWatchedDate}
                       placeholder="dd/mm/yyyy"
                     />
                   </div>
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <DatePicker
-                    value={draftWatchedDate}
-                    onChange={setDraftWatchedDate}
-                    placeholder="dd/mm/yyyy"
-                  />
-                </div>
+                )
               )}
 
               <div className="mt-3">
@@ -414,16 +434,23 @@ export default function MediaReviewModal({
                     {statusOptions.map((opt) => {
                       const Icon = opt.icon;
                       const isSelected = draftStatus === opt.key;
+                      const isAllowed = isReleased ? true : opt.key === "watchlist";
                       return (
                         <button
                           key={opt.key}
                           type="button"
-                          onClick={() => setDraftStatus(opt.key)}
-                          title={opt.label}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-[#a8dadc] text-zinc-950 font-bold"
-                              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
+                          disabled={!isAllowed}
+                          onClick={() => {
+                            if (!isAllowed) return;
+                            setDraftStatus(opt.key);
+                          }}
+                          title={!isAllowed ? "Not released yet" : opt.label}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all ${
+                            !isAllowed
+                              ? "opacity-25 cursor-not-allowed text-zinc-600"
+                              : isSelected
+                              ? "bg-[#a8dadc] text-zinc-950 font-bold cursor-pointer"
+                              : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 cursor-pointer"
                           }`}
                         >
                           <Icon className="w-3.5 h-3.5 stroke-[2]" />

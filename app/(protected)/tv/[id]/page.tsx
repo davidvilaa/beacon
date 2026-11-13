@@ -26,7 +26,7 @@ import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import EpisodesTab from "@/components/modules/tabs/EpisodesTab";
-import { getTvCrewSections } from "@/lib/media-utils";
+import { getTvCrewSections, isMediaReleased } from "@/lib/media-utils";
 
 function TvDetailContent() {
   const params = useParams();
@@ -70,6 +70,29 @@ function TvDetailContent() {
 
   const supabase = createClient();
   const { addToast } = useToast();
+
+  const regularSeasons = useMemo(() => {
+    if (!tv?.seasons) return [];
+    return tv.seasons
+      .filter((s) => s.season_number > 0)
+      .sort((a, b) => a.season_number - b.season_number);
+  }, [tv]);
+
+  const currentSeasonSummary = useMemo(() => {
+    return tv?.seasons?.find((s) => s.season_number === activeSeason) || null;
+  }, [tv, activeSeason]);
+
+  const currentSeasonDetails = seasonCache[activeSeason] || null;
+
+  const rawDate =
+    currentSeasonDetails?.air_date ||
+    currentSeasonSummary?.air_date ||
+    tv?.first_air_date;
+
+  const isReleased = useMemo(() => {
+    if (!tv) return true;
+    return isMediaReleased("tv", tv.status, rawDate);
+  }, [tv, rawDate]);
 
   useEffect(() => {
     let ignore = false;
@@ -146,6 +169,11 @@ function TvDetailContent() {
         return;
       }
       if (!tv) return;
+
+      if (!isReleased && newStatus && newStatus !== "watchlist") {
+        addToast("This season has not been released yet", "error");
+        return;
+      }
 
       if (!newStatus) {
         const { error } = await supabase
@@ -647,24 +675,6 @@ function TvDetailContent() {
     };
   }, [id, activeSeason, seasonCache]);
 
-  const regularSeasons = useMemo(() => {
-    if (!tv?.seasons) return [];
-    return tv.seasons
-      .filter((s) => s.season_number > 0)
-      .sort((a, b) => a.season_number - b.season_number);
-  }, [tv]);
-
-  const currentSeasonSummary = useMemo(() => {
-    return tv?.seasons?.find((s) => s.season_number === activeSeason) || null;
-  }, [tv, activeSeason]);
-
-  const currentSeasonDetails = seasonCache[activeSeason] || null;
-
-  const rawDate =
-    currentSeasonDetails?.air_date ||
-    currentSeasonSummary?.air_date ||
-    tv?.first_air_date;
-
   const totalRuntimeMinutes = useMemo(() => {
     if (!currentSeasonDetails?.episodes) return 0;
     return currentSeasonDetails.episodes.reduce(
@@ -766,6 +776,7 @@ function TvDetailContent() {
             status={seriesStatus}
             isFavorite={isFavorite}
             hasLog={Boolean(seriesStatus)}
+            isReleased={isReleased}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onOpenListModal={() => setIsListModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
@@ -777,7 +788,7 @@ function TvDetailContent() {
                 addToast("You can only have up to 5 favorite series", "error");
                 return;
               }
-              const nextStatus = seriesStatus || "watched";
+              const nextStatus = seriesStatus || (isReleased ? "watched" : "watchlist");
               handleQuickAction(nextStatus, nextFav);
             }}
           >
@@ -884,6 +895,7 @@ function TvDetailContent() {
         backdropUrl={backdropUrl}
         mediaType="tv"
         status={seriesStatus}
+        isReleased={isReleased}
         isFavorite={isFavorite}
         canAddFavorite={canAddFavorite}
         rating={rating}

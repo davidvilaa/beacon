@@ -19,7 +19,7 @@ import CastTab from "@/components/modules/tabs/CastTab";
 import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import ReleasesTab from "@/components/modules/tabs/ReleasesTab";
-import { getMovieCrewSections, getReleaseDateGroups } from "@/lib/media-utils";
+import { getMovieCrewSections, getReleaseDateGroups, isMediaReleased } from "@/lib/media-utils";
 
 function MovieDetailContent() {
   const params = useParams();
@@ -51,6 +51,11 @@ function MovieDetailContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details" | "releases">("cast");
+
+  const isReleased = useMemo(() => {
+    if (!movie) return true;
+    return isMediaReleased("movie", movie.status, movie.release_date);
+  }, [movie]);
 
   useEffect(() => {
     let ignore = false;
@@ -114,6 +119,11 @@ function MovieDetailContent() {
         return;
       }
       if (!movie) return;
+
+      if (!isReleased && newStatus && newStatus !== "watchlist") {
+        addToast("This movie has not been released yet", "error");
+        return;
+      }
 
       if (!newStatus) {
         const { error } = await supabase
@@ -565,6 +575,7 @@ function MovieDetailContent() {
             status={movieStatus}
             isFavorite={isFavorite}
             hasLog={Boolean(movieStatus)}
+            isReleased={isReleased}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onOpenListModal={() => setIsListModalOpen(true)}
             onQuickStatusChange={(newStatus) => {
@@ -576,7 +587,7 @@ function MovieDetailContent() {
                 addToast("You can only have up to 5 favorite movies", "error");
                 return;
               }
-              const nextStatus = movieStatus || "watched";
+              const nextStatus = movieStatus || (isReleased ? "watched" : "watchlist");
               handleQuickAction(nextStatus, nextFav);
             }}
           />
@@ -667,6 +678,7 @@ function MovieDetailContent() {
         backdropUrl={backdropUrl}
         mediaType="movie"
         status={movieStatus}
+        isReleased={isReleased}
         isFavorite={isFavorite}
         canAddFavorite={canAddFavorite}
         rating={rating}

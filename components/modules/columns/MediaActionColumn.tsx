@@ -37,6 +37,7 @@ interface MediaActionColumnProps {
   onToggleFavorite: () => void;
   onOpenListModal?: () => void;
   children?: React.ReactNode;
+  isReleased?: boolean;
   className?: string;
 }
 
@@ -54,6 +55,7 @@ export default function MediaActionColumn({
   onToggleFavorite,
   onOpenListModal,
   children,
+  isReleased = true,
   className = "",
 }: MediaActionColumnProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -194,21 +196,28 @@ export default function MediaActionColumn({
                 {statusOptions.map((opt) => {
                   const Icon = opt.icon;
                   const isSelected = status === opt.statusKey;
+                  const isAllowed = isReleased ? true : opt.statusKey === "watchlist";
                   return (
                     <button
                       key={opt.statusKey}
                       type="button"
+                      disabled={!isAllowed}
                       tabIndex={isOpen ? 0 : -1}
-                      onClick={() => onQuickStatusChange(isSelected ? null : opt.statusKey)}
-                      title={opt.label}
-                      className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
-                        isSelected
-                          ? "text-[#a8dadc] bg-zinc-800/80"
-                          : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                      onClick={() => {
+                        if (!isAllowed) return;
+                        onQuickStatusChange(isSelected ? null : opt.statusKey);
+                      }}
+                      title={!isAllowed ? "Not released yet" : opt.label}
+                      className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors group ${
+                        !isAllowed
+                          ? "opacity-25 cursor-not-allowed text-zinc-600"
+                          : isSelected
+                          ? "text-[#a8dadc] bg-zinc-800/80 cursor-pointer"
+                          : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 cursor-pointer"
                       }`}
                     >
                       <Icon
-                        className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
+                        className={`${iconSizeClass} transition-transform ${isAllowed ? "group-hover:scale-110" : ""} ${
                           isSelected
                             ? opt.statusKey === "watchlist"
                               ? "fill-[#a8dadc] stroke-[2]"

@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
   User,
-  Calendar,
+  CalendarSync,
   Layers,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -368,9 +368,12 @@ function ListDetailContent() {
                   <span>{items.length}</span>
                 </div>
 
-                <div className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs text-zinc-400 font-medium whitespace-nowrap shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                  <span>Updated on {updatedDateText}</span>
+                <div
+                  title={`Updated: ${updatedDateText}`}
+                  className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs text-zinc-400 font-medium whitespace-nowrap shrink-0"
+                >
+                  <CalendarSync className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                  <span>{updatedDateText}</span>
                 </div>
               </Link>
             </div>

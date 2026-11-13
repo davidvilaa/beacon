@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, Check, Layers, Calendar } from "lucide-react";
+import { Lock, Check, Layers, CalendarSync } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";
 
@@ -104,7 +104,7 @@ export default function ListCard({
           <div className="flex items-center gap-2.5 text-xs text-zinc-400 flex-wrap">
             {typeof list.itemCount === "number" && (
               <span className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#a8dadc]" />
+                <Layers className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{list.itemCount}</span>
               </span>
             )}
@@ -112,9 +112,9 @@ export default function ListCard({
               <span>•</span>
             )}
             {formattedDate && (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-                <span>Updated on {formattedDate}</span>
+              <span className="flex items-center gap-1.5" title={`Updated: ${formattedDate}`}>
+                <CalendarSync className="w-3.5 h-3.5 text-zinc-500" />
+                <span>{formattedDate}</span>
               </span>
             )}
           </div>

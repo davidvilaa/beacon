@@ -10,7 +10,6 @@ import {
   X,
   UserCircle,
   ArrowLeft,
-  Film,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Loading from "@/components/ui/Loading";
@@ -134,10 +133,7 @@ function ListDetailContent() {
 
         const mappedItems: ListGridItem[] = sortedRawItems.map((item: any) => {
           const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
-          const displayTitle =
-            item.media_type === "tv" && item.season_number
-              ? `${cached?.title || "Series"} (Season ${item.season_number})`
-              : cached?.title || "Media";
+          const displayTitle = cached?.title || "Media";
 
           return {
             id: item.id,
@@ -382,19 +378,7 @@ function ListDetailContent() {
         )}
       </div>
 
-      {items.length === 0 ? (
-        <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 flex flex-col items-center justify-center text-center p-6 min-h-[260px]">
-          <Film className="w-10 h-10 text-zinc-700 mb-3 stroke-[1.5]" />
-          <h4 className="text-sm font-bold text-zinc-300 mb-1">
-            This list is empty
-          </h4>
-          <p className="text-xs text-zinc-500 max-w-sm leading-relaxed">
-            {isOwner
-              ? "Open any movie or series page and add it from the quick actions menu."
-              : "No items have been added to this list yet."}
-          </p>
-        </div>
-      ) : (
+      {items.length === 0 ? null : (
         <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
           {items.map((item) => (
             <div key={item.id} className="relative group/card">
@@ -407,11 +391,6 @@ function ListDetailContent() {
                     : undefined
                 }
                 title={item.title}
-                subtitle={
-                  item.mediaType === "tv" && item.seasonNumber
-                    ? `Season ${item.seasonNumber}`
-                    : undefined
-                }
                 posterPath={item.posterPath}
                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 125px"
               />

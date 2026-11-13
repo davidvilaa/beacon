@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ListPlus, Lock, Plus, Film } from "lucide-react";
+import { Lock, Plus, Film } from "lucide-react";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { getPosterUrl } from "@/lib/tmdb";
 
@@ -39,7 +39,7 @@ export default function ProfileListsTab({
 }: ProfileListsTabProps) {
   return (
     <div>
-      {isOwner && onCreateList && !isLoading && lists.length > 0 && (
+      {isOwner && onCreateList && !isLoading && (
         <div className="mb-6 flex items-center justify-end">
           <button
             type="button"
@@ -74,29 +74,7 @@ export default function ProfileListsTab({
             </div>
           ))}
         </div>
-      ) : lists.length === 0 ? (
-        <div className="py-20 rounded-xl border border-zinc-800/40 bg-zinc-900/10 flex flex-col items-center justify-center text-center p-6 min-h-[260px]">
-          <ListPlus className="w-10 h-10 text-zinc-700 mb-3 stroke-[1.5]" />
-          <h4 className="text-sm font-bold text-zinc-300 mb-1">
-            {isOwner ? "No lists yet" : "No public lists"}
-          </h4>
-          <p className="text-xs text-zinc-500 max-w-sm leading-relaxed mb-5">
-            {isOwner
-              ? "Create custom collections to organize movies, series, and more."
-              : "This user hasn't created any public lists yet."}
-          </p>
-          {isOwner && onCreateList && (
-            <button
-              type="button"
-              onClick={onCreateList}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>New list</span>
-            </button>
-          )}
-        </div>
-      ) : (
+      ) : lists.length === 0 ? null : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {lists.map((list) => {
             const slots = Array.from({ length: 4 });

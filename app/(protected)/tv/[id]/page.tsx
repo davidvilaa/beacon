@@ -336,8 +336,14 @@ function TvDetailContent() {
           has_spoilers: reviewData.hasSpoilers,
           start_date: reviewData.startDate || null,
           end_date: reviewData.endDate || null,
-          custom_poster_path: customPosters[activeSeason] || null,
-          custom_backdrop_path: selectedBackdrop,
+          custom_poster_path:
+            reviewData.customPosterPath !== undefined
+              ? reviewData.customPosterPath
+              : (customPosters[activeSeason] || null),
+          custom_backdrop_path:
+            reviewData.customBackdropPath !== undefined
+              ? reviewData.customBackdropPath
+              : selectedBackdrop,
         },
         { onConflict: "user_id,series_id,season_number" }
       );
@@ -346,6 +352,16 @@ function TvDetailContent() {
         addToast("Error saving review", "error");
         setIsSaving(false);
         return;
+      }
+
+      if (reviewData.customPosterPath) {
+        setCustomPosters((prev) => ({
+          ...prev,
+          [activeSeason]: reviewData.customPosterPath!,
+        }));
+      }
+      if (reviewData.customBackdropPath) {
+        setSelectedBackdrop(reviewData.customBackdropPath);
       }
 
       setSeriesStatus(reviewData.status);
@@ -860,6 +876,14 @@ function TvDetailContent() {
         isSaving={isSaving}
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
+        availablePosters={availablePosters[activeSeason] || []}
+        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
+        selectedPoster={posterPath}
+        selectedBackdrop={selectedBackdrop}
+        onSelectPoster={handleSelectPoster}
+        onSelectBackdrop={handleSelectBackdrop}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
       />
 
       <ListModal

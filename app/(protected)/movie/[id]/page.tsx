@@ -285,8 +285,14 @@ function MovieDetailContent() {
           review: reviewData.review.trim() || null,
           has_spoilers: reviewData.hasSpoilers,
           watched_date: reviewData.watchedDate || null,
-          custom_poster_path: selectedPoster,
-          custom_backdrop_path: selectedBackdrop,
+          custom_poster_path:
+            reviewData.customPosterPath !== undefined
+              ? reviewData.customPosterPath
+              : selectedPoster,
+          custom_backdrop_path:
+            reviewData.customBackdropPath !== undefined
+              ? reviewData.customBackdropPath
+              : selectedBackdrop,
         },
         { onConflict: "user_id,movie_id" }
       );
@@ -295,6 +301,13 @@ function MovieDetailContent() {
         addToast("Error saving review", "error");
         setIsSaving(false);
         return;
+      }
+
+      if (reviewData.customPosterPath) {
+        setSelectedPoster(reviewData.customPosterPath);
+      }
+      if (reviewData.customBackdropPath) {
+        setSelectedBackdrop(reviewData.customBackdropPath);
       }
 
       setMovieStatus(reviewData.status);
@@ -674,6 +687,14 @@ function MovieDetailContent() {
         isSaving={isSaving}
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
+        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
+        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
+        selectedPoster={selectedPoster}
+        selectedBackdrop={selectedBackdrop}
+        onSelectPoster={handleSelectPoster}
+        onSelectBackdrop={handleSelectBackdrop}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
       />
 
       <ListModal

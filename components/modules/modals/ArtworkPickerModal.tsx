@@ -14,6 +14,7 @@ interface ArtworkPickerModalProps {
   selectedImage: string | null;
   onSelectImage: (filePath: string) => void;
   isLoading?: boolean;
+  zIndexClassName?: string;
 }
 
 export default function ArtworkPickerModal({
@@ -25,14 +26,21 @@ export default function ArtworkPickerModal({
   selectedImage,
   onSelectImage,
   isLoading = false,
+  zIndexClassName,
 }: ArtworkPickerModalProps) {
   if (!isOpen) return null;
 
   const isPoster = type === "poster";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div
+      onClick={onClose}
+      className={`fixed inset-0 ${zIndexClassName || "z-50"} bg-black/85 backdrop-blur-md flex items-center justify-center p-4`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+      >
         <div className="p-3.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
             {title}

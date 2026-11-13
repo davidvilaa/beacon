@@ -14,12 +14,16 @@ import {
   PauseCircle,
   XCircle,
   Star,
+  ImageIcon,
 } from "lucide-react";
 import { MediaStatus } from "../columns/MediaActionColumn";
 import { formatRuntime, formatFullDate } from "@/lib/media-utils";
 import DatePicker from "@/components/ui/DatePicker";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
+import ArtworkPickerModal from "./ArtworkPickerModal";
+import BackdropPickerModal from "./BackdropPickerModal";
+import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 
 function StarRating({
   value,
@@ -83,6 +87,8 @@ export interface MediaReviewData {
   watchedDate?: string;
   startDate?: string;
   endDate?: string;
+  customPosterPath?: string | null;
+  customBackdropPath?: string | null;
 }
 
 interface MediaReviewModalProps {
@@ -110,6 +116,14 @@ interface MediaReviewModalProps {
   isSaving?: boolean;
   onSave: (data: MediaReviewData) => void;
   onDelete?: () => void;
+  availablePosters?: { file_path: string }[];
+  availableBackdrops?: { file_path: string }[];
+  selectedPoster?: string | null;
+  selectedBackdrop?: string | null;
+  onSelectPoster?: (filePath: string) => void;
+  onSelectBackdrop?: (filePath: string) => void;
+  loadingPosters?: boolean;
+  loadingBackdrops?: boolean;
 }
 
 export default function MediaReviewModal({
@@ -136,6 +150,14 @@ export default function MediaReviewModal({
   isSaving = false,
   onSave,
   onDelete,
+  availablePosters,
+  availableBackdrops,
+  selectedPoster,
+  selectedBackdrop,
+  onSelectPoster,
+  onSelectBackdrop,
+  loadingPosters,
+  loadingBackdrops,
 }: MediaReviewModalProps) {
   const { addToast } = useToast();
   const fallbackStatus: Exclude<MediaStatus, null> =
@@ -151,6 +173,10 @@ export default function MediaReviewModal({
   const [draftWatchedDate, setDraftWatchedDate] = useState<string>(watchedDate || "");
   const [draftStartDate, setDraftStartDate] = useState<string>(startDate || "");
   const [draftEndDate, setDraftEndDate] = useState<string>(endDate || "");
+  const [draftPoster, setDraftPoster] = useState<string | null>(selectedPoster ?? null);
+  const [draftBackdrop, setDraftBackdrop] = useState<string | null>(selectedBackdrop ?? null);
+  const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
+  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -162,6 +188,8 @@ export default function MediaReviewModal({
       setDraftWatchedDate(watchedDate || "");
       setDraftStartDate(startDate || "");
       setDraftEndDate(endDate || "");
+      setDraftPoster(selectedPoster ?? null);
+      setDraftBackdrop(selectedBackdrop ?? null);
     }
   }, [
     isOpen,
@@ -173,6 +201,8 @@ export default function MediaReviewModal({
     watchedDate,
     startDate,
     endDate,
+    selectedPoster,
+    selectedBackdrop,
     fallbackStatus,
   ]);
 
@@ -211,6 +241,34 @@ export default function MediaReviewModal({
     : null;
   const runtimeFormatted = formatRuntime(runtimeMinutes || null);
 
+  const handleSelectPosterInternal = (filePath: string) => {
+    setDraftPoster(filePath);
+    if (onSelectPoster) {
+      onSelectPoster(filePath);
+    }
+  };
+
+  const handleSelectBackdropInternal = (filePath: string) => {
+    setDraftBackdrop(filePath);
+    if (onSelectBackdrop) {
+      onSelectBackdrop(filePath);
+    }
+  };
+
+  const currentPosterUrl = draftPoster
+    ? getPosterUrl(draftPoster, "w500")
+    : posterUrl;
+  const currentBackdropUrl = draftBackdrop
+    ? getBackdropUrl(draftBackdrop, "original")
+    : backdropUrl;
+
+  const canChangePoster = Boolean(
+    onSelectPoster && ((availablePosters?.length ?? 0) > 0 || loadingPosters)
+  );
+  const canChangeBackdrop = Boolean(
+    onSelectBackdrop && ((availableBackdrops?.length ?? 0) > 0 || loadingBackdrops)
+  );
+
   const handleSaveClick = () => {
     const finalStatus: Exclude<MediaStatus, null> =
       draftStatus || fallbackStatus;
@@ -223,57 +281,101 @@ export default function MediaReviewModal({
       watchedDate: draftWatchedDate,
       startDate: draftStartDate,
       endDate: draftEndDate,
+      customPosterPath: draftPoster,
+      customBackdropPath: draftBackdrop,
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
-        <div className="relative h-36 sm:h-48 md:h-52 w-full bg-zinc-900 overflow-hidden">
-          {backdropUrl ? (
-            <Image
-              src={backdropUrl}
-              alt="Media banner"
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-zinc-900" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/30" />
+    <>
+      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+          <div className="relative h-36 sm:h-48 md:h-52 w-full bg-zinc-900 overflow-hidden">
+            {currentBackdropUrl ? (
+              <Image
+                src={currentBackdropUrl}
+                alt="Media banner"
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-zinc-900" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/30" />
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            {canChangeBackdrop && (
+              <button
+                type="button"
+                onClick={() => setIsBackdropPickerOpen(true)}
+                aria-label="Change banner"
+                className="absolute inset-0 z-0 cursor-pointer group"
+              >
+                <div className="absolute inset-0 group-hover:bg-black/20 transition-colors" />
+              </button>
+            )}
 
-        <div className="px-5 sm:px-8 pb-6 sm:pb-8">
-          <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start -mt-14 sm:-mt-20 relative z-10 mb-5">
-            <div className="flex flex-col items-center gap-3 shrink-0">
-              <div className="relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
-                {posterUrl ? (
-                  <Image
-                    src={posterUrl}
-                    alt={title}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-700">
-                    <Film className="w-8 h-8" />
-                  </div>
-                )}
+            {canChangeBackdrop && (
+              <button
+                type="button"
+                onClick={() => setIsBackdropPickerOpen(true)}
+                className="absolute bottom-3 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 hover:bg-black/90 border border-zinc-700/70 hover:border-zinc-500 text-xs font-medium text-zinc-300 hover:text-white transition-colors backdrop-blur-sm shadow-md cursor-pointer"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>Change banner</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-zinc-700/60 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="px-5 sm:px-8 pb-6 sm:pb-8">
+            <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start -mt-14 sm:-mt-20 relative z-10 mb-5">
+              <div className="flex flex-col items-center gap-3 shrink-0">
+                <div className="relative w-28 sm:w-36 aspect-[2/3] rounded-lg overflow-hidden bg-zinc-900 border-2 border-zinc-800 shadow-2xl">
+                  {currentPosterUrl ? (
+                    <Image
+                      src={currentPosterUrl}
+                      alt={title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-700">
+                      <Film className="w-8 h-8" />
+                    </div>
+                  )}
+
+                  {canChangePoster && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPosterPickerOpen(true)}
+                      aria-label="Change artwork"
+                      className="absolute inset-0 z-10 group cursor-pointer text-left"
+                    >
+                      <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2 text-center text-white">
+                        <ImageIcon className="w-5 h-5 text-zinc-200" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-200 leading-tight">
+                          Change artwork
+                        </span>
+                      </div>
+                      <div className="absolute bottom-1.5 right-1.5 p-1 rounded-md bg-black/70 border border-zinc-700/60 text-zinc-300 group-hover:opacity-0 transition-opacity">
+                        <ImageIcon className="w-3 h-3" />
+                      </div>
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-1 flex justify-center w-full">
+                  <StarRating value={draftRating} onChange={setDraftRating} />
+                </div>
               </div>
-
-              <div className="mt-1 flex justify-center w-full">
-                <StarRating value={draftRating} onChange={setDraftRating} />
-              </div>
-            </div>
 
             <div className="flex-1 min-w-0 pt-2 sm:pt-14 md:pt-16">
               <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">
@@ -455,5 +557,33 @@ export default function MediaReviewModal({
         </div>
       </div>
     </div>
+
+      {availablePosters && onSelectPoster && (
+        <ArtworkPickerModal
+          isOpen={isPosterPickerOpen}
+          onClose={() => setIsPosterPickerOpen(false)}
+          title="CHANGE ARTWORK"
+          type="poster"
+          images={availablePosters}
+          selectedImage={draftPoster}
+          onSelectImage={handleSelectPosterInternal}
+          isLoading={loadingPosters}
+          zIndexClassName="z-[60]"
+        />
+      )}
+
+      {availableBackdrops && onSelectBackdrop && (
+        <BackdropPickerModal
+          isOpen={isBackdropPickerOpen}
+          onClose={() => setIsBackdropPickerOpen(false)}
+          title="CHANGE BANNER"
+          images={availableBackdrops}
+          selectedImage={draftBackdrop}
+          onSelectImage={handleSelectBackdropInternal}
+          isLoading={loadingBackdrops}
+          zIndexClassName="z-[60]"
+        />
+      )}
+    </>
   );
 }

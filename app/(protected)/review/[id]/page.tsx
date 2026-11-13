@@ -13,25 +13,23 @@ import {
   PauseCircle,
   XCircle,
   Heart,
-  Share2,
   Pencil,
-  ArrowLeft,
   AlertTriangle,
   Film,
   Tv,
   User,
   Calendar,
-  ExternalLink,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import Loading from "@/components/ui/Loading";
 import MediaLayout from "@/components/modules/MediaLayout";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import SeasonRevolver from "@/components/ui/SeasonRevolver";
 import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/modules/modals/MediaReviewModal";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl, TvSeasonSummary } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";
 
 interface ReviewUser {
@@ -96,6 +94,7 @@ function ReviewDetailContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [tmdbMeta, setTmdbMeta] = useState<TmdbMeta | null>(null);
+  const [tvSeasons, setTvSeasons] = useState<TvSeasonSummary[]>([]);
 
   useEffect(() => {
     let ignore = false;
@@ -253,16 +252,29 @@ function ReviewDetailContent() {
           const endpoint =
             record.media_type === "movie"
               ? `/api/movies/${record.media_id}`
-              : `/api/tv/${record.media_id}`;
+              : `/api/tv/${record.media_id}?season=${record.season_number || 1}`;
 
           fetch(endpoint)
             .then((res) => (res.ok ? res.json() : null))
             .then((tmdb) => {
               if (ignore || !tmdb) return;
+              if (Array.isArray(tmdb.seasons)) {
+                setTvSeasons(tmdb.seasons);
+              }
               const date = tmdb.release_date || tmdb.first_air_date || "";
               const genres = Array.isArray(tmdb.genres)
                 ? tmdb.genres.map((g: any) => g.name)
                 : [];
+              const seasonSummary = Array.isArray(tmdb.seasons)
+                ? tmdb.seasons.find(
+                    (s: any) => s.season_number === (record.season_number || 1)
+                  )
+                : null;
+              const seasonPoster =
+                tmdb.initialSeason?.poster_path ||
+                seasonSummary?.poster_path ||
+                tmdb.poster_path;
+
               setTmdbMeta({
                 title: tmdb.title || tmdb.name,
                 original_title: tmdb.original_title || tmdb.original_name,
@@ -277,7 +289,7 @@ function ReviewDetailContent() {
                 tagline: tmdb.tagline || "",
                 overview: tmdb.overview,
                 backdrop_path: tmdb.backdrop_path,
-                poster_path: tmdb.poster_path,
+                poster_path: seasonPoster,
               });
             })
             .catch(() => {});
@@ -321,16 +333,21 @@ function ReviewDetailContent() {
     return getBackdropUrl(backdropPath, "original");
   }, [backdropPath]);
 
-  const handleShare = async () => {
-    try {
-      if (typeof window !== "undefined") {
-        await navigator.clipboard.writeText(window.location.href);
-        addToast("Review link copied to clipboard", "success");
-      }
-    } catch {
-      addToast("Failed to copy link", "error");
-    }
-  };
+  const regularSeasons = useMemo(() => {
+    if (review?.media_type !== "tv") return [];
+    const filtered = (tvSeasons || []).filter((s) => s.season_number > 0);
+    if (filtered.length > 0) return filtered;
+    const seasonNum = review.season_number || 1;
+    return Array.from({ length: seasonNum }, (_, idx) => ({
+      id: idx + 1,
+      season_number: idx + 1,
+      name: `Season ${idx + 1}`,
+      overview: "",
+      poster_path: null,
+      air_date: null,
+      episode_count: 0,
+    }));
+  }, [review, tvSeasons]);
 
   const handleSaveReview = async (reviewData: MediaReviewData) => {
     if (!review || !isOwner) return;
@@ -473,16 +490,34 @@ function ReviewDetailContent() {
   const authorName = review.users?.username || "User";
 
   const resolvedTitle = tmdbMeta?.title || review.title;
-  const resolvedTypeLabel =
-    review.media_type === "movie"
-      ? "Movie"
-      : review.season_number
-      ? `Series • Season ${review.season_number}`
-      : "Series";
+  const resolvedTypeLabel = review.media_type === "movie" ? "Movie" : "Series";
 
   const posterColumnNode = (
-    <div className="w-full flex flex-col items-center">
-      <div className="relative aspect-[2/3] w-56 sm:w-full rounded-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl">
+    <div className="relative w-56 sm:w-full">
+      {regularSeasons.length > 0 && (
+        <>
+          <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
+            <SeasonRevolver
+              seasons={regularSeasons}
+              activeSeason={review.season_number || 1}
+              readOnly
+            />
+          </div>
+          <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-sm bg-zinc-900 border border-zinc-800">
+            <SeasonRevolver
+              seasons={regularSeasons}
+              activeSeason={review.season_number || 1}
+              readOnly
+            />
+          </div>
+        </>
+      )}
+
+      <div
+        className={`relative aspect-[2/3] w-full ${
+          isOwner ? "rounded-t-sm" : "rounded-sm"
+        } overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl`}
+      >
         {posterUrl ? (
           <Image
             src={posterUrl}
@@ -504,43 +539,18 @@ function ReviewDetailContent() {
         )}
       </div>
 
-      <div className="mt-4 w-56 sm:w-full flex flex-col gap-2">
-        <Link
-          href={mediaHref}
-          className="w-full py-2.5 px-3 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
-        >
-          <span>Go to {review.media_type === "movie" ? "Movie" : "Series"}</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Link>
-
-        {isOwner && (
+      {isOwner && (
+        <div className="flex items-stretch bg-zinc-900 border border-t-0 border-zinc-800 rounded-b-sm overflow-hidden shadow-xl">
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="w-full py-2.5 px-3 rounded-sm bg-zinc-800/80 hover:bg-zinc-800 text-xs font-semibold text-[#a8dadc] border border-zinc-700/80 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Edit review"
+            className="w-full flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
           >
-            <Pencil className="w-3.5 h-3.5" />
-            <span>Edit Review</span>
+            <Pencil className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
           </button>
-        )}
-
-        <button
-          type="button"
-          onClick={handleShare}
-          className="w-full py-2.5 px-3 rounded-sm bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>Share Review</span>
-        </button>
-
-        <Link
-          href={`/profile/${authorName}`}
-          className="w-full py-2 px-3 mt-1 rounded-sm bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-[#a8dadc] transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to {authorName}&apos;s profile</span>
-        </Link>
-      </div>
+        </div>
+      )}
     </div>
   );
 

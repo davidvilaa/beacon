@@ -7,8 +7,9 @@ import { TvSeasonSummary } from "@/lib/tmdb";
 interface SeasonRevolverProps {
   seasons: TvSeasonSummary[];
   activeSeason: number;
-  onSelectSeason: (seasonNumber: number) => void;
+  onSelectSeason?: (seasonNumber: number) => void;
   className?: string;
+  readOnly?: boolean;
 }
 
 const ITEM_HEIGHT = 40;
@@ -19,6 +20,7 @@ export default function SeasonRevolver({
   activeSeason,
   onSelectSeason,
   className = "",
+  readOnly = false,
 }: SeasonRevolverProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartYRef = useRef<number | null>(null);
@@ -46,22 +48,22 @@ export default function SeasonRevolver({
 
   const handleStep = useCallback(
     (direction: "up" | "down") => {
-      if (sortedSeasons.length <= 1) return;
+      if (readOnly || sortedSeasons.length <= 1) return;
       if (direction === "up" && currentIndex > 0) {
         const nextIdx = currentIndex - 1;
         setCurrentIndex(nextIdx);
-        onSelectSeason(sortedSeasons[nextIdx].season_number);
+        onSelectSeason?.(sortedSeasons[nextIdx].season_number);
       } else if (direction === "down" && currentIndex < sortedSeasons.length - 1) {
         const nextIdx = currentIndex + 1;
         setCurrentIndex(nextIdx);
-        onSelectSeason(sortedSeasons[nextIdx].season_number);
+        onSelectSeason?.(sortedSeasons[nextIdx].season_number);
       }
     },
-    [currentIndex, sortedSeasons, onSelectSeason]
+    [readOnly, currentIndex, sortedSeasons, onSelectSeason]
   );
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (sortedSeasons.length <= 1) return;
+    if (readOnly || sortedSeasons.length <= 1) return;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {}
@@ -133,7 +135,7 @@ export default function SeasonRevolver({
       });
 
       if (newIndex !== activeIndex) {
-        onSelectSeason(sortedSeasons[newIndex].season_number);
+        onSelectSeason?.(sortedSeasons[newIndex].season_number);
       }
     } else {
       setIsDragging(false);
@@ -145,12 +147,13 @@ export default function SeasonRevolver({
         const diffFromCenter = Math.round((clickY - CONTAINER_HEIGHT / 2) / ITEM_HEIGHT);
         const clickedIndex = currentIndex + diffFromCenter;
         if (
+          !readOnly &&
           clickedIndex >= 0 &&
           clickedIndex < sortedSeasons.length &&
           clickedIndex !== currentIndex
         ) {
           setCurrentIndex(clickedIndex);
-          onSelectSeason(sortedSeasons[clickedIndex].season_number);
+          onSelectSeason?.(sortedSeasons[clickedIndex].season_number);
         }
       }
     }
@@ -173,9 +176,13 @@ export default function SeasonRevolver({
       <button
         type="button"
         onClick={() => handleStep("up")}
-        disabled={currentIndex <= 0}
+        disabled={readOnly || currentIndex <= 0}
         aria-label="Previous Season"
-        className="p-1 rounded-sm text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mb-1"
+        className={`p-1 rounded-sm text-zinc-500 transition-colors mb-1 ${
+          readOnly
+            ? "opacity-20 cursor-default"
+            : "hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed cursor-pointer"
+        }`}
       >
         <ChevronUp className="w-4 h-4" />
       </button>
@@ -186,7 +193,9 @@ export default function SeasonRevolver({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative w-16 sm:w-20 h-[200px] flex items-center justify-center overflow-hidden touch-none cursor-grab active:cursor-grabbing"
+        className={`relative w-16 sm:w-20 h-[200px] flex items-center justify-center overflow-hidden touch-none ${
+          readOnly ? "cursor-default" : "cursor-grab active:cursor-grabbing"
+        }`}
         style={{
           perspective: "450px",
           maskImage:
@@ -220,15 +229,18 @@ export default function SeasonRevolver({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (readOnly) return;
                   if (!hasDraggedRef.current && idx !== currentIndex) {
                     setCurrentIndex(idx);
-                    onSelectSeason(s.season_number);
+                    onSelectSeason?.(s.season_number);
                   }
                 }}
                 title={s.name}
                 className={`absolute inset-x-1 h-10 flex items-center justify-center rounded-sm pointer-events-auto z-10 ${
                   isSelected
                     ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
+                    : readOnly
+                    ? "text-zinc-500 font-bold text-xs sm:text-sm tracking-wider cursor-default"
                     : "text-zinc-400 font-bold text-xs sm:text-sm tracking-wider hover:text-white cursor-pointer"
                 }`}
                 style={{
@@ -250,9 +262,13 @@ export default function SeasonRevolver({
       <button
         type="button"
         onClick={() => handleStep("down")}
-        disabled={currentIndex >= sortedSeasons.length - 1}
+        disabled={readOnly || currentIndex >= sortedSeasons.length - 1}
         aria-label="Next Season"
-        className="p-1 rounded-sm text-zinc-500 hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1"
+        className={`p-1 rounded-sm text-zinc-500 transition-colors mt-1 ${
+          readOnly
+            ? "opacity-20 cursor-default"
+            : "hover:text-zinc-200 disabled:opacity-15 disabled:cursor-not-allowed cursor-pointer"
+        }`}
       >
         <ChevronDown className="w-4 h-4" />
       </button>

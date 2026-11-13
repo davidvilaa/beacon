@@ -169,10 +169,14 @@ function ProfileMoviesContent() {
   const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredMovies.map((m) => ({
       id: m.movie_id,
+      entryLogId: m.id,
       title: m.movies?.title || "Movie",
       posterPath: m.custom_poster_path || m.movies?.poster_path || null,
       href: `/movie/${m.movie_id}`,
       mediaType: "movie",
+      rating: m.rating ? Number(m.rating) : null,
+      review: m.review,
+      hasSpoilers: Boolean(m.has_spoilers),
     }));
   }, [filteredMovies]);
 

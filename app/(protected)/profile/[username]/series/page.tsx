@@ -180,10 +180,15 @@ function ProfileSeriesContent() {
   const catalogItems = useMemo<ProfileMediaItem[]>(() => {
     return filteredSeries.map((s) => ({
       id: `${s.series_id}-${s.season_number}`,
+      entryLogId: s.id,
       title: s.series?.name || "Series",
       posterPath: s.custom_poster_path || s.series?.poster_path || null,
       href: `/tv/${s.series_id}?season=${s.season_number}`,
       mediaType: "tv",
+      rating: s.rating ? Number(s.rating) : null,
+      review: s.review,
+      seasonNumber: s.season_number,
+      hasSpoilers: Boolean(s.has_spoilers),
     }));
   }, [filteredSeries]);
 

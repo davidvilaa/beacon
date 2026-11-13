@@ -494,32 +494,12 @@ function MovieDetailContent() {
     };
   }, [id, dedupedBackdrops]);
 
-  const handleSelectPoster = async (path: string) => {
+  const handleSelectPoster = (path: string) => {
     setSelectedPoster(path);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && movie && movieStatus) {
-        await supabase
-          .from("user_movies")
-          .update({ custom_poster_path: path })
-          .eq("user_id", session.user.id)
-          .eq("movie_id", movie.id);
-      }
-    } catch {}
   };
 
-  const handleSelectBackdrop = async (path: string) => {
+  const handleSelectBackdrop = (path: string) => {
     setSelectedBackdrop(path);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && movie && movieStatus) {
-        await supabase
-          .from("user_movies")
-          .update({ custom_backdrop_path: path })
-          .eq("user_id", session.user.id)
-          .eq("movie_id", movie.id);
-      }
-    } catch {}
   };
 
   const sectionCrew = useMemo(() => {
@@ -691,8 +671,6 @@ function MovieDetailContent() {
         availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
         selectedPoster={selectedPoster}
         selectedBackdrop={selectedBackdrop}
-        onSelectPoster={handleSelectPoster}
-        onSelectBackdrop={handleSelectBackdrop}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

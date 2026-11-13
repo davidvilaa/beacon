@@ -119,8 +119,6 @@ interface MediaReviewModalProps {
   availableBackdrops?: { file_path: string }[];
   selectedPoster?: string | null;
   selectedBackdrop?: string | null;
-  onSelectPoster?: (filePath: string) => void;
-  onSelectBackdrop?: (filePath: string) => void;
   loadingPosters?: boolean;
   loadingBackdrops?: boolean;
 }
@@ -153,8 +151,6 @@ export default function MediaReviewModal({
   availableBackdrops,
   selectedPoster,
   selectedBackdrop,
-  onSelectPoster,
-  onSelectBackdrop,
   loadingPosters,
   loadingBackdrops,
 }: MediaReviewModalProps) {
@@ -242,16 +238,10 @@ export default function MediaReviewModal({
 
   const handleSelectPosterInternal = (filePath: string) => {
     setDraftPoster(filePath);
-    if (onSelectPoster) {
-      onSelectPoster(filePath);
-    }
   };
 
   const handleSelectBackdropInternal = (filePath: string) => {
     setDraftBackdrop(filePath);
-    if (onSelectBackdrop) {
-      onSelectBackdrop(filePath);
-    }
   };
 
   const currentPosterUrl = draftPoster
@@ -262,10 +252,10 @@ export default function MediaReviewModal({
     : backdropUrl;
 
   const canChangePoster = Boolean(
-    onSelectPoster && ((availablePosters?.length ?? 0) > 0 || loadingPosters)
+    (availablePosters?.length ?? 0) > 0 || loadingPosters
   );
   const canChangeBackdrop = Boolean(
-    onSelectBackdrop && ((availableBackdrops?.length ?? 0) > 0 || loadingBackdrops)
+    (availableBackdrops?.length ?? 0) > 0 || loadingBackdrops
   );
 
   const handleSaveClick = () => {
@@ -539,7 +529,7 @@ export default function MediaReviewModal({
       </div>
     </div>
 
-      {availablePosters && onSelectPoster && (
+      {availablePosters && (
         <ArtworkPickerModal
           isOpen={isPosterPickerOpen}
           onClose={() => setIsPosterPickerOpen(false)}
@@ -553,7 +543,7 @@ export default function MediaReviewModal({
         />
       )}
 
-      {availableBackdrops && onSelectBackdrop && (
+      {availableBackdrops && (
         <BackdropPickerModal
           isOpen={isBackdropPickerOpen}
           onClose={() => setIsBackdropPickerOpen(false)}

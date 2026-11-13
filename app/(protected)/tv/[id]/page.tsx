@@ -573,37 +573,15 @@ function TvDetailContent() {
     };
   }, [id, dedupedBackdrops]);
 
-  const handleSelectPoster = async (path: string) => {
+  const handleSelectPoster = (path: string) => {
     setCustomPosters((prev) => ({
       ...prev,
       [activeSeason]: path,
     }));
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && tv && seriesStatus) {
-        await supabase
-          .from("user_series")
-          .update({ custom_poster_path: path })
-          .eq("user_id", session.user.id)
-          .eq("series_id", tv.id)
-          .eq("season_number", activeSeason);
-      }
-    } catch {}
   };
 
-  const handleSelectBackdrop = async (path: string) => {
+  const handleSelectBackdrop = (path: string) => {
     setSelectedBackdrop(path);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && tv && seriesStatus) {
-        await supabase
-          .from("user_series")
-          .update({ custom_backdrop_path: path })
-          .eq("user_id", session.user.id)
-          .eq("series_id", tv.id)
-          .eq("season_number", activeSeason);
-      }
-    } catch {}
   };
 
   useEffect(() => {
@@ -880,8 +858,6 @@ function TvDetailContent() {
         availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
         selectedPoster={posterPath}
         selectedBackdrop={selectedBackdrop}
-        onSelectPoster={handleSelectPoster}
-        onSelectBackdrop={handleSelectBackdrop}
         loadingPosters={loadingPosters}
         loadingBackdrops={loadingBackdrops}
       />

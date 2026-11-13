@@ -365,9 +365,7 @@ function ListDetailContent() {
                   className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-300 shrink-0"
                 >
                   <Layers className="w-4 h-4 text-[#a8dadc]" />
-                  <span>
-                    {items.length} {items.length === 1 ? "item" : "items"}
-                  </span>
+                  <span>{items.length}</span>
                 </div>
 
                 <div className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs text-zinc-400 font-medium whitespace-nowrap shrink-0">

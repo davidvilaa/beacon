@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Film, Star, AlignJustify } from "lucide-react";
+import { Film, Star, StarHalf, AlignJustify } from "lucide-react";
 import Select, { Option } from "@/components/ui/Select";
 import MediaCard from "@/components/ui/MediaCard";
 
@@ -115,9 +115,7 @@ export default function ProfileMediaTab({
                           </div>
                         )}
                         {isHalf && (
-                          <div className="absolute inset-0 overflow-hidden w-1/2">
-                            <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                          </div>
+                          <StarHalf className="absolute inset-0 w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
                         )}
                       </div>
                     );
@@ -128,10 +126,10 @@ export default function ProfileMediaTab({
                   <Link
                     href={`/review/${item.entryLogId}?type=${item.mediaType}`}
                     title={item.review ? "Read review" : "View review"}
-                    className={`p-0.5 rounded-sm transition-colors cursor-pointer shrink-0 ${
+                    className={`p-0.5 transition-colors cursor-pointer shrink-0 ${
                       item.review
-                        ? "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800"
-                        : "text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800"
+                        ? "text-zinc-400 hover:text-[#a8dadc]"
+                        : "text-zinc-600 hover:text-[#a8dadc]"
                     }`}
                   >
                     <AlignJustify className="w-3.5 h-3.5" />

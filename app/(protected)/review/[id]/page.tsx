@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Star,
+  StarHalf,
   Eye,
   Bookmark,
   PlayCircle,
@@ -25,6 +26,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import Loading from "@/components/ui/Loading";
+import MediaLayout from "@/components/modules/MediaLayout";
+import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
 import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/modules/modals/MediaReviewModal";
@@ -63,6 +66,19 @@ interface ReviewRecord {
   users: ReviewUser | null;
 }
 
+interface TmdbMeta {
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  runtime?: number;
+  episodesCount?: number;
+  genres?: string[];
+  tagline?: string;
+  overview?: string;
+  backdrop_path?: string;
+  poster_path?: string;
+}
+
 function ReviewDetailContent() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -78,12 +94,8 @@ function ReviewDetailContent() {
   const [showSpoilers, setShowSpoilers] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [extraDetails, setExtraDetails] = useState<{
-    year?: string;
-    runtime?: number;
-    genres?: string[];
-    tagline?: string;
-  } | null>(null);
+  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
+  const [tmdbMeta, setTmdbMeta] = useState<TmdbMeta | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -248,15 +260,24 @@ function ReviewDetailContent() {
             .then((tmdb) => {
               if (ignore || !tmdb) return;
               const date = tmdb.release_date || tmdb.first_air_date || "";
-              const year = date ? date.split("-")[0] : "";
               const genres = Array.isArray(tmdb.genres)
                 ? tmdb.genres.map((g: any) => g.name)
                 : [];
-              setExtraDetails({
-                year,
-                runtime: tmdb.runtime || (Array.isArray(tmdb.episode_run_time) ? tmdb.episode_run_time[0] : undefined),
+              setTmdbMeta({
+                title: tmdb.title || tmdb.name,
+                original_title: tmdb.original_title || tmdb.original_name,
+                release_date: date,
+                runtime:
+                  tmdb.runtime ||
+                  (Array.isArray(tmdb.episode_run_time) && tmdb.episode_run_time.length > 0
+                    ? tmdb.episode_run_time[0]
+                    : undefined),
+                episodesCount: tmdb.number_of_episodes,
                 genres,
                 tagline: tmdb.tagline || "",
+                overview: tmdb.overview,
+                backdrop_path: tmdb.backdrop_path,
+                poster_path: tmdb.poster_path,
               });
             })
             .catch(() => {});
@@ -280,21 +301,25 @@ function ReviewDetailContent() {
     currentUserId && review && currentUserId === review.user_id
   );
 
+  const posterPath =
+    review?.custom_poster_path ||
+    review?.poster_path ||
+    tmdbMeta?.poster_path ||
+    null;
+
+  const backdropPath =
+    review?.custom_backdrop_path ||
+    review?.backdrop_path ||
+    tmdbMeta?.backdrop_path ||
+    null;
+
   const posterUrl = useMemo(() => {
-    if (!review) return null;
-    return getPosterUrl(
-      review.custom_poster_path || review.poster_path,
-      "w500"
-    );
-  }, [review]);
+    return getPosterUrl(posterPath, "w500");
+  }, [posterPath]);
 
   const backdropUrl = useMemo(() => {
-    if (!review) return null;
-    return getBackdropUrl(
-      review.custom_backdrop_path || review.backdrop_path,
-      "original"
-    );
-  }, [review]);
+    return getBackdropUrl(backdropPath, "original");
+  }, [backdropPath]);
 
   const handleShare = async () => {
     try {
@@ -312,7 +337,6 @@ function ReviewDetailContent() {
 
     try {
       setIsSaving(true);
-
       const table = review.media_type === "movie" ? "user_movies" : "user_series";
 
       const payload: Record<string, any> = {
@@ -432,151 +456,118 @@ function ReviewDetailContent() {
     ? `Watched on ${formatFullDate(review.watched_date)}`
     : `Logged on ${formatFullDate(review.created_at.split("T")[0])}`;
 
-  return (
-    <div className="relative flex-1 w-full min-h-[85vh] font-[family-name:var(--font-geist-sans)] pb-24">
-      {backdropUrl && (
-        <div className="absolute top-0 left-0 right-0 h-[420px] overflow-hidden pointer-events-none select-none z-0">
-          <div
-            className="relative w-full h-full opacity-25"
-            style={{
-              maskImage:
-                "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0) 100%)",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0) 100%)",
-            }}
-          >
-            <Image
-              src={backdropUrl}
-              alt={review.title}
-              fill
-              priority
-              className="object-cover object-top"
-            />
+  const resolvedTitle = tmdbMeta?.title || review.title;
+  const resolvedTypeLabel =
+    review.media_type === "movie"
+      ? "Movie"
+      : review.season_number
+      ? `Series • Season ${review.season_number}`
+      : "Series";
+
+  const posterColumnNode = (
+    <div className="w-full flex flex-col items-center">
+      <div className="relative aspect-[2/3] w-56 sm:w-full rounded-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl">
+        {posterUrl ? (
+          <Image
+            src={posterUrl}
+            alt={resolvedTitle}
+            fill
+            priority
+            sizes="(max-width: 640px) 224px, 288px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
+            {review.media_type === "movie" ? (
+              <Film className="w-12 h-12 mb-2 stroke-[1.5]" />
+            ) : (
+              <Tv className="w-12 h-12 mb-2 stroke-[1.5]" />
+            )}
+            <span className="text-xs text-zinc-500 font-semibold">No Poster</span>
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+        )}
+      </div>
+
+      <div className="mt-4 w-56 sm:w-full flex flex-col gap-2">
+        <Link
+          href={mediaHref}
+          className="w-full py-2.5 px-3 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
+        >
+          <span>Go to {review.media_type === "movie" ? "Movie" : "Series"}</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => setIsEditModalOpen(true)}
+            className="w-full py-2.5 px-3 rounded-sm bg-zinc-800/80 hover:bg-zinc-800 text-xs font-semibold text-[#a8dadc] border border-zinc-700/80 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            <span>Edit Review</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={handleShare}
+          className="w-full py-2.5 px-3 rounded-sm bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          <span>Share Review</span>
+        </button>
+
+        <Link
+          href={`/profile/${authorName}`}
+          className="w-full py-2 px-3 mt-1 rounded-sm bg-zinc-900/40 border border-zinc-800/80 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-[#a8dadc] transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to {authorName}&apos;s profile</span>
+        </Link>
+      </div>
+
+      {tmdbMeta?.genres && tmdbMeta.genres.length > 0 && (
+        <div className="mt-5 w-56 sm:w-full p-4 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
+            Genres
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {tmdbMeta.genres.map((genre) => (
+              <span
+                key={genre}
+                className="text-[11px] font-medium px-2 py-0.5 rounded-sm bg-zinc-800/80 border border-zinc-700/60 text-zinc-300"
+              >
+                {genre}
+              </span>
+            ))}
+          </div>
         </div>
       )}
+    </div>
+  );
 
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-8">
-        <div className="mb-6">
-          <Link
-            href={`/profile/${authorName}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-[#a8dadc] transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to {authorName}&apos;s profile</span>
-          </Link>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-start">
-          <aside className="w-full sm:w-56 md:w-64 lg:w-72 shrink-0 flex flex-col items-center sm:items-start">
-            <div className="aspect-[2/3] w-52 sm:w-full rounded-sm overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl relative">
-              {posterUrl ? (
-                <Image
-                  src={posterUrl}
-                  alt={review.title}
-                  fill
-                  priority
-                  sizes="(max-width: 640px) 208px, (max-width: 1024px) 256px, 288px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
-                  {review.media_type === "movie" ? (
-                    <Film className="w-12 h-12 mb-2 stroke-[1.5]" />
-                  ) : (
-                    <Tv className="w-12 h-12 mb-2 stroke-[1.5]" />
-                  )}
-                  <span className="text-xs text-zinc-500 font-semibold">
-                    No Poster
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 w-52 sm:w-full flex flex-col gap-2">
-              <Link
-                href={mediaHref}
-                className="w-full py-2.5 px-3 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
-              >
-                <span>
-                  Go to {review.media_type === "movie" ? "Movie" : "Series"}
-                </span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="w-full py-2.5 px-3 rounded-sm bg-zinc-800/80 hover:bg-zinc-800 text-xs font-semibold text-[#a8dadc] border border-zinc-700/80 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>Edit Review</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleShare}
-                className="w-full py-2.5 px-3 rounded-sm bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Share Review</span>
-              </button>
-            </div>
-
-            {extraDetails?.genres && extraDetails.genres.length > 0 && (
-              <div className="mt-6 w-52 sm:w-full p-4 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block mb-2">
-                  Genres
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {extraDetails.genres.map((genre) => (
-                    <span
-                      key={genre}
-                      className="text-[11px] font-medium px-2 py-0.5 rounded-sm bg-zinc-800/80 border border-zinc-700/60 text-zinc-300"
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </aside>
-
-          <section className="flex-1 min-w-0 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-zinc-800 border border-zinc-700/80 text-[#a8dadc]">
-                  {review.media_type === "movie" ? "Movie" : "Series"}
-                </span>
-                {review.season_number && (
-                  <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-zinc-800/80 border border-zinc-700/60 text-zinc-300">
-                    Season {review.season_number}
-                  </span>
-                )}
-                {extraDetails?.year && (
-                  <span className="text-xs font-mono text-zinc-400 font-semibold">
-                    {extraDetails.year}
-                  </span>
-                )}
-              </div>
-
-              <Link href={mediaHref} className="group inline-block">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-100 tracking-tight leading-tight group-hover:text-[#a8dadc] transition-colors">
-                  {review.title}
-                </h1>
-              </Link>
-
-              {extraDetails?.tagline && (
-                <p className="text-sm italic text-zinc-400 mt-1">
-                  &ldquo;{extraDetails.tagline}&rdquo;
-                </p>
-              )}
-            </div>
-
-            <div className="mt-6 p-4 sm:p-5 rounded-sm bg-zinc-900/60 border border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
+  return (
+    <>
+      <MediaLayout
+        backdropUrl={backdropUrl}
+        backdropAlt={resolvedTitle}
+        isBackdropLoaded={isBackdropLoaded}
+        onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        posterColumn={posterColumnNode}
+        bottomPaddingClassName="pb-32 sm:pb-40"
+      >
+        <MediaInfoColumn
+          typeLabel={resolvedTypeLabel}
+          title={resolvedTitle}
+          originalTitle={tmdbMeta?.original_title}
+          releaseDate={tmdbMeta?.release_date}
+          runtimeMinutes={tmdbMeta?.runtime}
+          episodesCount={tmdbMeta?.episodesCount}
+          tagline={tmdbMeta?.tagline}
+          overview={review.overview || tmdbMeta?.overview}
+        >
+          <div className="pt-2">
+            <div className="p-4 sm:p-5 rounded-sm bg-zinc-900/60 border border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <Link
                   href={`/profile/${authorName}`}
@@ -643,7 +634,7 @@ function ReviewDetailContent() {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-5 flex items-center gap-3">
               <div
                 className="flex items-center gap-1 shrink-0"
                 title={ratingVal > 0 ? `${ratingVal} / 5` : "Unrated"}
@@ -661,9 +652,7 @@ function ReviewDetailContent() {
                         </div>
                       )}
                       {isHalf && (
-                        <div className="absolute inset-0 overflow-hidden w-1/2">
-                          <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
-                        </div>
+                        <StarHalf className="absolute inset-0 w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
                       )}
                     </div>
                   );
@@ -679,10 +668,10 @@ function ReviewDetailContent() {
             </div>
 
             {review.has_spoilers && (
-              <div className="mt-6 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">
+              <div className="mt-5 rounded-sm border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-amber-300 font-semibold">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
-                  <span>This review contains spoilers for {review.title}.</span>
+                  <span>This review contains spoilers for {resolvedTitle}.</span>
                 </div>
                 <button
                   type="button"
@@ -715,7 +704,7 @@ function ReviewDetailContent() {
             </div>
 
             {review.media_type === "tv" && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {typeof review.last_watched_episode === "number" &&
                   review.last_watched_episode > 0 && (
                     <div className="p-3.5 rounded-sm bg-zinc-900/40 border border-zinc-800/80">
@@ -751,34 +740,34 @@ function ReviewDetailContent() {
                 )}
               </div>
             )}
-          </section>
-        </div>
+          </div>
+        </MediaInfoColumn>
+      </MediaLayout>
 
-        {isOwner && (
-          <MediaReviewModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            title={review.title}
-            typeLabel={review.media_type === "movie" ? "Movie" : "Series"}
-            year={extraDetails?.year}
-            posterUrl={posterUrl}
-            backdropUrl={backdropUrl}
-            mediaType={review.media_type}
-            status={review.status}
-            isFavorite={review.is_favorite}
-            rating={ratingVal}
-            review={review.review || ""}
-            hasSpoilers={review.has_spoilers}
-            watchedDate={review.watched_date || undefined}
-            startDate={review.start_date || undefined}
-            endDate={review.end_date || undefined}
-            isSaving={isSaving}
-            onSave={handleSaveReview}
-            onDelete={handleDeleteReview}
-          />
-        )}
-      </main>
-    </div>
+      {isOwner && (
+        <MediaReviewModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title={resolvedTitle}
+          typeLabel={review.media_type === "movie" ? "Movie" : "Series"}
+          year={tmdbMeta?.release_date ? tmdbMeta.release_date.split("-")[0] : undefined}
+          posterUrl={posterUrl}
+          backdropUrl={backdropUrl}
+          mediaType={review.media_type}
+          status={review.status}
+          isFavorite={review.is_favorite}
+          rating={ratingVal}
+          review={review.review || ""}
+          hasSpoilers={review.has_spoilers}
+          watchedDate={review.watched_date || undefined}
+          startDate={review.start_date || undefined}
+          endDate={review.end_date || undefined}
+          isSaving={isSaving}
+          onSave={handleSaveReview}
+          onDelete={handleDeleteReview}
+        />
+      )}
+    </>
   );
 }
 

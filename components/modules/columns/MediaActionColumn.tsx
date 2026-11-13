@@ -12,7 +12,6 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
-  Film,
   ListPlus,
 } from "lucide-react";
 
@@ -123,9 +122,10 @@ export default function MediaActionColumn({
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700">
-              <Film className="w-12 h-12 mb-2" />
-              <span className="text-xs text-zinc-500">No poster</span>
+            <div className="w-full h-full flex items-center justify-center p-4 text-center bg-zinc-900">
+              <span className="text-sm font-bold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-4 select-none">
+                {title}
+              </span>
             </div>
           )}
 

@@ -9,7 +9,6 @@ import {
   Eye,
   Bookmark,
   Heart,
-  Film,
   PlayCircle,
   PauseCircle,
   XCircle,
@@ -329,8 +328,10 @@ export default function MediaReviewModal({
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-700">
-                      <Film className="w-8 h-8" />
+                    <div className="w-full h-full flex items-center justify-center p-3 text-center bg-zinc-900">
+                      <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-4 select-none">
+                        {title}
+                      </span>
                     </div>
                   )}
 

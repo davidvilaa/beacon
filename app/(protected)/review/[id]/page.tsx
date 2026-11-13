@@ -15,8 +15,6 @@ import {
   Heart,
   Pencil,
   AlertTriangle,
-  Film,
-  Tv,
   User,
   Calendar,
 } from "lucide-react";
@@ -528,13 +526,10 @@ function ReviewDetailContent() {
             className="object-cover"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900">
-            {review.media_type === "movie" ? (
-              <Film className="w-12 h-12 mb-2 stroke-[1.5]" />
-            ) : (
-              <Tv className="w-12 h-12 mb-2 stroke-[1.5]" />
-            )}
-            <span className="text-xs text-zinc-500 font-semibold">No Poster</span>
+          <div className="w-full h-full flex items-center justify-center p-4 text-center bg-zinc-900">
+            <span className="text-sm font-bold uppercase tracking-wider text-zinc-500 leading-snug line-clamp-4 select-none">
+              {resolvedTitle}
+            </span>
           </div>
         )}
       </div>

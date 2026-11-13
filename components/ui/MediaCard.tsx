@@ -3,7 +3,6 @@
 import { forwardRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Film } from "lucide-react";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import CardGradientBorder from "./CardGradientBorder";
 
@@ -71,9 +70,8 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
                 className="object-cover transition-opacity duration-300"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-zinc-600 bg-zinc-900">
-                <Film className="w-8 h-8 mb-1.5 text-zinc-700" />
-                <span className="text-[10px] text-zinc-500 font-semibold truncate max-w-[80px]">
+              <div className="w-full h-full flex items-center justify-center p-2 text-center bg-zinc-900">
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500 line-clamp-3 leading-snug select-none">
                   {title}
                 </span>
               </div>
@@ -134,9 +132,8 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-zinc-900">
-              <Film className="w-8 h-8 text-zinc-700 mb-1" />
-              <span className="text-[10px] text-zinc-500 font-semibold line-clamp-2">
+            <div className="w-full h-full flex items-center justify-center p-3 text-center bg-zinc-900">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-500 line-clamp-4 leading-snug select-none">
                 {title}
               </span>
             </div>

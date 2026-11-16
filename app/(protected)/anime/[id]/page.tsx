@@ -91,6 +91,14 @@ function AnimeDetailContent() {
     return isMediaReleased("anime", anime.status, releaseDateStr);
   }, [anime, releaseDateStr]);
 
+  const totalRuntimeMinutes = useMemo(() => {
+    if (!anime?.duration) return null;
+    if (anime.episodes && anime.episodes > 1) {
+      return anime.duration * anime.episodes;
+    }
+    return anime.duration;
+  }, [anime]);
+
   useEffect(() => {
     let ignore = false;
     async function fetchUserLog() {
@@ -665,17 +673,13 @@ function AnimeDetailContent() {
         }
       >
         <MediaInfoColumn
-          typeLabel={`Anime • ${anime.format || "TV"}`}
+          typeLabel="Anime"
           title={title}
-          originalTitle={anime.title.romaji || anime.title.native}
+          originalTitle={anime.title.native || anime.title.romaji}
           releaseDate={releaseDateStr}
-          runtimeMinutes={anime.duration}
+          runtimeMinutes={totalRuntimeMinutes}
           episodesCount={anime.episodes}
-          tagline={
-            anime.studios?.nodes?.[0]?.name
-              ? `Animated by ${anime.studios.nodes[0].name}`
-              : null
-          }
+          tagline={null}
           overview={stripHtml(anime.description)}
         >
           <MediaTabsNav
@@ -932,7 +936,7 @@ function AnimeDetailContent() {
           typeLabel="Anime"
           year={anime.startDate?.year}
           releaseDate={releaseDateStr}
-          runtimeMinutes={anime.duration}
+          runtimeMinutes={totalRuntimeMinutes}
           episodesCount={anime.episodes}
           posterUrl={posterUrl}
           backdropUrl={backdropUrl}

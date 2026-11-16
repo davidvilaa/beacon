@@ -11,6 +11,7 @@ import {
   getAnimeBackdropUrl,
   stripHtml,
 } from "@/lib/anilist";
+import { getPosterUrl, getBackdropUrl, MovieImage } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
@@ -23,11 +24,13 @@ import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/modules/modals/MediaReviewModal";
 import ListModal from "@/components/modules/modals/ListModal";
+import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
+import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import MediaCard from "@/components/ui/MediaCard";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
-import { isMediaReleased, formatFullDate } from "@/lib/media-utils";
-import { User, ChevronUp, ChevronDown, Plus, Minus } from "lucide-react";
+import { isMediaReleased } from "@/lib/media-utils";
+import { User, Plus, Minus } from "lucide-react";
 
 function formatRelationLabel(type: string): string {
   return type
@@ -43,6 +46,14 @@ function AnimeDetailContent() {
 
   const [anime, setAnime] = useState<AnimeMedia | null>(null);
   const [loading, setLoading] = useState(true);
+  const [customPoster, setCustomPoster] = useState<string | null>(null);
+  const [customBackdrop, setCustomBackdrop] = useState<string | null>(null);
+  const [availablePosters, setAvailablePosters] = useState<MovieImage[]>([]);
+  const [availableBackdrops, setAvailableBackdrops] = useState<MovieImage[]>([]);
+  const [loadingPosters, setLoadingPosters] = useState(false);
+  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
+  const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
+  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isListModalOpen, setIsListModalOpen] = useState(false);
@@ -105,6 +116,8 @@ function AnimeDetailContent() {
           setStartDate(data.start_date || "");
           setEndDate(data.end_date || "");
           setLastWatchedEpisode(data.last_watched_episode || 0);
+          if (data.custom_poster_path) setCustomPoster(data.custom_poster_path);
+          if (data.custom_backdrop_path) setCustomBackdrop(data.custom_backdrop_path);
         } else {
           setAnimeStatus(null);
           setIsFavorite(false);
@@ -165,6 +178,143 @@ function AnimeDetailContent() {
       ignore = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchPosters() {
+      if (!id) return;
+      try {
+        setLoadingPosters(true);
+        const res = await fetch(`/api/anime/${id}/posters`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.posters?.length) {
+            setAvailablePosters(data.posters);
+          }
+        }
+      } catch {
+      } finally {
+        if (!ignore) setLoadingPosters(false);
+      }
+    }
+
+    async function fetchBackdrops() {
+      if (!id) return;
+      try {
+        setLoadingBackdrops(true);
+        const res = await fetch(`/api/anime/${id}/backdrops`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.backdrops?.length) {
+            setAvailableBackdrops(data.backdrops);
+          }
+        }
+      } catch {
+      } finally {
+        if (!ignore) setLoadingBackdrops(false);
+      }
+    }
+
+    fetchPosters();
+    fetchBackdrops();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  const handleSelectPoster = async (filePath: string) => {
+    setCustomPoster(filePath);
+    setIsPosterPickerOpen(false);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session || !anime) return;
+
+      const title = getAnimeTitle(anime.title);
+      await supabase.from("animes").upsert({
+        id: anime.id,
+        title,
+        overview: stripHtml(anime.description) || null,
+        poster_path: getAnimePosterUrl(anime),
+        backdrop_path: getAnimeBackdropUrl(anime),
+        format: anime.format || null,
+        episodes: anime.episodes || 0,
+        status: anime.status || null,
+      });
+
+      await supabase.from("user_animes").upsert(
+        {
+          user_id: session.user.id,
+          anime_id: anime.id,
+          status: animeStatus || "watchlist",
+          is_favorite: isFavorite,
+          rating: rating || null,
+          review: review || null,
+          has_spoilers: hasSpoilers,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          last_watched_episode: lastWatchedEpisode,
+          custom_poster_path: filePath,
+          custom_backdrop_path: customBackdrop,
+        },
+        { onConflict: "user_id,anime_id" }
+      );
+
+      addToast("Poster updated", "success");
+    } catch {
+      addToast("Error saving poster choice", "error");
+    }
+  };
+
+  const handleSelectBackdrop = async (filePath: string) => {
+    setCustomBackdrop(filePath);
+    setIsBackdropPickerOpen(false);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session || !anime) return;
+
+      const title = getAnimeTitle(anime.title);
+      await supabase.from("animes").upsert({
+        id: anime.id,
+        title,
+        overview: stripHtml(anime.description) || null,
+        poster_path: getAnimePosterUrl(anime),
+        backdrop_path: getAnimeBackdropUrl(anime),
+        format: anime.format || null,
+        episodes: anime.episodes || 0,
+        status: anime.status || null,
+      });
+
+      await supabase.from("user_animes").upsert(
+        {
+          user_id: session.user.id,
+          anime_id: anime.id,
+          status: animeStatus || "watchlist",
+          is_favorite: isFavorite,
+          rating: rating || null,
+          review: review || null,
+          has_spoilers: hasSpoilers,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          last_watched_episode: lastWatchedEpisode,
+          custom_poster_path: customPoster,
+          custom_backdrop_path: filePath,
+        },
+        { onConflict: "user_id,anime_id" }
+      );
+
+      addToast("Backdrop updated", "success");
+    } catch {
+      addToast("Error saving backdrop choice", "error");
+    }
+  };
 
   const handleQuickAction = async (
     newStatus: MediaStatus,
@@ -243,6 +393,8 @@ function AnimeDetailContent() {
           start_date: startDate || null,
           end_date: endDate || null,
           last_watched_episode: lastWatchedEpisode,
+          custom_poster_path: customPoster,
+          custom_backdrop_path: customBackdrop,
         },
         { onConflict: "user_id,anime_id" }
       );
@@ -310,6 +462,8 @@ function AnimeDetailContent() {
           start_date: startDate || null,
           end_date: endDate || null,
           last_watched_episode: nextEpisode,
+          custom_poster_path: customPoster,
+          custom_backdrop_path: customBackdrop,
         },
         { onConflict: "user_id,anime_id" }
       );
@@ -355,6 +509,11 @@ function AnimeDetailContent() {
 
       if (animeError) throw animeError;
 
+      const chosenPoster =
+        data.customPosterPath !== undefined ? data.customPosterPath : customPoster;
+      const chosenBackdrop =
+        data.customBackdropPath !== undefined ? data.customBackdropPath : customBackdrop;
+
       const { error: userError } = await supabase.from("user_animes").upsert(
         {
           user_id: session.user.id,
@@ -370,11 +529,16 @@ function AnimeDetailContent() {
             data.status === "watched" && anime.episodes
               ? anime.episodes
               : lastWatchedEpisode,
+          custom_poster_path: chosenPoster,
+          custom_backdrop_path: chosenBackdrop,
         },
         { onConflict: "user_id,anime_id" }
       );
 
       if (userError) throw userError;
+
+      if (chosenPoster !== undefined) setCustomPoster(chosenPoster);
+      if (chosenBackdrop !== undefined) setCustomBackdrop(chosenBackdrop);
 
       setAnimeStatus(data.status);
       setIsFavorite(data.isFavorite);
@@ -422,6 +586,8 @@ function AnimeDetailContent() {
       setStartDate("");
       setEndDate("");
       setLastWatchedEpisode(0);
+      setCustomPoster(null);
+      setCustomBackdrop(null);
 
       setIsLogModalOpen(false);
       addToast("Removed from library", "success");
@@ -452,8 +618,23 @@ function AnimeDetailContent() {
   }
 
   const title = getAnimeTitle(anime.title);
-  const posterUrl = getAnimePosterUrl(anime);
-  const backdropUrl = getAnimeBackdropUrl(anime);
+  const defaultPoster = getAnimePosterUrl(anime);
+  const defaultBackdrop = getAnimeBackdropUrl(anime);
+
+  const activePosterPath = customPoster || defaultPoster;
+  const posterUrl = activePosterPath
+    ? activePosterPath.startsWith("http")
+      ? activePosterPath
+      : getPosterUrl(activePosterPath, "w500")
+    : null;
+
+  const activeBackdropPath = customBackdrop || defaultBackdrop;
+  const backdropUrl = activeBackdropPath
+    ? activeBackdropPath.startsWith("http")
+      ? activeBackdropPath
+      : getBackdropUrl(activeBackdropPath, "original")
+    : null;
+
   const hasTrailer = Boolean(
     anime.trailer?.id && anime.trailer?.site?.toLowerCase() === "youtube"
   );
@@ -469,6 +650,9 @@ function AnimeDetailContent() {
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
   ];
 
+  const hasMultiplePosters = availablePosters.length > 1;
+  const hasMultipleBackdrops = availableBackdrops.length > 1;
+
   return (
     <>
       <MediaLayout
@@ -476,13 +660,15 @@ function AnimeDetailContent() {
         backdropAlt={title}
         isBackdropLoaded={isBackdropLoaded}
         onBackdropLoaded={() => setIsBackdropLoaded(true)}
-        hasMultipleBackdrops={false}
+        hasMultipleBackdrops={hasMultipleBackdrops}
+        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
         posterColumn={
           <div className="w-full flex flex-col items-center">
             <MediaActionColumn
               posterUrl={posterUrl}
               title={title}
-              hasMultiplePosters={false}
+              hasMultiplePosters={hasMultiplePosters}
+              onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
               mediaType="anime"
               status={animeStatus}
               isFavorite={isFavorite}
@@ -776,6 +962,31 @@ function AnimeDetailContent() {
         </MediaInfoColumn>
       </MediaLayout>
 
+      {isPosterPickerOpen && (
+        <ArtworkPickerModal
+          isOpen={isPosterPickerOpen}
+          onClose={() => setIsPosterPickerOpen(false)}
+          title="CHANGE POSTER"
+          type="poster"
+          images={availablePosters}
+          selectedImage={customPoster || defaultPoster}
+          onSelectImage={handleSelectPoster}
+          isLoading={loadingPosters}
+        />
+      )}
+
+      {isBackdropPickerOpen && (
+        <BackdropPickerModal
+          isOpen={isBackdropPickerOpen}
+          onClose={() => setIsBackdropPickerOpen(false)}
+          title="CHANGE BACKDROP"
+          images={availableBackdrops}
+          selectedImage={customBackdrop || defaultBackdrop}
+          onSelectImage={handleSelectBackdrop}
+          isLoading={loadingBackdrops}
+        />
+      )}
+
       {isLogModalOpen && (
         <MediaReviewModal
           isOpen={isLogModalOpen}
@@ -797,6 +1008,12 @@ function AnimeDetailContent() {
           hasSpoilers={hasSpoilers}
           startDate={startDate}
           endDate={endDate}
+          availablePosters={availablePosters}
+          availableBackdrops={availableBackdrops}
+          selectedPoster={customPoster}
+          selectedBackdrop={customBackdrop}
+          loadingPosters={loadingPosters}
+          loadingBackdrops={loadingBackdrops}
           isSaving={isSaving}
           isReleased={isReleased}
           onSave={handleSaveModal}
@@ -815,8 +1032,16 @@ function AnimeDetailContent() {
             overview: stripHtml(anime.description) || null,
             posterPath: posterUrl,
             backdropPath: backdropUrl,
+            customPosterPath: customPoster,
+            customBackdropPath: customBackdrop,
             numberOfEpisodes: anime.episodes || 0,
           }}
+          availablePosters={availablePosters}
+          availableBackdrops={availableBackdrops}
+          selectedPoster={customPoster}
+          selectedBackdrop={customBackdrop}
+          loadingPosters={loadingPosters}
+          loadingBackdrops={loadingBackdrops}
         />
       )}
     </>

@@ -9,6 +9,9 @@ export interface TmdbExclusionItem {
   first_air_date?: string;
 }
 
+const ASIAN_ANIMATION_LANGUAGES = ["ja", "zh", "ko", "yue", "cn"];
+const ASIAN_ANIMATION_COUNTRIES = ["JP", "CN", "KR", "TW", "HK"];
+
 export const CONTENT_FILTERS = {
   tmdb: {
     excludedGenreIds: [
@@ -63,8 +66,11 @@ export function isExcludedTmdbMedia(item: TmdbExclusionItem): boolean {
         ? item.origin_country.map((c) => String(c).toUpperCase().trim())
         : [];
 
-      const isJapanese = lang === "ja" || countries.includes("JP");
-      if (isJapanese) return true;
+      const isAsian =
+        ASIAN_ANIMATION_LANGUAGES.includes(lang) ||
+        countries.some((c) => ASIAN_ANIMATION_COUNTRIES.includes(c));
+
+      if (isAsian) return true;
     }
   }
 

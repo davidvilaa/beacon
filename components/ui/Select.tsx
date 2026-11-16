@@ -80,8 +80,8 @@ export default function Select({
           {options.map((option) => (
             <div key={option.id} className="w-full">
               {option.dividerAbove && (
-                <div className="flex justify-center my-1.5">
-                  <div className="w-[70%] h-px bg-zinc-800" />
+                <div className={`my-1.5 ${isCompact ? "px-2.5" : "px-3"}`}>
+                  <div className="h-px bg-zinc-800" />
                 </div>
               )}
               <button

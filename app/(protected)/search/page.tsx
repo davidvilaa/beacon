@@ -242,20 +242,20 @@ function SearchContent() {
                     title={username}
                     className="group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors cursor-pointer min-w-0"
                   >
-                    <div className="w-20 sm:w-28 md:w-32 aspect-[2/3] flex items-center justify-center shrink-0">
+                    <div className="w-20 sm:w-28 md:w-32 shrink-0 flex items-start justify-center">
                       {avatarUrl ? (
-                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900 shrink-0">
+                        <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900 shrink-0">
                           <Image
                             src={avatarUrl}
                             alt={username}
                             fill
-                            sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+                            sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 128px"
                             className="object-cover"
                           />
                         </div>
                       ) : (
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-zinc-900 flex items-center justify-center border-2 border-zinc-800 text-zinc-600 shrink-0">
-                          <UserIcon className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-600" />
+                        <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-zinc-900 flex items-center justify-center border-2 border-zinc-800 text-zinc-600 shrink-0">
+                          <UserIcon className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 text-zinc-600" />
                         </div>
                       )}
                     </div>

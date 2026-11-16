@@ -21,6 +21,7 @@ interface SearchMovieItem extends Omit<Movie, "id"> {
   moduleType?: string;
   media_type?: string;
   username?: string;
+  author?: string | null;
   href?: string;
   famous_works?: string | null;
   description?: string | null;
@@ -37,7 +38,7 @@ const RESULT_OPTIONS: Option[] = [
   { id: "tv", label: "Series" },
   { id: "anime", label: "Anime" },
   { id: "game", label: "Games" },
-  { id: "user", label: "Users" },
+  { id: "user", label: "Users", dividerAbove: true },
   { id: "person", label: "People" },
   { id: "company", label: "Companies" },
   { id: "list", label: "Lists" },
@@ -214,6 +215,7 @@ function SearchContent() {
                     list={{
                       id: String(movie.id),
                       title: movie.title,
+                      author: movie.author || null,
                       description: movie.description || movie.overview || null,
                       isPrivate: movie.isPrivate,
                       isNumbered: movie.isNumbered,

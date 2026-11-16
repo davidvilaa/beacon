@@ -9,6 +9,7 @@ import { formatFullDate } from "@/lib/media-utils";
 export interface ListCardData {
   id: string;
   title: string;
+  author?: string | null;
   description?: string | null;
   isPrivate?: boolean;
   isNumbered?: boolean;
@@ -98,6 +99,15 @@ export default function ListCard({
             <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 shrink-0" />
           )}
         </div>
+
+        {list.author && (
+          <p className="text-xs sm:text-sm text-zinc-400 -mt-0.5">
+            by{" "}
+            <span className="text-zinc-200 font-medium group-hover:text-[#a8dadc] transition-colors">
+              {list.author}
+            </span>
+          </p>
+        )}
 
         {(typeof list.itemCount === "number" || formattedDate) && (
           <div className="flex items-center gap-2.5 text-xs text-zinc-400 flex-wrap">

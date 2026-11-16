@@ -93,13 +93,11 @@ export async function GET(request: Request) {
 
       let usersQuery = supabase
         .from("users")
-        .select("id, username, avatar_url, bio, created_at", { count: "exact" })
+        .select("id, username, avatar_url, bio", { count: "exact" })
         .ilike("username", `%${query.trim()}%`);
 
-      if (sortBy === "newest") {
-        usersQuery = usersQuery.order("created_at", { ascending: false });
-      } else if (sortBy === "oldest") {
-        usersQuery = usersQuery.order("created_at", { ascending: true });
+      if (sortBy === "oldest") {
+        usersQuery = usersQuery.order("username", { ascending: false });
       } else {
         usersQuery = usersQuery.order("username", { ascending: true });
       }
@@ -193,6 +191,7 @@ export async function GET(request: Request) {
       const mediaMap = await fetchCachedMediaMap(supabase as any, previewRefs);
 
       const mappedLists = (lists || []).map((l: any) => {
+        const rawOwner = Array.isArray(l.users) ? l.users[0] : l.users;
         const sorted = sortedItemsByList.get(l.id) || [];
         const previewPosters = sorted.slice(0, 5).map((item) => {
           const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
@@ -202,6 +201,7 @@ export async function GET(request: Request) {
         return {
           id: l.id,
           title: l.title,
+          author: rawOwner?.username || null,
           description: l.description || "",
           overview: l.description || "",
           isPrivate: l.is_private,
@@ -317,7 +317,7 @@ export async function GET(request: Request) {
         uiPage === 1
           ? supabase
               .from("users")
-              .select("id, username, avatar_url, bio, created_at")
+              .select("id, username, avatar_url, bio")
               .ilike("username", `%${query.trim()}%`)
               .limit(3)
           : Promise.resolve({ data: [] }),
@@ -332,6 +332,10 @@ export async function GET(request: Request) {
                 is_numbered,
                 created_at,
                 updated_at,
+                users (
+                  id,
+                  username
+                ),
                 list_items (
                   id,
                   media_type,
@@ -363,7 +367,6 @@ export async function GET(request: Request) {
           media_type: "user",
           moduleType: "user",
           popularity: isExact ? 100 : 1,
-          created_at: u.created_at,
           href: `/profile/${encodeURIComponent(u.username)}`,
         };
       });
@@ -392,6 +395,7 @@ export async function GET(request: Request) {
       );
 
       const listItems = (listsRes.data || []).map((l: any) => {
+        const rawOwner = Array.isArray(l.users) ? l.users[0] : l.users;
         const sorted = listItemsMap.get(l.id) || [];
         const previewPosters = sorted.slice(0, 5).map((item) => {
           const cached = listMediaMap.get(`${item.media_type}-${item.media_id}`);
@@ -401,6 +405,7 @@ export async function GET(request: Request) {
         return {
           id: l.id,
           title: l.title,
+          author: rawOwner?.username || null,
           description: l.description || "",
           overview: l.description || "",
           isPrivate: l.is_private,

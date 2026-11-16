@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { UserCircle, Link as LinkIcon } from "lucide-react";
 import { FaGithub, FaXTwitter, FaInstagram } from "react-icons/fa6";
 import { ProfileProvider, ProfileUser } from "@/components/profile/ProfileContext";
+import FollowButton from "@/components/profile/FollowButton";
 
 function ProfileSubNav({
   activeTab,
@@ -164,6 +165,7 @@ function UserProfileContent({
     if (subSegment === "anime") return "anime";
     if (subSegment === "games") return "games";
     if (subSegment === "lists") return "lists";
+    if (subSegment === "network") return "network";
     return "overview";
   };
 
@@ -213,6 +215,7 @@ function UserProfileContent({
     { id: "anime", label: "Anime", href: `${basePath}/anime` },
     { id: "games", label: "Games", href: `${basePath}/games` },
     { id: "lists", label: "Lists", href: `${basePath}/lists` },
+    { id: "network", label: "Network", href: `${basePath}/network` },
   ];
 
   if (!loading && !profile) {
@@ -267,9 +270,14 @@ function UserProfileContent({
             </div>
 
             <div className="flex flex-col gap-2 flex-1 pt-1">
-              <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
-                {profile.username || "User"}
-              </h1>
+              <div className="flex items-center gap-3.5 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
+                  {profile.username || "User"}
+                </h1>
+                {!isOwner && (
+                  <FollowButton targetUserId={profile.id} />
+                )}
+              </div>
 
               {profile.social_links && profile.social_links.length > 0 && (
                 <div className="flex flex-wrap gap-3.5 items-center mt-0.5">
@@ -330,7 +338,7 @@ function UserProfileContent({
           />
         </div>
 
-        {activeTab !== "overview" && activeTab !== "lists" && (
+        {activeTab !== "overview" && activeTab !== "lists" && activeTab !== "network" && (
           <Suspense fallback={<div className="h-10 border-b border-zinc-700/80 rounded-b-sm px-2" />}>
             <ProfileSubNav activeTab={activeTab} basePath={basePath} />
           </Suspense>

@@ -286,3 +286,27 @@ create policy "list_items_delete_policy"
         and lists.user_id = auth.uid()
     )
   );
+
+create table public.follows (
+  id uuid not null default gen_random_uuid() primary key,
+  follower_id uuid not null references public.users(id) on delete cascade,
+  following_id uuid not null references public.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  constraint follows_unique unique (follower_id, following_id),
+  constraint follows_no_self_follow check (follower_id <> following_id)
+);
+
+create index idx_follows_follower_id on public.follows (follower_id);
+create index idx_follows_following_id on public.follows (following_id);
+create index idx_follows_created_at on public.follows (created_at desc);
+
+alter table public.follows enable row level security;
+
+create policy "follows_select_policy"
+  on public.follows for select using (true);
+
+create policy "follows_insert_policy"
+  on public.follows for insert with check (auth.uid() = follower_id);
+
+create policy "follows_delete_policy"
+  on public.follows for delete using (auth.uid() = follower_id);

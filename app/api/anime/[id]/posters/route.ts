@@ -200,6 +200,76 @@ export async function GET(
             (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
         );
       }
+
+      if (tmdbEntry.mediaType === "tv") {
+        try {
+          const showUrl = new URL(`https://api.themoviedb.org/3/tv/${tmdbEntry.id}`);
+          if (rawKey) showUrl.searchParams.set("api_key", rawKey);
+          const showRes = await fetch(showUrl.toString(), { headers });
+          if (showRes.ok) {
+            const showData = await showRes.json();
+            const seasons = (showData.seasons || []).filter((s: any) => s.season_number > 0);
+            if (seasons.length > 1) {
+              const aniTitle = `${anime.title.english || ""} ${anime.title.romaji || ""}`.toLowerCase();
+              const aniYearMonth =
+                anime.startDate?.year && anime.startDate?.month
+                  ? `${anime.startDate.year}-${String(anime.startDate.month).padStart(2, "0")}`
+                  : "";
+
+              let matchedSeason: number | null = null;
+              if (aniYearMonth) {
+                const dateMatch = seasons.find(
+                  (s: any) => s.air_date && s.air_date.startsWith(aniYearMonth)
+                );
+                if (dateMatch) matchedSeason = dateMatch.season_number;
+              }
+              if (!matchedSeason) {
+                const numMatch =
+                  aniTitle.match(/(\d+)(?:st|nd|rd|th)?\s*season/) ||
+                  aniTitle.match(/season\s*(\d+)/);
+                if (numMatch) {
+                  const num = parseInt(numMatch[1], 10);
+                  const s = seasons.find((sec: any) => sec.season_number === num);
+                  if (s) matchedSeason = s.season_number;
+                }
+              }
+              if (!matchedSeason) {
+                for (const s of seasons) {
+                  const clean = (s.name || "")
+                    .replace(/season\s*\d+/i, "")
+                    .replace(/arc/i, "")
+                    .trim()
+                    .toLowerCase();
+                  if (clean.length > 3 && aniTitle.includes(clean)) {
+                    matchedSeason = s.season_number;
+                    break;
+                  }
+                }
+              }
+
+              if (matchedSeason) {
+                const seasonImgUrl = new URL(
+                  `https://api.themoviedb.org/3/tv/${tmdbEntry.id}/season/${matchedSeason}/images`
+                );
+                if (rawKey) seasonImgUrl.searchParams.set("api_key", rawKey);
+                const seasonImgRes = await fetch(seasonImgUrl.toString(), { headers });
+                if (seasonImgRes.ok) {
+                  const sData = await seasonImgRes.json();
+                  const sPosters = (sData.posters || []).filter(
+                    (p: MovieImage) =>
+                      Boolean(p.file_path) &&
+                      (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
+                  );
+                  if (sPosters.length > 0) {
+                    tmdbPosters = [...sPosters, ...tmdbPosters];
+                  }
+                }
+              }
+            }
+          }
+        } catch {
+        }
+      }
     }
 
     const combined = [...initialPosters, ...tmdbPosters];

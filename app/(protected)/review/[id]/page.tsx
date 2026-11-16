@@ -29,6 +29,12 @@ import MediaReviewModal, {
 } from "@/components/modules/modals/MediaReviewModal";
 import { getPosterUrl, getBackdropUrl, TvSeasonSummary } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";
+import {
+  getAnimeTitle,
+  getAnimePosterUrl,
+  getAnimeBackdropUrl,
+  stripHtml,
+} from "@/lib/anilist";
 
 interface ReviewUser {
   id: string;
@@ -280,12 +286,20 @@ function ReviewDetailContent() {
 
           if (animeData) {
             const a = animeData as any;
+            const rawTitle = a.animes?.title;
+            const animeTitleStr =
+              typeof rawTitle === "object" && rawTitle !== null
+                ? getAnimeTitle(rawTitle)
+                : typeof rawTitle === "string"
+                ? rawTitle
+                : "Anime";
+
             record = {
               id: a.id,
               user_id: a.user_id,
               media_id: a.anime_id,
               media_type: "anime",
-              title: a.animes?.title || "Anime",
+              title: animeTitleStr,
               overview: a.animes?.overview || null,
               poster_path: a.animes?.poster_path || null,
               backdrop_path: a.animes?.backdrop_path || null,
@@ -326,34 +340,65 @@ function ReviewDetailContent() {
               if (Array.isArray(tmdb.seasons)) {
                 setTvSeasons(tmdb.seasons);
               }
-              const date = tmdb.release_date || tmdb.first_air_date || "";
+
+              const isAnime = record.media_type === "anime";
+              const titleStr = isAnime
+                ? getAnimeTitle(tmdb.title)
+                : typeof tmdb.title === "object" && tmdb.title
+                ? getAnimeTitle(tmdb.title)
+                : tmdb.title || tmdb.name || "";
+
+              const originalTitleStr = isAnime
+                ? tmdb.title?.romaji || tmdb.title?.native || titleStr
+                : tmdb.original_title || tmdb.original_name || "";
+
+              const animeReleaseDate = tmdb.startDate?.year
+                ? `${tmdb.startDate.year}-${String(tmdb.startDate.month || 1).padStart(2, "0")}-${String(tmdb.startDate.day || 1).padStart(2, "0")}`
+                : "";
+
+              const date = tmdb.release_date || tmdb.first_air_date || animeReleaseDate || "";
+
               const genres = Array.isArray(tmdb.genres)
-                ? tmdb.genres.map((g: any) => g.name)
+                ? tmdb.genres
+                    .map((g: any) => (typeof g === "string" ? g : g?.name))
+                    .filter(Boolean)
                 : [];
+
               const seasonSummary = Array.isArray(tmdb.seasons)
                 ? tmdb.seasons.find(
                     (s: any) => s.season_number === (record.season_number || 1)
                   )
                 : null;
+
+              const animePoster = tmdb.coverImage ? getAnimePosterUrl(tmdb) : null;
               const seasonPoster =
                 tmdb.initialSeason?.poster_path ||
                 seasonSummary?.poster_path ||
-                tmdb.poster_path;
+                tmdb.poster_path ||
+                animePoster;
+
+              const animeBackdrop =
+                tmdb.bannerImage || tmdb.coverImage ? getAnimeBackdropUrl(tmdb) : null;
+              const backdropPath = tmdb.backdrop_path || animeBackdrop;
+
+              const overviewText =
+                tmdb.overview || (tmdb.description ? stripHtml(tmdb.description) : "");
 
               setTmdbMeta({
-                title: tmdb.title || tmdb.name,
-                original_title: tmdb.original_title || tmdb.original_name,
+                title: titleStr,
+                original_title: originalTitleStr,
                 release_date: date,
                 runtime:
                   tmdb.runtime ||
+                  tmdb.duration ||
                   (Array.isArray(tmdb.episode_run_time) && tmdb.episode_run_time.length > 0
                     ? tmdb.episode_run_time[0]
                     : undefined),
-                episodesCount: tmdb.number_of_episodes,
+                episodesCount: tmdb.number_of_episodes || tmdb.episodes,
                 genres,
                 tagline: tmdb.tagline || "",
-                overview: tmdb.overview,
-                backdrop_path: tmdb.backdrop_path,
+                overview: overviewText,
+                backdrop_path: backdropPath,
                 poster_path: seasonPoster,
               });
             })
@@ -566,7 +611,11 @@ function ReviewDetailContent() {
   const ratingVal = review.rating ? Number(review.rating) : 0;
   const authorName = review.users?.username || "User";
 
-  const resolvedTitle = tmdbMeta?.title || review.title;
+  const rawTitle = tmdbMeta?.title || review.title;
+  const resolvedTitle =
+    typeof rawTitle === "object" && rawTitle !== null
+      ? getAnimeTitle(rawTitle)
+      : String(rawTitle || "Untitled");
   const resolvedTypeLabel =
     review.media_type === "movie"
       ? "Movie"

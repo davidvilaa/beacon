@@ -62,8 +62,13 @@ export async function fetchCachedMediaMap(
     });
   }
   for (const a of animesRes.data || []) {
+    const rawTitle = a.title as any;
+    const titleStr =
+      typeof rawTitle === "object" && rawTitle !== null
+        ? rawTitle.english || rawTitle.romaji || rawTitle.native || "Anime"
+        : String(rawTitle || "Anime");
     map.set(`anime-${a.id}`, {
-      title: a.title,
+      title: titleStr,
       posterPath: a.poster_path,
       backdropPath: a.backdrop_path,
     });

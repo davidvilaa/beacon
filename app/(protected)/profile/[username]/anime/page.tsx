@@ -159,13 +159,20 @@ function ProfileAnimeContent() {
     return animeList
       .filter((a) => a.is_favorite)
       .slice(0, 5)
-      .map((a) => ({
-        id: a.anime_id,
-        title: a.animes?.title || "Anime",
-        posterPath: a.custom_poster_path || a.animes?.poster_path || null,
-        href: `/anime/${a.anime_id}`,
-        mediaType: "anime",
-      }));
+      .map((a) => {
+        const rawTitle = a.animes?.title as any;
+        const titleStr =
+          typeof rawTitle === "object" && rawTitle !== null
+            ? rawTitle.english || rawTitle.romaji || rawTitle.native || "Anime"
+            : String(rawTitle || "Anime");
+        return {
+          id: a.anime_id,
+          title: titleStr,
+          posterPath: a.custom_poster_path || a.animes?.poster_path || null,
+          href: `/anime/${a.anime_id}`,
+          mediaType: "anime",
+        };
+      });
   }, [animeList]);
 
   const filteredAnime = useMemo(() => {
@@ -205,17 +212,24 @@ function ProfileAnimeContent() {
   }, [animeList, statusFilter, sortBy]);
 
   const catalogItems = useMemo<ProfileMediaItem[]>(() => {
-    return filteredAnime.map((a) => ({
-      id: a.anime_id,
-      entryLogId: a.id,
-      title: a.animes?.title || "Anime",
-      posterPath: a.custom_poster_path || a.animes?.poster_path || null,
-      href: `/anime/${a.anime_id}`,
-      mediaType: "anime",
-      rating: a.rating ? Number(a.rating) : null,
-      review: a.review,
-      hasSpoilers: Boolean(a.has_spoilers),
-    }));
+    return filteredAnime.map((a) => {
+      const rawTitle = a.animes?.title as any;
+      const titleStr =
+        typeof rawTitle === "object" && rawTitle !== null
+          ? rawTitle.english || rawTitle.romaji || rawTitle.native || "Anime"
+          : String(rawTitle || "Anime");
+      return {
+        id: a.anime_id,
+        entryLogId: a.id,
+        title: titleStr,
+        posterPath: a.custom_poster_path || a.animes?.poster_path || null,
+        href: `/anime/${a.anime_id}`,
+        mediaType: "anime",
+        rating: a.rating ? Number(a.rating) : null,
+        review: a.review,
+        hasSpoilers: Boolean(a.has_spoilers),
+      };
+    });
   }, [filteredAnime]);
 
   const isEffectiveLoading = loading || isLoadingProfile;

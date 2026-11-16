@@ -115,12 +115,12 @@ export default function ProfileNetworkTab({
             </p>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2.5 sm:gap-3">
+          <div className="flex flex-col gap-2.5 sm:gap-3">
             {users.map((u) => (
               <Link
                 key={u.id}
                 href={`/profile/${encodeURIComponent(u.username)}`}
-                className="relative inline-flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11 max-w-full"
+                className="relative flex items-stretch w-full rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
               >
                 <CardGradientBorder roundedClassName="rounded-sm" />
                 <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
@@ -151,18 +151,18 @@ export default function ProfileNetworkTab({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 animate-pulse">
         <div className="space-y-4">
           <div className="h-6 w-36 border-b border-zinc-700/80 rounded-b-sm bg-zinc-800/40" />
-          <div className="flex flex-wrap gap-2.5 sm:gap-3">
-            <div className="h-10 sm:h-11 w-36 bg-zinc-800/50 rounded-sm" />
-            <div className="h-10 sm:h-11 w-44 bg-zinc-800/40 rounded-sm" />
-            <div className="h-10 sm:h-11 w-32 bg-zinc-800/30 rounded-sm" />
+          <div className="flex flex-col gap-2.5 sm:gap-3">
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/50 rounded-sm" />
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/40 rounded-sm" />
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/30 rounded-sm" />
           </div>
         </div>
         <div className="space-y-4">
           <div className="h-6 w-36 border-b border-zinc-700/80 rounded-b-sm bg-zinc-800/40" />
-          <div className="flex flex-wrap gap-2.5 sm:gap-3">
-            <div className="h-10 sm:h-11 w-40 bg-zinc-800/50 rounded-sm" />
-            <div className="h-10 sm:h-11 w-32 bg-zinc-800/40 rounded-sm" />
-            <div className="h-10 sm:h-11 w-48 bg-zinc-800/30 rounded-sm" />
+          <div className="flex flex-col gap-2.5 sm:gap-3">
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/50 rounded-sm" />
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/40 rounded-sm" />
+            <div className="h-10 sm:h-11 w-full bg-zinc-800/30 rounded-sm" />
           </div>
         </div>
       </div>

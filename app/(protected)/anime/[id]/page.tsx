@@ -48,6 +48,8 @@ function AnimeDetailContent() {
   const [loading, setLoading] = useState(true);
   const [customPoster, setCustomPoster] = useState<string | null>(null);
   const [customBackdrop, setCustomBackdrop] = useState<string | null>(null);
+  const [fallbackPoster, setFallbackPoster] = useState<string | null>(null);
+  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
   const [availablePosters, setAvailablePosters] = useState<MovieImage[]>([]);
   const [availableBackdrops, setAvailableBackdrops] = useState<MovieImage[]>([]);
   const [loadingPosters, setLoadingPosters] = useState(false);
@@ -180,6 +182,11 @@ function AnimeDetailContent() {
   }, [id]);
 
   useEffect(() => {
+    setFallbackPoster(null);
+    setFallbackBackdrop(null);
+  }, [id]);
+
+  useEffect(() => {
     let ignore = false;
 
     async function fetchPosters() {
@@ -191,6 +198,12 @@ function AnimeDetailContent() {
           const data = await res.json();
           if (!ignore && data.posters?.length) {
             setAvailablePosters(data.posters);
+            const candidates = data.posters.slice(0, 10);
+            const picked =
+              candidates[Math.floor(Math.random() * candidates.length)]?.file_path;
+            if (picked) {
+              setFallbackPoster(picked);
+            }
           }
         }
       } catch {
@@ -208,6 +221,12 @@ function AnimeDetailContent() {
           const data = await res.json();
           if (!ignore && data.backdrops?.length) {
             setAvailableBackdrops(data.backdrops);
+            const candidates = data.backdrops.slice(0, 10);
+            const picked =
+              candidates[Math.floor(Math.random() * candidates.length)]?.file_path;
+            if (picked) {
+              setFallbackBackdrop(picked);
+            }
           }
         }
       } catch {
@@ -224,96 +243,14 @@ function AnimeDetailContent() {
     };
   }, [id]);
 
-  const handleSelectPoster = async (filePath: string) => {
+  const handleSelectPoster = (filePath: string) => {
     setCustomPoster(filePath);
     setIsPosterPickerOpen(false);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session || !anime) return;
-
-      const title = getAnimeTitle(anime.title);
-      await supabase.from("animes").upsert({
-        id: anime.id,
-        title,
-        overview: stripHtml(anime.description) || null,
-        poster_path: getAnimePosterUrl(anime),
-        backdrop_path: getAnimeBackdropUrl(anime),
-        format: anime.format || null,
-        episodes: anime.episodes || 0,
-        status: anime.status || null,
-      });
-
-      await supabase.from("user_animes").upsert(
-        {
-          user_id: session.user.id,
-          anime_id: anime.id,
-          status: animeStatus || "watchlist",
-          is_favorite: isFavorite,
-          rating: rating || null,
-          review: review || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: lastWatchedEpisode,
-          custom_poster_path: filePath,
-          custom_backdrop_path: customBackdrop,
-        },
-        { onConflict: "user_id,anime_id" }
-      );
-
-      addToast("Poster updated", "success");
-    } catch {
-      addToast("Error saving poster choice", "error");
-    }
   };
 
-  const handleSelectBackdrop = async (filePath: string) => {
+  const handleSelectBackdrop = (filePath: string) => {
     setCustomBackdrop(filePath);
     setIsBackdropPickerOpen(false);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session || !anime) return;
-
-      const title = getAnimeTitle(anime.title);
-      await supabase.from("animes").upsert({
-        id: anime.id,
-        title,
-        overview: stripHtml(anime.description) || null,
-        poster_path: getAnimePosterUrl(anime),
-        backdrop_path: getAnimeBackdropUrl(anime),
-        format: anime.format || null,
-        episodes: anime.episodes || 0,
-        status: anime.status || null,
-      });
-
-      await supabase.from("user_animes").upsert(
-        {
-          user_id: session.user.id,
-          anime_id: anime.id,
-          status: animeStatus || "watchlist",
-          is_favorite: isFavorite,
-          rating: rating || null,
-          review: review || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: lastWatchedEpisode,
-          custom_poster_path: customPoster,
-          custom_backdrop_path: filePath,
-        },
-        { onConflict: "user_id,anime_id" }
-      );
-
-      addToast("Backdrop updated", "success");
-    } catch {
-      addToast("Error saving backdrop choice", "error");
-    }
   };
 
   const handleQuickAction = async (
@@ -621,14 +558,14 @@ function AnimeDetailContent() {
   const defaultPoster = getAnimePosterUrl(anime);
   const defaultBackdrop = getAnimeBackdropUrl(anime);
 
-  const activePosterPath = customPoster || defaultPoster;
+  const activePosterPath = customPoster || fallbackPoster || defaultPoster || null;
   const posterUrl = activePosterPath
     ? activePosterPath.startsWith("http")
       ? activePosterPath
       : getPosterUrl(activePosterPath, "w500")
     : null;
 
-  const activeBackdropPath = customBackdrop || defaultBackdrop;
+  const activeBackdropPath = customBackdrop || fallbackBackdrop || defaultBackdrop || null;
   const backdropUrl = activeBackdropPath
     ? activeBackdropPath.startsWith("http")
       ? activeBackdropPath
@@ -966,10 +903,10 @@ function AnimeDetailContent() {
         <ArtworkPickerModal
           isOpen={isPosterPickerOpen}
           onClose={() => setIsPosterPickerOpen(false)}
-          title="CHANGE POSTER"
+          title="CHANGE ARTWORK"
           type="poster"
           images={availablePosters}
-          selectedImage={customPoster || defaultPoster}
+          selectedImage={activePosterPath}
           onSelectImage={handleSelectPoster}
           isLoading={loadingPosters}
         />
@@ -979,9 +916,9 @@ function AnimeDetailContent() {
         <BackdropPickerModal
           isOpen={isBackdropPickerOpen}
           onClose={() => setIsBackdropPickerOpen(false)}
-          title="CHANGE BACKDROP"
+          title="CHANGE BANNER"
           images={availableBackdrops}
-          selectedImage={customBackdrop || defaultBackdrop}
+          selectedImage={activeBackdropPath}
           onSelectImage={handleSelectBackdrop}
           isLoading={loadingBackdrops}
         />
@@ -1010,8 +947,8 @@ function AnimeDetailContent() {
           endDate={endDate}
           availablePosters={availablePosters}
           availableBackdrops={availableBackdrops}
-          selectedPoster={customPoster}
-          selectedBackdrop={customBackdrop}
+          selectedPoster={activePosterPath}
+          selectedBackdrop={activeBackdropPath}
           loadingPosters={loadingPosters}
           loadingBackdrops={loadingBackdrops}
           isSaving={isSaving}
@@ -1030,16 +967,16 @@ function AnimeDetailContent() {
             mediaId: anime.id,
             title,
             overview: stripHtml(anime.description) || null,
-            posterPath: posterUrl,
-            backdropPath: backdropUrl,
-            customPosterPath: customPoster,
-            customBackdropPath: customBackdrop,
+            posterPath: activePosterPath,
+            backdropPath: activeBackdropPath,
+            customPosterPath: activePosterPath,
+            customBackdropPath: activeBackdropPath,
             numberOfEpisodes: anime.episodes || 0,
           }}
           availablePosters={availablePosters}
           availableBackdrops={availableBackdrops}
-          selectedPoster={customPoster}
-          selectedBackdrop={customBackdrop}
+          selectedPoster={activePosterPath}
+          selectedBackdrop={activeBackdropPath}
           loadingPosters={loadingPosters}
           loadingBackdrops={loadingBackdrops}
         />

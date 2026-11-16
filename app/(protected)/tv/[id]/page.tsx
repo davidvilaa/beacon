@@ -46,6 +46,7 @@ function TvDetailContent() {
   const [customPosters, setCustomPosters] = useState<Record<number, string>>({});
   const [customBackdrops, setCustomBackdrops] = useState<Record<number, string>>({});
   const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
+  const [fallbackPosters, setFallbackPosters] = useState<Record<number, string>>({});
   const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
   const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
@@ -571,6 +572,15 @@ function TvDetailContent() {
               ...prev,
               [activeSeason]: data.posters,
             }));
+            const topCandidates = data.posters.slice(0, Math.min(5, data.posters.length));
+            const picked =
+              topCandidates[Math.floor(Math.random() * topCandidates.length)]?.file_path;
+            if (picked) {
+              setFallbackPosters((prev) => ({
+                ...prev,
+                [activeSeason]: picked,
+              }));
+            }
           }
         }
       } catch (err) {
@@ -705,6 +715,7 @@ function TvDetailContent() {
 
   const posterPath =
     customPosters[activeSeason] ||
+    fallbackPosters[activeSeason] ||
     currentSeasonDetails?.poster_path ||
     currentSeasonSummary?.poster_path ||
     tv?.poster_path ||

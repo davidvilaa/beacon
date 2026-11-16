@@ -404,7 +404,12 @@ function MovieDetailContent() {
             return (b.vote_count ?? 0) - (a.vote_count ?? 0);
           });
 
-          const chosenPoster = sortedPosters[0]?.file_path || data.poster_path;
+          let chosenPoster = data.poster_path;
+          if (sortedPosters.length > 0) {
+            const topPosters = sortedPosters.slice(0, Math.min(5, sortedPosters.length));
+            chosenPoster =
+              topPosters[Math.floor(Math.random() * topPosters.length)].file_path;
+          }
 
           setFallbackBackdrop(chosenBackdrop);
           setFallbackPoster(chosenPoster);

@@ -231,7 +231,7 @@ export async function searchAnime(
           hasNextPage
           perPage
         }
-        media(search: $search, type: ANIME, sort: $sort) {
+        media(search: $search, type: ANIME, format_not_in: [MOVIE, MUSIC], sort: $sort) {
           id
           title {
             romaji
@@ -421,7 +421,7 @@ export async function getPopularAnime(
   const query = `
     query ($page: Int, $perPage: Int) {
       Page(page: $page, perPage: $perPage) {
-        media(type: ANIME, sort: [POPULARITY_DESC]) {
+        media(type: ANIME, format_not_in: [MOVIE, MUSIC], sort: [POPULARITY_DESC]) {
           id
           title {
             romaji

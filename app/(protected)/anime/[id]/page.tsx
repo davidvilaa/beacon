@@ -679,7 +679,7 @@ function AnimeDetailContent() {
           releaseDate={releaseDateStr}
           runtimeMinutes={totalRuntimeMinutes}
           episodesCount={anime.episodes}
-          tagline={null}
+          tagline={anime.tagline || null}
           overview={stripHtml(anime.description)}
         >
           <MediaTabsNav

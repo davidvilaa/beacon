@@ -88,6 +88,7 @@ export interface AnimeMedia {
   averageScore: number | null;
   popularity: number | null;
   genres: string[];
+  tagline?: string | null;
   studios?: {
     nodes: AnimeStudioNode[];
   } | null;

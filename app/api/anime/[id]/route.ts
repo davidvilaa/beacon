@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAnimeById } from "@/lib/anilist";
+import { getAnimeTmdbTagline } from "@/lib/tmdb";
 
 export async function GET(
   request: Request,
@@ -17,7 +18,21 @@ export async function GET(
       return NextResponse.json({ error: "Anime not found" }, { status: 404 });
     }
 
-    return NextResponse.json(data);
+    let tagline: string | null = null;
+    try {
+      tagline = await getAnimeTmdbTagline(
+        animeId,
+        [data.title.english, data.title.romaji, data.title.native],
+        data.format === "MOVIE"
+      );
+    } catch {
+      tagline = null;
+    }
+
+    return NextResponse.json({
+      ...data,
+      tagline,
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message || "Failed to fetch anime details" },

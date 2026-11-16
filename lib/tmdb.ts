@@ -664,6 +664,22 @@ export async function getCompanyDetails(
   return company;
 }
 
+export async function getCompanyTopWorks(
+  id: string | number
+): Promise<string[]> {
+  try {
+    const data = await fetchFromTmdb<TmdbPaginatedResponse<Movie>>("/discover/movie", {
+      with_companies: String(id),
+      page: 1,
+      include_adult: "false",
+      sort_by: "popularity.desc",
+    });
+    return (data.results || []).slice(0, 4).map((m) => m.title).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 export interface TvEpisode {
   id: number;
   name: string;

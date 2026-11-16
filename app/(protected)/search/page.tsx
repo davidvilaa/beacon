@@ -3,24 +3,18 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Film,
-  Tv,
-  Sparkles,
-  Gamepad2,
-  BookOpen,
-  BookCopy,
-  User,
-  Clapperboard,
   Building2,
-  Layers,
+  User as UserIcon,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Movie } from "@/lib/tmdb";
+import { Movie, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import MediaCard from "@/components/ui/MediaCard";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import ListCard from "@/components/ui/ListCard";
+import Select, { Option } from "@/components/ui/Select";
 
 interface SearchMovieItem extends Omit<Movie, "id"> {
   id: number | string;
@@ -28,19 +22,31 @@ interface SearchMovieItem extends Omit<Movie, "id"> {
   media_type?: string;
   username?: string;
   href?: string;
+  famous_works?: string | null;
+  description?: string | null;
+  isPrivate?: boolean;
+  isNumbered?: boolean;
+  itemCount?: number;
+  updatedAt?: string;
+  previewPosters?: (string | null)[];
 }
 
-const allFilters = [
-  { id: "movies", title: "Movies", icon: Film },
-  { id: "series", title: "Series", icon: Tv },
-  { id: "anime", title: "Anime", icon: Sparkles },
-  { id: "games", title: "Games", icon: Gamepad2 },
-  { id: "manga", title: "Manga", icon: BookOpen },
-  { id: "comics", title: "Comics", icon: BookCopy },
-  { id: "users", title: "Users", icon: User },
-  { id: "people", title: "People", icon: Clapperboard },
-  { id: "companies", title: "Companies", icon: Building2 },
-  { id: "lists", title: "Lists", icon: Layers },
+const RESULT_OPTIONS: Option[] = [
+  { id: "all", label: "All Formats" },
+  { id: "movie", label: "Movies" },
+  { id: "tv", label: "Series" },
+  { id: "anime", label: "Anime" },
+  { id: "game", label: "Games" },
+  { id: "user", label: "Users" },
+  { id: "person", label: "People" },
+  { id: "company", label: "Companies" },
+  { id: "list", label: "Lists" },
+];
+
+const SORT_OPTIONS: Option[] = [
+  { id: "popularity", label: "Most Popular" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
 ];
 
 function getPageNumbers(current: number, total: number): (number | string)[] {
@@ -64,7 +70,8 @@ function SearchContent() {
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("popularity");
   const [movies, setMovies] = useState<SearchMovieItem[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
@@ -82,10 +89,16 @@ function SearchContent() {
     let isCancelled = false;
     setLoading(true);
 
-    const filterParam = selectedFilter ? `&module=${encodeURIComponent(selectedFilter)}` : "";
+    const filterParam =
+      selectedFilter !== "all"
+        ? `&module=${encodeURIComponent(selectedFilter)}`
+        : "";
+    const sortParam = `&sort_by=${encodeURIComponent(sortBy)}`;
 
     fetch(
-      `/api/movies/search?q=${encodeURIComponent(query.trim())}&page=${currentPage}${filterParam}`
+      `/api/movies/search?q=${encodeURIComponent(
+        query.trim()
+      )}&page=${currentPage}${filterParam}${sortParam}`
     )
       .then((res) => res.json())
       .then((data) => {
@@ -109,7 +122,7 @@ function SearchContent() {
     return () => {
       isCancelled = true;
     };
-  }, [query, currentPage, selectedFilter]);
+  }, [query, currentPage, selectedFilter, sortBy]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage === currentPage || newPage < 1 || newPage > totalPages) return;
@@ -119,8 +132,17 @@ function SearchContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleFilterClick = (filterId: string) => {
-    setSelectedFilter((prev) => (prev === filterId ? null : filterId));
+  const handleFilterChange = (filterId: string) => {
+    setSelectedFilter(filterId);
+    if (currentPage !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", "1");
+      router.push(`/search?${params.toString()}`);
+    }
+  };
+
+  const handleSortChange = (sortId: string) => {
+    setSortBy(sortId);
     if (currentPage !== 1) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", "1");
@@ -132,52 +154,34 @@ function SearchContent() {
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
-      <p className="text-sm italic text-zinc-400 mb-8">
-        results for{" "}
-        <span className="text-[#a8dadc] not-italic font-medium">
-          &ldquo;{query.toLowerCase()}&rdquo;
-        </span>
-      </p>
+      <div className="pb-5 mb-8 border-b border-zinc-800/80 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-sm italic text-zinc-400">
+          results for{" "}
+          <span className="text-[#a8dadc] not-italic font-medium">
+            &ldquo;{query.toLowerCase()}&rdquo;
+          </span>
+        </p>
 
-      <section className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            FILTERS
-          </h2>
-        </div>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Select
+            value={selectedFilter}
+            onChange={handleFilterChange}
+            options={RESULT_OPTIONS}
+            variant="compact"
+            className="w-36 sm:w-44"
+          />
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-2">
-          {allFilters.map((filter) => {
-            const Icon = filter.icon;
-            const isSelected = selectedFilter === filter.id;
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => handleFilterClick(filter.id)}
-                title={filter.title}
-                aria-label={filter.title}
-                className={`group relative w-14 h-14 rounded-sm border flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0 overflow-hidden ${
-                  isSelected
-                    ? "border-[#a8dadc] bg-[#a8dadc]/15 text-[#a8dadc]"
-                    : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
-                }`}
-              >
-                {!isSelected && <CardGradientBorder roundedClassName="rounded-sm" />}
-                <Icon className="w-6 h-6" />
-              </button>
-            );
-          })}
+          <Select
+            value={sortBy}
+            onChange={handleSortChange}
+            options={SORT_OPTIONS}
+            variant="compact"
+            className="w-36 sm:w-44"
+          />
         </div>
-      </section>
+      </div>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-            Results
-          </h2>
-        </div>
-
         <div className="divide-y divide-zinc-700/80">
           {loading ? (
             Array.from({ length: 5 }).map((_, index) => (
@@ -199,35 +203,180 @@ function SearchContent() {
             ))
           ) : filteredMovies.length > 0 ? (
             filteredMovies.map((movie) => {
-              const isMovie = movie.media_type === "movie" || movie.moduleType === "movies";
-              const releaseYear =
+              if (
+                movie.media_type === "list" ||
+                movie.moduleType === "list" ||
+                movie.moduleType === "lists"
+              ) {
+                return (
+                  <ListCard
+                    key={`list-${movie.id}`}
+                    list={{
+                      id: String(movie.id),
+                      title: movie.title,
+                      description: movie.description || movie.overview || null,
+                      isPrivate: movie.isPrivate,
+                      isNumbered: movie.isNumbered,
+                      itemCount: movie.itemCount,
+                      updatedAt: movie.updatedAt,
+                      previewPosters: movie.previewPosters || [],
+                    }}
+                    href={`/lists/${movie.id}`}
+                  />
+                );
+              }
+
+              if (
+                movie.media_type === "user" ||
+                movie.moduleType === "user" ||
                 movie.moduleType === "users"
-                  ? "User"
-                  : movie.moduleType === "people"
-                  ? "Person"
-                  : movie.moduleType === "companies"
-                  ? "Company"
-                  : movie.moduleType === "lists"
-                  ? "List"
-                  : movie.release_date
-                  ? movie.release_date.slice(0, 4)
-                  : isMovie
-                  ? "Movie"
-                  : "Series";
+              ) {
+                const avatarUrl = movie.poster_path;
+                const username = movie.username || movie.title;
+                return (
+                  <Link
+                    key={`user-${movie.id}`}
+                    href={`/profile/${encodeURIComponent(username)}`}
+                    title={username}
+                    className="group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors cursor-pointer min-w-0"
+                  >
+                    <div className="w-20 sm:w-28 md:w-32 aspect-[2/3] flex items-center justify-center shrink-0">
+                      {avatarUrl ? (
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-zinc-800 bg-zinc-900 shrink-0">
+                          <Image
+                            src={avatarUrl}
+                            alt={username}
+                            fill
+                            sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-zinc-900 flex items-center justify-center border-2 border-zinc-800 text-zinc-600 shrink-0">
+                          <UserIcon className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-600" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                        {username}
+                      </h3>
+                      {movie.overview && (
+                        <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 sm:line-clamp-4 leading-relaxed mt-2">
+                          {movie.overview}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              }
+
+              if (
+                movie.media_type === "person" ||
+                movie.moduleType === "person" ||
+                movie.moduleType === "people"
+              ) {
+                const profileUrl = getPosterUrl(movie.poster_path, "w500");
+                const famousWorks = movie.famous_works || movie.overview;
+                return (
+                  <Link
+                    key={`person-${movie.id}`}
+                    href={`/person/${movie.id}`}
+                    title={movie.title}
+                    className="group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors cursor-pointer min-w-0"
+                  >
+                    <div className="relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm overflow-hidden shrink-0 bg-zinc-900 border border-zinc-800/80">
+                      {profileUrl ? (
+                        <Image
+                          src={profileUrl}
+                          alt={movie.title}
+                          fill
+                          sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 128px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-2 text-center bg-zinc-900">
+                          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500 line-clamp-3 leading-snug select-none">
+                            {movie.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                        {movie.title}
+                      </h3>
+                      {famousWorks && (
+                        <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 leading-relaxed mt-2">
+                          {famousWorks}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              }
+
+              if (
+                movie.media_type === "company" ||
+                movie.moduleType === "company" ||
+                movie.moduleType === "companies"
+              ) {
+                const logoUrl = getPosterUrl(movie.poster_path, "w500");
+                const famousWorks = movie.famous_works || movie.overview;
+                return (
+                  <Link
+                    key={`company-${movie.id}`}
+                    href={`/company/${movie.id}`}
+                    title={movie.title}
+                    className="group flex items-start gap-4 sm:gap-5 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors cursor-pointer min-w-0"
+                  >
+                    <div
+                      className={`relative w-20 sm:w-28 md:w-32 aspect-[2/3] rounded-sm overflow-hidden shrink-0 border border-zinc-800/80 flex items-center justify-center p-2.5 ${
+                        logoUrl ? "bg-white" : "bg-zinc-900"
+                      }`}
+                    >
+                      {logoUrl ? (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <Image
+                            src={logoUrl}
+                            alt={movie.title}
+                            fill
+                            sizes="(max-width: 640px) 80px, (max-width: 768px) 112px, 128px"
+                            className="object-contain p-1 sm:p-2"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-zinc-900 p-2 text-center">
+                          <Building2 className="w-6 h-6 text-zinc-600" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                        {movie.title}
+                      </h3>
+                      {famousWorks && (
+                        <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 leading-relaxed mt-2">
+                          {famousWorks}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              }
+
+              const isMovie =
+                movie.media_type === "movie" || movie.moduleType === "movies";
+              const releaseYear = movie.release_date
+                ? movie.release_date.slice(0, 4)
+                : "";
 
               const resolvedHref =
                 movie.href ||
-                (movie.media_type === "person" || movie.moduleType === "people"
-                  ? `/person/${movie.id}`
-                  : movie.media_type === "company" || movie.moduleType === "companies"
-                  ? `/company/${movie.id}`
-                  : movie.media_type === "user" || movie.moduleType === "users"
-                  ? `/profile/${encodeURIComponent(movie.username || movie.title)}`
-                  : movie.media_type === "list" || movie.moduleType === "lists"
-                  ? `/lists/${movie.id}`
-                  : isMovie
-                  ? `/movie/${movie.id}`
-                  : `/tv/${movie.id}`);
+                (isMovie ? `/movie/${movie.id}` : `/tv/${movie.id}`);
 
               return (
                 <MediaCard

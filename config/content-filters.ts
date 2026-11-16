@@ -2,6 +2,11 @@ export interface TmdbExclusionItem {
   genre_ids?: number[];
   genres?: { id: number; name: string }[];
   media_type?: string;
+  original_language?: string;
+  origin_country?: string[];
+  name?: string;
+  title?: string;
+  first_air_date?: string;
 }
 
 export const CONTENT_FILTERS = {
@@ -15,6 +20,7 @@ export const CONTENT_FILTERS = {
       10402,
       10770,
     ],
+    excludeAnimeFromTv: true,
   },
   games: {
     excludedCategoryIds: [] as number[],
@@ -43,6 +49,23 @@ export function isExcludedTmdbMedia(item: TmdbExclusionItem): boolean {
       CONTENT_FILTERS.tmdb.excludedGenreIds.includes(id)
     );
     if (isGenreExcluded) return true;
+  }
+
+  if (CONTENT_FILTERS.tmdb.excludeAnimeFromTv && ids.includes(16)) {
+    const isTv =
+      item.media_type === "tv" ||
+      Boolean(item.first_air_date) ||
+      (Boolean(item.name) && !Boolean(item.title));
+
+    if (isTv) {
+      const lang = (item.original_language || "").toLowerCase().trim();
+      const countries = Array.isArray(item.origin_country)
+        ? item.origin_country.map((c) => String(c).toUpperCase().trim())
+        : [];
+
+      const isJapanese = lang === "ja" || countries.includes("JP");
+      if (isJapanese) return true;
+    }
   }
 
   return false;

@@ -129,6 +129,8 @@ export interface TvShow {
   vote_count: number;
   popularity?: number;
   genre_ids?: number[];
+  original_language?: string;
+  origin_country?: string[];
 }
 
 export interface MultiSearchItem {
@@ -150,6 +152,8 @@ export interface MultiSearchItem {
   vote_count?: number;
   popularity?: number;
   genre_ids?: number[];
+  original_language?: string;
+  origin_country?: string[];
 }
 
 export async function searchTv(

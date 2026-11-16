@@ -110,7 +110,7 @@ export async function GET(
       return (b.vote_average ?? 0) - (a.vote_average ?? 0);
     });
 
-    const candidates = sorted.slice(0, 35);
+    const candidates = sorted.slice(0, 100);
     const fingerprints = await Promise.all(
       candidates.map(async (b) => {
         const fp = await getBackdropFingerprint(b.file_path);
@@ -133,7 +133,7 @@ export async function GET(
         unique.push(item.backdrop);
       }
 
-      if (unique.length >= 25) break;
+      if (unique.length >= 80) break;
     }
 
     movieBackdropCache.set(id, { backdrops: unique, timestamp: Date.now() });

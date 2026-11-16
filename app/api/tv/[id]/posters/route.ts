@@ -160,7 +160,7 @@ export async function GET(
       return true;
     });
 
-    const candidates = prioritized.slice(0, 30);
+    const candidates = prioritized.slice(0, 100);
     const fingerprints = await Promise.all(
       candidates.map(async (p) => {
         const fp = await getPosterFingerprint(p.file_path);
@@ -183,7 +183,7 @@ export async function GET(
         unique.push(item.poster);
       }
 
-      if (unique.length >= 30) break;
+      if (unique.length >= 80) break;
     }
 
     tvPosterCache.set(cacheKey, { posters: unique, timestamp: Date.now() });

@@ -887,7 +887,7 @@ function TvDetailContent() {
         isOpen={isBackdropPickerOpen}
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
-        images={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
+        images={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
         selectedImage={backdropPath}
         onSelectImage={handleSelectBackdrop}
         isLoading={loadingBackdrops}
@@ -918,7 +918,7 @@ function TvDetailContent() {
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
         availablePosters={availablePosters[activeSeason] || []}
-        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
+        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
         selectedPoster={posterPath}
         selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
@@ -943,7 +943,7 @@ function TvDetailContent() {
           numberOfEpisodes: tv.number_of_episodes,
         }}
         availablePosters={availablePosters[activeSeason] || []}
-        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 30)}
+        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
         selectedPoster={posterPath}
         selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}

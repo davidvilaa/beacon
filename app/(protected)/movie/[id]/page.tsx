@@ -665,7 +665,7 @@ function MovieDetailContent() {
         isOpen={isBackdropPickerOpen}
         onClose={() => setIsBackdropPickerOpen(false)}
         title="CHANGE BANNER"
-        images={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
+        images={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
         selectedImage={backdropPath}
         onSelectImage={handleSelectBackdrop}
         isLoading={loadingBackdrops}
@@ -693,8 +693,8 @@ function MovieDetailContent() {
         isSaving={isSaving}
         onSave={handleSaveReview}
         onDelete={handleDeleteReview}
-        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
-        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
+        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 80)}
+        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
         selectedPoster={posterPath}
         selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}
@@ -714,8 +714,8 @@ function MovieDetailContent() {
           customPosterPath: posterPath,
           customBackdropPath: backdropPath,
         }}
-        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 30)}
-        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 30)}
+        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 80)}
+        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
         selectedPoster={posterPath}
         selectedBackdrop={backdropPath}
         loadingPosters={loadingPosters}

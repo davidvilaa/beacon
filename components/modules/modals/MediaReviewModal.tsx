@@ -101,7 +101,7 @@ interface MediaReviewModalProps {
   episodesCount?: number | null;
   posterUrl: string | null;
   backdropUrl: string | null;
-  mediaType: "movie" | "tv";
+  mediaType: "movie" | "tv" | "anime";
   status: MediaStatus;
   isFavorite: boolean;
   canAddFavorite?: boolean;
@@ -231,7 +231,7 @@ export default function MediaReviewModal({
     mediaType === "movie" ? movieStatusOptions : tvStatusOptions;
 
   const resolvedTypeLabel =
-    typeLabel || (mediaType === "movie" ? "Movie" : "Series");
+    typeLabel || (mediaType === "movie" ? "Movie" : mediaType === "anime" ? "Anime" : "Series");
   const formattedDate = releaseDate
     ? formatFullDate(releaseDate)
     : year
@@ -397,7 +397,7 @@ export default function MediaReviewModal({
               </div>
 
               {draftStatus !== "watchlist" && (
-                mediaType === "tv" ? (
+                mediaType === "tv" || mediaType === "anime" ? (
                   <div className="mt-4 flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-zinc-400">Start</span>

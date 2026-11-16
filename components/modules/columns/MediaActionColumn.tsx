@@ -28,7 +28,7 @@ interface MediaActionColumnProps {
   title: string;
   hasMultiplePosters?: boolean;
   onOpenPosterPicker?: () => void;
-  mediaType: "movie" | "tv";
+  mediaType: "movie" | "tv" | "anime";
   status: MediaStatus;
   isFavorite: boolean;
   hasLog?: boolean;

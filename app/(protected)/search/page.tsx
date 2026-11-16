@@ -372,13 +372,19 @@ function SearchContent() {
 
               const isMovie =
                 movie.media_type === "movie" || movie.moduleType === "movies";
+              const isAnime =
+                movie.media_type === "anime" || movie.moduleType === "anime";
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
                 : "";
 
               const resolvedHref =
                 movie.href ||
-                (isMovie ? `/movie/${movie.id}` : `/tv/${movie.id}`);
+                (isAnime
+                  ? `/anime/${movie.id}`
+                  : isMovie
+                  ? `/movie/${movie.id}`
+                  : `/tv/${movie.id}`);
 
               return (
                 <MediaCard
@@ -386,7 +392,7 @@ function SearchContent() {
                   variant="horizontal"
                   id={movie.id}
                   href={resolvedHref}
-                  mediaType={isMovie ? "movie" : "tv"}
+                  mediaType={isAnime ? "anime" : isMovie ? "movie" : "tv"}
                   title={movie.title}
                   posterPath={movie.poster_path}
                   backdropPath={movie.backdrop_path}

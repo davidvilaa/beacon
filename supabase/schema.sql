@@ -1,9 +1,12 @@
+drop table if exists public.follows cascade;
 drop table if exists public.list_items cascade;
 drop table if exists public.lists cascade;
 drop table if exists public.user_movies cascade;
 drop table if exists public.user_series cascade;
+drop table if exists public.user_animes cascade;
 drop table if exists public.movies cascade;
 drop table if exists public.series cascade;
+drop table if exists public.animes cascade;
 
 create or replace function public.handle_updated_at()
 returns trigger as $$
@@ -63,6 +66,34 @@ create policy "series_update_policy"
 
 create trigger trigger_series_updated_at
   before update on public.series
+  for each row execute function public.handle_updated_at();
+
+create table public.animes (
+  id bigint not null primary key,
+  title text not null,
+  overview text null,
+  poster_path text null,
+  backdrop_path text null,
+  format text null,
+  episodes integer null default 0,
+  status text null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.animes enable row level security;
+
+create policy "animes_read_policy"
+  on public.animes for select using (true);
+
+create policy "animes_insert_policy"
+  on public.animes for insert with check (auth.role() = 'authenticated');
+
+create policy "animes_update_policy"
+  on public.animes for update using (auth.role() = 'authenticated');
+
+create trigger trigger_animes_updated_at
+  before update on public.animes
   for each row execute function public.handle_updated_at();
 
 create table public.user_movies (
@@ -196,6 +227,72 @@ $$ language plpgsql;
 create trigger trigger_user_series_favorites_limit
   before insert or update on public.user_series
   for each row execute function public.check_user_series_favorites_limit();
+
+create table public.user_animes (
+  id uuid not null default gen_random_uuid() primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  anime_id bigint not null references public.animes(id) on delete cascade,
+  status text not null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist')),
+  is_favorite boolean not null default false,
+  rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
+  review text null,
+  has_spoilers boolean not null default false,
+  custom_poster_path text null,
+  custom_backdrop_path text null,
+  last_watched_episode integer null default 0,
+  start_date date null,
+  end_date date null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint user_animes_user_anime_unique unique (user_id, anime_id)
+);
+
+create index idx_user_animes_user_id on public.user_animes (user_id);
+create index idx_user_animes_anime_id on public.user_animes (anime_id);
+create index idx_user_animes_status on public.user_animes (user_id, status);
+create index idx_user_animes_favorite on public.user_animes (user_id, is_favorite);
+
+alter table public.user_animes enable row level security;
+
+create policy "user_animes_select_policy"
+  on public.user_animes for select using (true);
+
+create policy "user_animes_insert_policy"
+  on public.user_animes for insert with check (auth.uid() = user_id);
+
+create policy "user_animes_update_policy"
+  on public.user_animes for update using (auth.uid() = user_id);
+
+create policy "user_animes_delete_policy"
+  on public.user_animes for delete using (auth.uid() = user_id);
+
+create trigger trigger_user_animes_updated_at
+  before update on public.user_animes
+  for each row execute function public.handle_updated_at();
+
+create or replace function public.check_user_animes_favorites_limit()
+returns trigger as $$
+declare
+  fav_count integer;
+begin
+  if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    select count(*) into fav_count
+    from public.user_animes
+    where user_id = new.user_id
+      and is_favorite = true
+      and anime_id <> new.anime_id;
+
+    if fav_count >= 5 then
+      raise exception 'Maximum of 5 favorite anime reached';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_user_animes_favorites_limit
+  before insert or update on public.user_animes
+  for each row execute function public.check_user_animes_favorites_limit();
 
 create table public.lists (
   id uuid not null default gen_random_uuid() primary key,

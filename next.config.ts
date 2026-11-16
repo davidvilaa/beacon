@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.anilist.co",
+      },
+      {
+        protocol: "https",
+        hostname: "s4.anilist.co",
+      },
     ],
   },
   experimental: {

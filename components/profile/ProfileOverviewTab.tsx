@@ -7,7 +7,7 @@ export interface FavoriteMediaItem {
   title: string;
   posterPath: string | null;
   href?: string;
-  mediaType: "movie" | "tv";
+  mediaType: "movie" | "tv" | "anime";
 }
 
 interface ProfileOverviewTabProps {

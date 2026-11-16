@@ -8,6 +8,13 @@ import {
   getBestMoviePoster,
   getCompanyTopWorks,
 } from "@/lib/tmdb";
+import {
+  searchAnime,
+  getAnimeTitle,
+  getAnimePosterUrl,
+  getAnimeBackdropUrl,
+  stripHtml,
+} from "@/lib/anilist";
 import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
 import { createClient } from "@supabase/supabase-js";
 
@@ -295,6 +302,39 @@ export async function GET(request: Request) {
         href: `/company/${c.id}`,
       }));
       totalResults = data.total_results || 0;
+    } else if (moduleType === "anime") {
+      const animeData = await searchAnime(query, uiPage, 10, sortBy);
+      const results = (animeData.results || []).map((a) => {
+        const title = getAnimeTitle(a.title);
+        const posterUrl = getAnimePosterUrl(a);
+        const backdropUrl = getAnimeBackdropUrl(a);
+        const releaseDate = a.startDate?.year
+          ? `${a.startDate.year}-${String(a.startDate.month || 1).padStart(2, "0")}-${String(a.startDate.day || 1).padStart(2, "0")}`
+          : "";
+        return {
+          id: a.id,
+          title,
+          original_title: a.title.romaji || a.title.native || title,
+          overview: stripHtml(a.description),
+          poster_path: posterUrl,
+          backdrop_path: backdropUrl,
+          release_date: releaseDate,
+          vote_average: a.averageScore ? a.averageScore / 10 : 0,
+          vote_count: a.popularity || 0,
+          popularity: a.popularity || 0,
+          genre_ids: [],
+          moduleType: "anime",
+          media_type: "anime",
+          href: `/anime/${a.id}`,
+        };
+      });
+
+      return NextResponse.json({
+        page: uiPage,
+        results,
+        total_pages: Math.min(Math.ceil((animeData.pageInfo?.total || 0) / 10), 1000),
+        total_results: animeData.pageInfo?.total || 0,
+      });
     } else if (
       moduleType &&
       moduleType !== "movies" &&
@@ -312,7 +352,7 @@ export async function GET(request: Request) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const [multiData, usersRes, listsRes, companyData] = await Promise.all([
+      const [multiData, usersRes, listsRes, companyData, animeData] = await Promise.all([
         searchMulti(query, tmdbPage),
         uiPage === 1
           ? supabase
@@ -352,6 +392,9 @@ export async function GET(request: Request) {
         uiPage === 1
           ? searchCompany(query, 1)
           : Promise.resolve({ results: [], total_results: 0 }),
+        uiPage === 1
+          ? searchAnime(query, 1, 3, sortBy)
+          : Promise.resolve({ results: [] as any[], pageInfo: { total: 0, currentPage: 1, lastPage: 1, hasNextPage: false, perPage: 3 } }),
       ]);
 
       const lowerQuery = query.trim().toLowerCase();
@@ -474,15 +517,41 @@ export async function GET(request: Request) {
         };
       });
 
+      const animeItems = (animeData.results || []).map((a: any) => {
+        const title = getAnimeTitle(a.title);
+        const posterUrl = getAnimePosterUrl(a);
+        const backdropUrl = getAnimeBackdropUrl(a);
+        const releaseDate = a.startDate?.year
+          ? `${a.startDate.year}-${String(a.startDate.month || 1).padStart(2, "0")}-${String(a.startDate.day || 1).padStart(2, "0")}`
+          : "";
+        return {
+          id: a.id,
+          title,
+          original_title: a.title.romaji || a.title.native || title,
+          overview: stripHtml(a.description),
+          poster_path: posterUrl,
+          backdrop_path: backdropUrl,
+          release_date: releaseDate,
+          vote_average: a.averageScore ? a.averageScore / 10 : 0,
+          vote_count: a.popularity || 0,
+          popularity: a.popularity || 0,
+          genre_ids: [],
+          moduleType: "anime",
+          media_type: "anime",
+          href: `/anime/${a.id}`,
+        };
+      });
+
       const allCandidates = [
         ...userItems,
         ...listItems,
         ...companyItems,
+        ...animeItems,
         ...tmdbItems,
       ];
 
       rawResults = sortItems(allCandidates, sortBy);
-      totalResults = (multiData.total_results || 0) + userItems.length + listItems.length + companyItems.length;
+      totalResults = (multiData.total_results || 0) + userItems.length + listItems.length + companyItems.length + animeItems.length;
     }
 
     const startIndex = ((uiPage - 1) % 2) * 10;

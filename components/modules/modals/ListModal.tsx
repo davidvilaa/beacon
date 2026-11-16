@@ -13,7 +13,7 @@ import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 
 export interface ListMediaPayload {
-  mediaType: "movie" | "tv";
+  mediaType: "movie" | "tv" | "anime" | "game";
   mediaId: number;
   title: string;
   seasonNumber?: number | null;
@@ -336,6 +336,19 @@ export default function ListModal({
           });
           if (cacheError) {
             addToast("Error saving movie metadata", "error");
+            return;
+          }
+        } else if (media.mediaType === "anime") {
+          const { error: cacheError } = await supabase.from("animes").upsert({
+            id: media.mediaId,
+            title: media.title,
+            overview: media.overview ?? null,
+            poster_path: media.posterPath ?? null,
+            backdrop_path: media.backdropPath ?? null,
+            episodes: media.numberOfEpisodes ?? 0,
+          });
+          if (cacheError) {
+            addToast("Error saving anime metadata", "error");
             return;
           }
         } else {

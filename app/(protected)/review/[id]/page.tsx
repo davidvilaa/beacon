@@ -40,7 +40,7 @@ interface ReviewRecord {
   id: string;
   user_id: string;
   media_id: number;
-  media_type: "movie" | "tv";
+  media_type: "movie" | "tv" | "anime";
   title: string;
   overview: string | null;
   poster_path: string | null;
@@ -242,6 +242,71 @@ function ReviewDetailContent() {
           }
         }
 
+        if (!record && typeHint !== "movie" && typeHint !== "tv") {
+          const { data: animeData } = await supabase
+            .from("user_animes")
+            .select(`
+              id,
+              user_id,
+              anime_id,
+              status,
+              is_favorite,
+              rating,
+              review,
+              has_spoilers,
+              custom_poster_path,
+              custom_backdrop_path,
+              last_watched_episode,
+              start_date,
+              end_date,
+              created_at,
+              updated_at,
+              users (
+                id,
+                username,
+                avatar_url
+              ),
+              animes (
+                id,
+                title,
+                overview,
+                poster_path,
+                backdrop_path,
+                episodes
+              )
+            `)
+            .eq("id", id)
+            .maybeSingle();
+
+          if (animeData) {
+            const a = animeData as any;
+            record = {
+              id: a.id,
+              user_id: a.user_id,
+              media_id: a.anime_id,
+              media_type: "anime",
+              title: a.animes?.title || "Anime",
+              overview: a.animes?.overview || null,
+              poster_path: a.animes?.poster_path || null,
+              backdrop_path: a.animes?.backdrop_path || null,
+              custom_poster_path: a.custom_poster_path || null,
+              custom_backdrop_path: a.custom_backdrop_path || null,
+              status: a.status,
+              is_favorite: Boolean(a.is_favorite),
+              rating: a.rating ? Number(a.rating) : null,
+              review: a.review || null,
+              has_spoilers: Boolean(a.has_spoilers),
+              watched_date: null,
+              start_date: a.start_date || null,
+              end_date: a.end_date || null,
+              last_watched_episode: a.last_watched_episode || 0,
+              created_at: a.created_at,
+              updated_at: a.updated_at,
+              users: a.users || null,
+            };
+          }
+        }
+
         if (!ignore) {
           setReview(record);
         }
@@ -250,6 +315,8 @@ function ReviewDetailContent() {
           const endpoint =
             record.media_type === "movie"
               ? `/api/movies/${record.media_id}`
+              : record.media_type === "anime"
+              ? `/api/anime/${record.media_id}`
               : `/api/tv/${record.media_id}?season=${record.season_number || 1}`;
 
           fetch(endpoint)
@@ -352,7 +419,12 @@ function ReviewDetailContent() {
 
     try {
       setIsSaving(true);
-      const table = review.media_type === "movie" ? "user_movies" : "user_series";
+      const table =
+        review.media_type === "movie"
+          ? "user_movies"
+          : review.media_type === "anime"
+          ? "user_animes"
+          : "user_series";
 
       const payload: Record<string, any> = {
         status: reviewData.status,
@@ -413,7 +485,12 @@ function ReviewDetailContent() {
 
     try {
       setIsSaving(true);
-      const table = review.media_type === "movie" ? "user_movies" : "user_series";
+      const table =
+        review.media_type === "movie"
+          ? "user_movies"
+          : review.media_type === "anime"
+          ? "user_animes"
+          : "user_series";
 
       const { error } = await supabase.from(table).delete().eq("id", review.id);
 
@@ -478,7 +555,9 @@ function ReviewDetailContent() {
   }
 
   const mediaHref =
-    review.media_type === "movie"
+    review.media_type === "anime"
+      ? `/anime/${review.media_id}`
+      : review.media_type === "movie"
       ? `/movie/${review.media_id}`
       : `/tv/${review.media_id}${
           review.season_number ? `?season=${review.season_number}` : ""
@@ -488,7 +567,12 @@ function ReviewDetailContent() {
   const authorName = review.users?.username || "User";
 
   const resolvedTitle = tmdbMeta?.title || review.title;
-  const resolvedTypeLabel = review.media_type === "movie" ? "Movie" : "Series";
+  const resolvedTypeLabel =
+    review.media_type === "movie"
+      ? "Movie"
+      : review.media_type === "anime"
+      ? "Anime"
+      : "Series";
 
   const posterColumnNode = (
     <div className="relative w-56 sm:w-full">
@@ -687,7 +771,13 @@ function ReviewDetailContent() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           title={resolvedTitle}
-          typeLabel={review.media_type === "movie" ? "Movie" : "Series"}
+          typeLabel={
+            review.media_type === "movie"
+              ? "Movie"
+              : review.media_type === "anime"
+              ? "Anime"
+              : "Series"
+          }
           year={tmdbMeta?.release_date ? tmdbMeta.release_date.split("-")[0] : undefined}
           posterUrl={posterUrl}
           backdropUrl={backdropUrl}

@@ -303,7 +303,7 @@ export function getReleaseDateGroups(results?: any[]) {
 }
 
 export function isMediaReleased(
-  mediaType: "movie" | "tv",
+  mediaType: "movie" | "tv" | "anime",
   status?: string | null,
   releaseOrAirDate?: string | null
 ): boolean {
@@ -335,6 +335,18 @@ export function isMediaReleased(
       return true;
     }
     return false;
+  }
+
+  if (mediaType === "anime") {
+    if (!status) return true;
+    const s = status.toUpperCase();
+    if (s === "FINISHED" || s === "RELEASING") return true;
+    if (s === "NOT_YET_RELEASED") return false;
+    if (releaseOrAirDate) {
+      const parsed = new Date(releaseOrAirDate);
+      if (!isNaN(parsed.getTime())) return parsed.getTime() <= Date.now();
+    }
+    return true;
   }
 
   return true;

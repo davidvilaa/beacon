@@ -39,6 +39,17 @@ Full DDL script is located in `supabase/schema.sql`.
   - `number_of_seasons`, `number_of_episodes`: integer default 0
   - `created_at`, `updated_at`: timestamptz
 
+- **`public.animes`**:
+  - `id`: bigint primary key (AniList anime ID)
+  - `title`: text not null
+  - `overview`: text
+  - `poster_path`: text
+  - `backdrop_path`: text
+  - `format`: text
+  - `episodes`: integer default 0
+  - `status`: text
+  - `created_at`, `updated_at`: timestamptz
+
 - **`public.user_movies`**:
   - `id`: uuid primary key default gen_random_uuid()
   - `user_id`: uuid references public.users(id) on delete cascade
@@ -68,6 +79,21 @@ Full DDL script is located in `supabase/schema.sql`.
   - `start_date`, `end_date`: date
   - `created_at`, `updated_at`: timestamptz
   - Unique constraint: `(user_id, series_id, season_number)`
+
+- **`public.user_animes`**:
+  - `id`: uuid primary key default gen_random_uuid()
+  - `user_id`: uuid references public.users(id) on delete cascade
+  - `anime_id`: bigint references public.animes(id) on delete cascade
+  - `status`: text not null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist'))
+  - `is_favorite`: boolean default false
+  - `rating`: numeric(2, 1) (0.5 to 5.0)
+  - `review`: text
+  - `has_spoilers`: boolean default false
+  - `custom_poster_path`, `custom_backdrop_path`: text
+  - `last_watched_episode`: integer default 0
+  - `start_date`, `end_date`: date
+  - `created_at`, `updated_at`: timestamptz
+  - Unique constraint: `(user_id, anime_id)`
 
 - **`public.lists`**:
   - `id`: uuid primary key default gen_random_uuid()
@@ -99,4 +125,4 @@ Full DDL script is located in `supabase/schema.sql`.
   - Check constraint: `follower_id <> following_id`
 
 - **Favorites Limit**:
-  - Maximum of 5 favorites per user for each media type (`public.user_movies` and `public.user_series`). Enforced via triggers `check_user_movies_favorites_limit` and `check_user_series_favorites_limit`, as well as client-side checks and user toasts.
+  - Maximum of 5 favorites per user for each media type (`public.user_movies`, `public.user_series`, and `public.user_animes`). Enforced via triggers `check_user_movies_favorites_limit`, `check_user_series_favorites_limit`, and `check_user_animes_favorites_limit`, as well as client-side checks and user toasts.

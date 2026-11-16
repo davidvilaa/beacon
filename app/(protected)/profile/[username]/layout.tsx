@@ -34,7 +34,7 @@ function ProfileSubNav({
       case "anime":
         return [
           { id: "overview", label: "Overview", href: `${basePath}/anime`, disabled: false },
-          { id: "anime", label: "Anime", href: `${basePath}/anime?tab=anime`, disabled: true },
+          { id: "anime", label: "Anime", href: `${basePath}/anime?tab=anime`, disabled: false },
         ];
       case "games":
         return [

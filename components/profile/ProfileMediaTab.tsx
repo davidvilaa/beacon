@@ -11,7 +11,7 @@ export interface ProfileMediaItem {
   title: string;
   posterPath: string | null;
   href?: string;
-  mediaType: "movie" | "tv";
+  mediaType: "movie" | "tv" | "anime";
   rating?: number | null;
   review?: string | null;
   seasonNumber?: number;

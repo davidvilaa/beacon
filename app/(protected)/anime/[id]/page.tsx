@@ -131,6 +131,125 @@ function AnimeDetailContent() {
     }));
   }, [anime?.studios?.nodes]);
 
+  const franchiseItems: (FranchiseItem & { category: string; sortKey: number })[] = useMemo(() => {
+    if (!anime) return [];
+
+    const validRelations = (anime.relations?.edges || []).filter(
+      (r) =>
+        r.node?.format !== "MANGA" &&
+        r.node?.format !== "NOVEL" &&
+        r.node?.format !== "ONE_SHOT"
+    );
+
+    const getSortKey = (
+      startDate?: { year?: number | null; month?: number | null; day?: number | null } | null
+    ) => {
+      if (!startDate?.year) return 99999999;
+      const y = startDate.year;
+      const m = startDate.month || 1;
+      const d = startDate.day || 1;
+      return y * 10000 + m * 100 + d;
+    };
+
+    const getCategory = (
+      type: string
+    ): "main" | "spin_off" | "side_story" | "alternative" | "other" => {
+      switch (type) {
+        case "CURRENT":
+        case "PREQUEL":
+        case "SEQUEL":
+        case "PARENT":
+          return "main";
+        case "SIDE_STORY":
+          return "side_story";
+        case "SPIN_OFF":
+        case "CHARACTER":
+          return "spin_off";
+        case "ALTERNATIVE":
+          return "alternative";
+        default:
+          return "other";
+      }
+    };
+
+    const formatLabel = (type: string) => {
+      if (type === "CURRENT") return "Current";
+      return type
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
+    const itemsMap = new Map<number, FranchiseItem & { category: string; sortKey: number }>();
+
+    itemsMap.set(anime.id, {
+      id: anime.id,
+      title: getAnimeTitle(anime.title),
+      posterPath: getAnimePosterUrl(anime),
+      mediaType: "anime",
+      subtitle: `Current • ${anime.format || "TV"}`,
+      category: "main",
+      sortKey: getSortKey(anime.startDate),
+    });
+
+    for (const r of validRelations) {
+      if (!itemsMap.has(r.node.id)) {
+        const title = r.node.title.english || r.node.title.romaji || "Untitled";
+        const poster =
+          r.node.coverImage?.extraLarge ||
+          r.node.coverImage?.large ||
+          r.node.coverImage?.medium ||
+          null;
+        const relLabel = formatLabel(r.relationType);
+        const formatText = r.node.format || "Anime";
+
+        itemsMap.set(r.node.id, {
+          id: r.node.id,
+          title,
+          posterPath: poster,
+          mediaType: "anime",
+          subtitle: `${relLabel} • ${formatText}`,
+          category: getCategory(r.relationType),
+          sortKey: getSortKey(r.node.startDate),
+        });
+      }
+    }
+
+    return Array.from(itemsMap.values()).sort((a, b) => a.sortKey - b.sortKey);
+  }, [anime]);
+
+  const franchiseCategories = useMemo(() => {
+    if (franchiseItems.length <= 1) return [];
+
+    const defs = [
+      { id: "all", label: "All" },
+      { id: "main", label: "Main" },
+      { id: "side_story", label: "Side Story" },
+      { id: "spin_off", label: "Spin-Off" },
+      { id: "alternative", label: "Alternative" },
+      { id: "other", label: "Other" },
+    ];
+
+    return defs
+      .map((def) => {
+        const count =
+          def.id === "all"
+            ? franchiseItems.length
+            : franchiseItems.filter((item) => item.category === def.id).length;
+        return { ...def, count };
+      })
+      .filter((cat) => cat.count > 0);
+  }, [franchiseItems]);
+
+  const displayedFranchiseItems = useMemo(() => {
+    if (selectedFranchiseCategory === "all") {
+      return franchiseItems;
+    }
+    return franchiseItems.filter(
+      (item) => item.category === selectedFranchiseCategory
+    );
+  }, [franchiseItems, selectedFranchiseCategory]);
+
   useEffect(() => {
     let ignore = false;
     async function fetchUserLog() {
@@ -621,125 +740,6 @@ function AnimeDetailContent() {
   const hasTrailer = Boolean(
     anime.trailer?.id && anime.trailer?.site?.toLowerCase() === "youtube"
   );
-
-  const franchiseItems: (FranchiseItem & { category: string; sortKey: number })[] = useMemo(() => {
-    if (!anime) return [];
-
-    const validRelations = (anime.relations?.edges || []).filter(
-      (r) =>
-        r.node?.format !== "MANGA" &&
-        r.node?.format !== "NOVEL" &&
-        r.node?.format !== "ONE_SHOT"
-    );
-
-    const getSortKey = (
-      startDate?: { year?: number | null; month?: number | null; day?: number | null } | null
-    ) => {
-      if (!startDate?.year) return 99999999;
-      const y = startDate.year;
-      const m = startDate.month || 1;
-      const d = startDate.day || 1;
-      return y * 10000 + m * 100 + d;
-    };
-
-    const getCategory = (
-      type: string
-    ): "main" | "spin_off" | "side_story" | "alternative" | "other" => {
-      switch (type) {
-        case "CURRENT":
-        case "PREQUEL":
-        case "SEQUEL":
-        case "PARENT":
-          return "main";
-        case "SIDE_STORY":
-          return "side_story";
-        case "SPIN_OFF":
-        case "CHARACTER":
-          return "spin_off";
-        case "ALTERNATIVE":
-          return "alternative";
-        default:
-          return "other";
-      }
-    };
-
-    const formatLabel = (type: string) => {
-      if (type === "CURRENT") return "Current";
-      return type
-        .replace(/_/g, " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-    };
-
-    const itemsMap = new Map<number, FranchiseItem & { category: string; sortKey: number }>();
-
-    itemsMap.set(anime.id, {
-      id: anime.id,
-      title: getAnimeTitle(anime.title),
-      posterPath: getAnimePosterUrl(anime),
-      mediaType: "anime",
-      subtitle: `Current • ${anime.format || "TV"}`,
-      category: "main",
-      sortKey: getSortKey(anime.startDate),
-    });
-
-    for (const r of validRelations) {
-      if (!itemsMap.has(r.node.id)) {
-        const title = r.node.title.english || r.node.title.romaji || "Untitled";
-        const poster =
-          r.node.coverImage?.extraLarge ||
-          r.node.coverImage?.large ||
-          r.node.coverImage?.medium ||
-          null;
-        const relLabel = formatLabel(r.relationType);
-        const formatText = r.node.format || "Anime";
-
-        itemsMap.set(r.node.id, {
-          id: r.node.id,
-          title,
-          posterPath: poster,
-          mediaType: "anime",
-          subtitle: `${relLabel} • ${formatText}`,
-          category: getCategory(r.relationType),
-          sortKey: getSortKey(r.node.startDate),
-        });
-      }
-    }
-
-    return Array.from(itemsMap.values()).sort((a, b) => a.sortKey - b.sortKey);
-  }, [anime]);
-
-  const franchiseCategories = useMemo(() => {
-    if (franchiseItems.length <= 1) return [];
-
-    const defs = [
-      { id: "all", label: "All" },
-      { id: "main", label: "Main" },
-      { id: "side_story", label: "Side Story" },
-      { id: "spin_off", label: "Spin-Off" },
-      { id: "alternative", label: "Alternative" },
-      { id: "other", label: "Other" },
-    ];
-
-    return defs
-      .map((def) => {
-        const count =
-          def.id === "all"
-            ? franchiseItems.length
-            : franchiseItems.filter((item) => item.category === def.id).length;
-        return { ...def, count };
-      })
-      .filter((cat) => cat.count > 0);
-  }, [franchiseItems]);
-
-  const displayedFranchiseItems = useMemo(() => {
-    if (selectedFranchiseCategory === "all") {
-      return franchiseItems;
-    }
-    return franchiseItems.filter(
-      (item) => item.category === selectedFranchiseCategory
-    );
-  }, [franchiseItems, selectedFranchiseCategory]);
 
   const hasEpisodes = episodes.length > 0;
 

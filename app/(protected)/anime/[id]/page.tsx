@@ -809,100 +809,135 @@ function AnimeDetailContent() {
           )}
 
           {activeTab === "details" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 rounded-sm border border-zinc-800 bg-zinc-900/40">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Status
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 mt-1 capitalize">
-                    {anime.status?.toLowerCase() || "—"}
-                  </p>
+            <div className="divide-y divide-zinc-700/80">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    {anime.studios?.nodes && anime.studios.nodes.length === 1 ? "Studio" : "Studios"}
+                  </span>
                 </div>
-
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Season
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 mt-1 capitalize">
-                    {anime.season && anime.seasonYear
-                      ? `${anime.season.toLowerCase()} ${anime.seasonYear}`
-                      : "—"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Average Score
-                  </p>
-                  <p className="text-sm font-mono font-semibold text-[#a8dadc] mt-1">
-                    {anime.averageScore ? `${anime.averageScore}%` : "—"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Format
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 mt-1">
-                    {anime.format || "TV"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Episodes
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 mt-1">
-                    {anime.episodes || "Unknown"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                    Duration
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 mt-1">
-                    {anime.duration ? `${anime.duration} mins/ep` : "—"}
-                  </p>
+                <div className="flex-1 flex flex-wrap gap-2 items-center">
+                  {anime.studios?.nodes && anime.studios.nodes.length > 0 ? (
+                    anime.studios.nodes.map((s) => (
+                      <div
+                        key={s.id}
+                        className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group overflow-hidden"
+                      >
+                        <CardGradientBorder roundedClassName="rounded-sm" />
+                        <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                          {s.name}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-zinc-500">—</span>
+                  )}
                 </div>
               </div>
 
-              {anime.genres && anime.genres.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
-                    Genres
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {anime.genres.map((g) => (
-                      <span
-                        key={g}
-                        className="px-2.5 py-1 rounded-sm text-xs font-medium bg-zinc-800 border border-zinc-700/80 text-zinc-300"
-                      >
-                        {g}
-                      </span>
-                    ))}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Original title
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 max-w-full">
+                    <span
+                      className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
+                      title={anime.title.romaji || anime.title.native || "—"}
+                    >
+                      {anime.title.romaji || anime.title.native || "—"}
+                    </span>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {anime.studios?.nodes && anime.studios.nodes.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">
-                    Studios
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {anime.studios.nodes.map((s) => (
-                      <span
-                        key={s.id}
-                        className="px-3 py-1.5 rounded-sm text-xs font-semibold uppercase tracking-wider bg-zinc-900 border border-zinc-800 text-zinc-200"
-                      >
-                        {s.name}
-                      </span>
-                    ))}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Status
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+                    <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
+                      {anime.status?.toLowerCase() || "—"}
+                    </span>
                   </div>
                 </div>
-              )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Format
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+                    <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                      {anime.format || "TV"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Season
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+                    <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
+                      {anime.season && anime.seasonYear
+                        ? `${anime.season.toLowerCase()} ${anime.seasonYear}`
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Episodes
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+                    <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                      {anime.episodes ?? "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+                <div className="w-36 sm:w-44 shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                    Genres
+                  </span>
+                </div>
+                <div className="flex-1 flex flex-wrap gap-2 items-center">
+                  {anime.genres && anime.genres.length > 0 ? (
+                    anime.genres.map((g) => (
+                      <div
+                        key={g}
+                        className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80"
+                      >
+                        <span className="text-xs font-medium text-zinc-200">
+                          {g}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-zinc-500">—</span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

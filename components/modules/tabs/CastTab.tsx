@@ -7,43 +7,52 @@ import { User, ChevronDown, ChevronUp } from "lucide-react";
 import { getPosterUrl } from "@/lib/tmdb";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
-interface CastMember {
-  id: number;
+export interface CastMember {
+  id: number | string;
   name: string;
   character?: string;
   profile_path?: string | null;
+  character_image?: string | null;
+  href?: string;
 }
 
-interface CastTabProps {
+export interface CastTabProps {
   cast: CastMember[];
   emptyMessage?: string;
+  gridClassName?: string;
 }
 
 export default function CastTab({
   cast,
   emptyMessage = "No cast information available.",
+  gridClassName,
 }: CastTabProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const displayedCast = isExpanded ? cast : cast.slice(0, 12);
+  const hasCharacterImages = cast.some((c) => Boolean(c.character_image));
 
   if (cast.length === 0) {
     return <p className="text-xs text-zinc-500 py-4">{emptyMessage}</p>;
   }
 
+  const defaultGrid = hasCharacterImages
+    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3"
+    : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3";
+
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className={gridClassName || defaultGrid}>
         {displayedCast.map((actor, idx) => {
           const profileUrl = actor.profile_path
-            ? getPosterUrl(actor.profile_path, "w185")
+            ? actor.profile_path.startsWith("http")
+              ? actor.profile_path
+              : getPosterUrl(actor.profile_path, "w185")
             : null;
 
-          return (
-            <Link
-              key={`${actor.id}-${idx}`}
-              href={`/person/${actor.id}`}
-              className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
-            >
+          const targetHref = actor.href || (actor.id ? `/person/${actor.id}` : null);
+
+          const content = (
+            <>
               <CardGradientBorder roundedClassName="rounded-sm" />
               <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
                 {profileUrl ? (
@@ -68,7 +77,39 @@ export default function CastTab({
                   </p>
                 )}
               </div>
-            </Link>
+              {actor.character_image && (
+                <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                  <Image
+                    src={actor.character_image}
+                    alt={actor.character || ""}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </>
+          );
+
+          if (targetHref) {
+            return (
+              <Link
+                key={`${actor.id}-${idx}`}
+                href={targetHref}
+                className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
+              >
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={`${actor.id}-${idx}`}
+              className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11"
+            >
+              {content}
+            </div>
           );
         })}
       </div>

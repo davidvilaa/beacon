@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
 import {
   AnimeMedia,
   getAnimeTitle,
@@ -27,17 +25,25 @@ import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
+import CastTab, { CastMember } from "@/components/modules/tabs/CastTab";
+import DetailsTab from "@/components/modules/tabs/DetailsTab";
+import RelationsTab from "@/components/modules/tabs/RelationsTab";
 import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
-import MediaCard from "@/components/ui/MediaCard";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { isMediaReleased } from "@/lib/media-utils";
-import { User, Plus, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 
-function formatRelationLabel(type: string): string {
-  return type
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+async function syncAnimeRecord(supabaseClient: any, currentAnime: AnimeMedia) {
+  const { error } = await supabaseClient.from("animes").upsert({
+    id: currentAnime.id,
+    title: getAnimeTitle(currentAnime.title),
+    overview: stripHtml(currentAnime.description) || null,
+    poster_path: getAnimePosterUrl(currentAnime),
+    backdrop_path: getAnimeBackdropUrl(currentAnime),
+    format: currentAnime.format || null,
+    episodes: currentAnime.episodes || 0,
+    status: currentAnime.status || null,
+  });
+  if (error) throw error;
 }
 
 function AnimeDetailContent() {
@@ -78,7 +84,6 @@ function AnimeDetailContent() {
   const [activeTab, setActiveTab] = useState<
     "cast" | "relations" | "details" | "episodes" | "trailer"
   >("cast");
-  const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
@@ -102,6 +107,29 @@ function AnimeDetailContent() {
     }
     return anime.duration;
   }, [anime]);
+
+  const castList: CastMember[] = useMemo(() => {
+    return (anime?.characters?.edges || []).map((edge) => {
+      const char = edge.node;
+      const va = edge.voiceActors?.[0];
+      return {
+        id: va?.id || char.id,
+        name: va?.name.full || "Unknown Voice",
+        character: char.name.full,
+        profile_path: va?.image?.medium || va?.image?.large || null,
+        character_image: char.image?.large || char.image?.medium || null,
+        href: va?.id ? `/person/al-${va.id}` : undefined,
+      };
+    });
+  }, [anime?.characters?.edges]);
+
+  const studioList = useMemo(() => {
+    return (anime?.studios?.nodes || []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      href: `/company/al-${s.id}`,
+    }));
+  }, [anime?.studios?.nodes]);
 
   useEffect(() => {
     let ignore = false;
@@ -328,22 +356,7 @@ function AnimeDetailContent() {
       setAnimeStatus(newStatus);
       setIsFavorite(newFavorite);
 
-      const title = getAnimeTitle(anime.title);
-      const posterUrl = getAnimePosterUrl(anime);
-      const backdropUrl = getAnimeBackdropUrl(anime);
-
-      const { error: animeError } = await supabase.from("animes").upsert({
-        id: anime.id,
-        title,
-        overview: stripHtml(anime.description) || null,
-        poster_path: posterUrl,
-        backdrop_path: backdropUrl,
-        format: anime.format || null,
-        episodes: anime.episodes || 0,
-        status: anime.status || null,
-      });
-
-      if (animeError) throw animeError;
+      await syncAnimeRecord(supabase, anime);
 
       if (!newStatus) {
         const { error: deleteError } = await supabase
@@ -420,17 +433,7 @@ function AnimeDetailContent() {
         setAnimeStatus(nextStatus);
       }
 
-      const title = getAnimeTitle(anime.title);
-      await supabase.from("animes").upsert({
-        id: anime.id,
-        title,
-        overview: stripHtml(anime.description) || null,
-        poster_path: getAnimePosterUrl(anime),
-        backdrop_path: getAnimeBackdropUrl(anime),
-        format: anime.format || null,
-        episodes: anime.episodes || 0,
-        status: anime.status || null,
-      });
+      await syncAnimeRecord(supabase, anime);
 
       const { error } = await supabase.from("user_animes").upsert(
         {
@@ -474,22 +477,7 @@ function AnimeDetailContent() {
         return;
       }
 
-      const title = getAnimeTitle(anime.title);
-      const posterUrl = getAnimePosterUrl(anime);
-      const backdropUrl = getAnimeBackdropUrl(anime);
-
-      const { error: animeError } = await supabase.from("animes").upsert({
-        id: anime.id,
-        title,
-        overview: stripHtml(anime.description) || null,
-        poster_path: posterUrl,
-        backdrop_path: backdropUrl,
-        format: anime.format || null,
-        episodes: anime.episodes || 0,
-        status: anime.status || null,
-      });
-
-      if (animeError) throw animeError;
+      await syncAnimeRecord(supabase, anime);
 
       const chosenPoster =
         data.customPosterPath !== undefined ? data.customPosterPath : customPoster;
@@ -623,8 +611,6 @@ function AnimeDetailContent() {
   const relations = (anime.relations?.edges || []).filter(
     (r) => r.node?.format !== "MANGA" && r.node?.format !== "NOVEL"
   );
-  const characters = anime.characters?.edges || [];
-  const displayedCharacters = isCastExpanded ? characters : characters.slice(0, 12);
 
   const hasEpisodes = episodes.length > 0;
 
@@ -649,68 +635,67 @@ function AnimeDetailContent() {
         hasMultipleBackdrops={hasMultipleBackdrops}
         onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
         posterColumn={
-          <div className="w-full flex flex-col items-center">
-            <MediaActionColumn
-              posterUrl={posterUrl}
-              title={title}
-              hasMultiplePosters={hasMultiplePosters}
-              onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
-              mediaType="anime"
-              status={animeStatus}
-              isFavorite={isFavorite}
-              hasLog={Boolean(animeStatus)}
-              isReleased={isReleased}
-              onOpenLogModal={() => setIsLogModalOpen(true)}
-              onOpenListModal={() => setIsListModalOpen(true)}
-              onQuickStatusChange={(newStatus) => {
-                handleQuickAction(newStatus, isFavorite);
-              }}
-              onToggleFavorite={() => {
-                const nextFav = !isFavorite;
-                if (nextFav && !canAddFavorite) {
-                  addToast("You can only have up to 5 favorite anime", "error");
-                  return;
-                }
-                const nextStatus =
-                  animeStatus || (isReleased ? "watched" : "watchlist");
-                handleQuickAction(nextStatus, nextFav);
-              }}
-            />
-
-            {animeStatus && animeStatus !== "watchlist" && (
-              <div className="w-56 sm:w-full mt-3 p-3 bg-zinc-900 border border-zinc-800 rounded-sm">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                  <span>Progress</span>
-                  <span className="font-mono text-zinc-300">
-                    {lastWatchedEpisode} / {anime.episodes || "?"}
-                  </span>
+          <MediaActionColumn
+            posterUrl={posterUrl}
+            title={title}
+            hasMultiplePosters={hasMultiplePosters}
+            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            mediaType="anime"
+            status={animeStatus}
+            isFavorite={isFavorite}
+            hasLog={Boolean(animeStatus)}
+            isReleased={isReleased}
+            onOpenLogModal={() => setIsLogModalOpen(true)}
+            onOpenListModal={() => setIsListModalOpen(true)}
+            onQuickStatusChange={(newStatus) => {
+              handleQuickAction(newStatus, isFavorite);
+            }}
+            onToggleFavorite={() => {
+              const nextFav = !isFavorite;
+              if (nextFav && !canAddFavorite) {
+                addToast("You can only have up to 5 favorite anime", "error");
+                return;
+              }
+              const nextStatus =
+                animeStatus || (isReleased ? "watched" : "watchlist");
+              handleQuickAction(nextStatus, nextFav);
+            }}
+            footerContent={
+              animeStatus && animeStatus !== "watchlist" ? (
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-sm">
+                  <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                    <span>Progress</span>
+                    <span className="font-mono text-zinc-300">
+                      {lastWatchedEpisode} / {anime.episodes || "?"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEpisodeChange(-1)}
+                      disabled={lastWatchedEpisode <= 0}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                      <span>-1</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEpisodeChange(1)}
+                      disabled={
+                        Boolean(anime.episodes) &&
+                        lastWatchedEpisode >= (anime.episodes || 0)
+                      }
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+1</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEpisodeChange(-1)}
-                    disabled={lastWatchedEpisode <= 0}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                    <span>-1</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleEpisodeChange(1)}
-                    disabled={
-                      Boolean(anime.episodes) &&
-                      lastWatchedEpisode >= (anime.episodes || 0)
-                    }
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>+1</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              ) : null
+            }
+          />
         }
       >
         <MediaInfoColumn
@@ -729,300 +714,22 @@ function AnimeDetailContent() {
             onChange={(key) => setActiveTab(key as any)}
           />
 
-          {activeTab === "cast" && (
-            <div>
-              {characters.length === 0 ? (
-                <p className="text-xs text-zinc-500 py-4">
-                  No cast information available.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-                  {displayedCharacters.map((edge) => {
-                    const char = edge.node;
-                    const va = edge.voiceActors?.[0];
-                    const vaName = va?.name.full || "Unknown Voice";
-                    const vaProfileUrl = va?.image?.medium || va?.image?.large || null;
-                    const charImageUrl = char.image?.large || char.image?.medium || null;
-
-                    return va?.id ? (
-                      <Link
-                        key={`${char.id}-${va.id}`}
-                        href={`/person/al-${va.id}`}
-                        className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11 cursor-pointer"
-                      >
-                        <CardGradientBorder roundedClassName="rounded-sm" />
-                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                          {vaProfileUrl ? (
-                            <Image
-                              src={vaProfileUrl}
-                              alt={vaName}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <User className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                          <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
-                            {vaName}
-                          </p>
-                          <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                            as <span className="text-zinc-300 font-medium">{char.name.full}</span>
-                          </p>
-                        </div>
-
-                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                          {charImageUrl ? (
-                            <Image
-                              src={charImageUrl}
-                              alt={char.name.full}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <User className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </div>
-                      </Link>
-                    ) : (
-                      <div
-                        key={`${char.id}-${va?.id || "none"}`}
-                        className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11"
-                      >
-                        <CardGradientBorder roundedClassName="rounded-sm" />
-                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                          {vaProfileUrl ? (
-                            <Image
-                              src={vaProfileUrl}
-                              alt={vaName}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <User className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                          <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
-                            {vaName}
-                          </p>
-                          <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                            as <span className="text-zinc-300 font-medium">{char.name.full}</span>
-                          </p>
-                        </div>
-
-                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                          {charImageUrl ? (
-                            <Image
-                              src={charImageUrl}
-                              alt={char.name.full}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <User className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {characters.length > 12 && (
-                <div className="flex justify-start mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsCastExpanded(!isCastExpanded)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
-                  >
-                    <span>{isCastExpanded ? "less..." : "more..."}</span>
-                    {isCastExpanded ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "relations" && (
-            <div>
-              {relations.length === 0 ? (
-                <p className="text-xs text-zinc-500 py-4">
-                  No anime relations found.
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                  {relations.map((r) => {
-                    const relNode = r.node;
-                    const relTitle =
-                      relNode.title.english || relNode.title.romaji || "Untitled";
-                    const relCover =
-                      relNode.coverImage?.extraLarge ||
-                      relNode.coverImage?.large ||
-                      relNode.coverImage?.medium ||
-                      null;
-                    const relType = formatRelationLabel(r.relationType);
-
-                    return (
-                      <MediaCard
-                        key={`${relNode.id}-${r.relationType}`}
-                        id={relNode.id}
-                        mediaType="anime"
-                        href={`/anime/${relNode.id}`}
-                        title={relTitle}
-                        posterPath={relCover}
-                        subtitle={`${relType} • ${relNode.format || "Anime"}`}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
+          {activeTab === "cast" && <CastTab cast={castList} />}
+          {activeTab === "relations" && <RelationsTab relations={relations} />}
           {activeTab === "details" && (
-            <div className="divide-y divide-zinc-700/80">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    {anime.studios?.nodes && anime.studios.nodes.length === 1 ? "Studio" : "Studios"}
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2 items-center">
-                  {anime.studios?.nodes && anime.studios.nodes.length > 0 ? (
-                    anime.studios.nodes.map((s) => (
-                      <Link
-                        key={s.id}
-                        href={`/company/al-${s.id}`}
-                        className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group overflow-hidden cursor-pointer"
-                      >
-                        <CardGradientBorder roundedClassName="rounded-sm" />
-                        <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
-                          {s.name}
-                        </span>
-                      </Link>
-                    ))
-                  ) : (
-                    <span className="text-xs text-zinc-500">—</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Original title
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center">
-                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 max-w-full">
-                    <span
-                      className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
-                      title={anime.title.romaji || anime.title.native || "—"}
-                    >
-                      {anime.title.romaji || anime.title.native || "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Status
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center">
-                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-                    <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
-                      {anime.status?.toLowerCase() || "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Format
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center">
-                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-                    <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                      {anime.format || "TV"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Season
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center">
-                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-                    <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
-                      {anime.season && anime.seasonYear
-                        ? `${anime.season.toLowerCase()} ${anime.seasonYear}`
-                        : "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Episodes
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center">
-                  <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-                    <span className="text-xs sm:text-sm font-medium text-zinc-200">
-                      {anime.episodes ?? "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-                <div className="w-36 sm:w-44 shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-                    Genres
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2 items-center">
-                  {anime.genres && anime.genres.length > 0 ? (
-                    anime.genres.map((g) => (
-                      <div
-                        key={g}
-                        className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80"
-                      >
-                        <span className="text-xs font-medium text-zinc-200">
-                          {g}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-xs text-zinc-500">—</span>
-                  )}
-                </div>
-              </div>
-            </div>
+            <DetailsTab
+              productionCompanies={studioList}
+              originalTitle={anime.title.romaji || anime.title.native}
+              status={anime.status?.toLowerCase()}
+              format={anime.format || "TV"}
+              season={
+                anime.season && anime.seasonYear
+                  ? `${anime.season.toLowerCase()} ${anime.seasonYear}`
+                  : null
+              }
+              episodesCount={anime.episodes}
+              genres={anime.genres}
+            />
           )}
 
           {activeTab === "episodes" && hasEpisodes && (
@@ -1046,88 +753,80 @@ function AnimeDetailContent() {
         </MediaInfoColumn>
       </MediaLayout>
 
-      {isPosterPickerOpen && (
-        <ArtworkPickerModal
-          isOpen={isPosterPickerOpen}
-          onClose={() => setIsPosterPickerOpen(false)}
-          title="CHANGE ARTWORK"
-          type="poster"
-          images={availablePosters}
-          selectedImage={activePosterPath}
-          onSelectImage={handleSelectPoster}
-          isLoading={loadingPosters}
-        />
-      )}
+      <ArtworkPickerModal
+        isOpen={isPosterPickerOpen}
+        onClose={() => setIsPosterPickerOpen(false)}
+        title="CHANGE ARTWORK"
+        type="poster"
+        images={availablePosters}
+        selectedImage={activePosterPath}
+        onSelectImage={handleSelectPoster}
+        isLoading={loadingPosters}
+      />
 
-      {isBackdropPickerOpen && (
-        <BackdropPickerModal
-          isOpen={isBackdropPickerOpen}
-          onClose={() => setIsBackdropPickerOpen(false)}
-          title="CHANGE BANNER"
-          images={availableBackdrops}
-          selectedImage={activeBackdropPath}
-          onSelectImage={handleSelectBackdrop}
-          isLoading={loadingBackdrops}
-        />
-      )}
+      <BackdropPickerModal
+        isOpen={isBackdropPickerOpen}
+        onClose={() => setIsBackdropPickerOpen(false)}
+        title="CHANGE BANNER"
+        images={availableBackdrops}
+        selectedImage={activeBackdropPath}
+        onSelectImage={handleSelectBackdrop}
+        isLoading={loadingBackdrops}
+      />
 
-      {isLogModalOpen && (
-        <MediaReviewModal
-          isOpen={isLogModalOpen}
-          onClose={() => setIsLogModalOpen(false)}
-          title={title}
-          typeLabel="Anime"
-          year={anime.startDate?.year}
-          releaseDate={releaseDateStr}
-          runtimeMinutes={totalRuntimeMinutes}
-          episodesCount={anime.episodes}
-          posterUrl={posterUrl}
-          backdropUrl={backdropUrl}
-          mediaType="anime"
-          status={animeStatus}
-          isFavorite={isFavorite}
-          canAddFavorite={canAddFavorite}
-          rating={rating}
-          review={review}
-          hasSpoilers={hasSpoilers}
-          startDate={startDate}
-          endDate={endDate}
-          availablePosters={availablePosters}
-          availableBackdrops={availableBackdrops}
-          selectedPoster={activePosterPath}
-          selectedBackdrop={activeBackdropPath}
-          loadingPosters={loadingPosters}
-          loadingBackdrops={loadingBackdrops}
-          isSaving={isSaving}
-          isReleased={isReleased}
-          onSave={handleSaveModal}
-          onDelete={handleDeleteModal}
-        />
-      )}
+      <MediaReviewModal
+        isOpen={isLogModalOpen}
+        onClose={() => setIsLogModalOpen(false)}
+        title={title}
+        typeLabel="Anime"
+        year={anime.startDate?.year}
+        releaseDate={releaseDateStr}
+        runtimeMinutes={totalRuntimeMinutes}
+        episodesCount={anime.episodes}
+        posterUrl={posterUrl}
+        backdropUrl={backdropUrl}
+        mediaType="anime"
+        status={animeStatus}
+        isFavorite={isFavorite}
+        canAddFavorite={canAddFavorite}
+        rating={rating}
+        review={review}
+        hasSpoilers={hasSpoilers}
+        startDate={startDate}
+        endDate={endDate}
+        availablePosters={availablePosters}
+        availableBackdrops={availableBackdrops}
+        selectedPoster={activePosterPath}
+        selectedBackdrop={activeBackdropPath}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
+        isSaving={isSaving}
+        isReleased={isReleased}
+        onSave={handleSaveModal}
+        onDelete={handleDeleteModal}
+      />
 
-      {isListModalOpen && (
-        <ListModal
-          isOpen={isListModalOpen}
-          onClose={() => setIsListModalOpen(false)}
-          media={{
-            mediaType: "anime",
-            mediaId: anime.id,
-            title,
-            overview: stripHtml(anime.description) || null,
-            posterPath: activePosterPath,
-            backdropPath: activeBackdropPath,
-            customPosterPath: activePosterPath,
-            customBackdropPath: activeBackdropPath,
-            numberOfEpisodes: anime.episodes || 0,
-          }}
-          availablePosters={availablePosters}
-          availableBackdrops={availableBackdrops}
-          selectedPoster={activePosterPath}
-          selectedBackdrop={activeBackdropPath}
-          loadingPosters={loadingPosters}
-          loadingBackdrops={loadingBackdrops}
-        />
-      )}
+      <ListModal
+        isOpen={isListModalOpen}
+        onClose={() => setIsListModalOpen(false)}
+        media={{
+          mediaType: "anime",
+          mediaId: anime.id,
+          title,
+          overview: stripHtml(anime.description) || null,
+          posterPath: activePosterPath,
+          backdropPath: activeBackdropPath,
+          customPosterPath: activePosterPath,
+          customBackdropPath: activeBackdropPath,
+          numberOfEpisodes: anime.episodes || 0,
+        }}
+        availablePosters={availablePosters}
+        availableBackdrops={availableBackdrops}
+        selectedPoster={activePosterPath}
+        selectedBackdrop={activeBackdropPath}
+        loadingPosters={loadingPosters}
+        loadingBackdrops={loadingBackdrops}
+      />
     </>
   );
 }

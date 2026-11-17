@@ -5,13 +5,14 @@ import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { formatCurrency } from "@/lib/media-utils";
 
 interface Company {
-  id: number;
+  id: number | string;
   name: string;
   origin_country?: string;
+  href?: string;
 }
 
 interface Genre {
-  id: number;
+  id?: number | string;
   name: string;
 }
 
@@ -24,7 +25,9 @@ interface DetailsTabProps {
   revenue?: number | null;
   seasonsCount?: number | null;
   episodesCount?: number | null;
-  genres?: Genre[];
+  genres?: (Genre | string)[];
+  format?: string | null;
+  season?: string | null;
 }
 
 export default function DetailsTab({
@@ -37,6 +40,8 @@ export default function DetailsTab({
   seasonsCount,
   episodesCount,
   genres,
+  format,
+  season,
 }: DetailsTabProps) {
   const hasCompanies = productionCompanies && productionCompanies.length > 0;
   const companiesLabel =
@@ -55,7 +60,7 @@ export default function DetailsTab({
             productionCompanies.map((company) => (
               <Link
                 key={company.id}
-                href={`/company/${company.id}`}
+                href={company.href || `/company/${company.id}`}
                 className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
               >
                 <CardGradientBorder roundedClassName="rounded-sm" />
@@ -101,27 +106,63 @@ export default function DetailsTab({
         </div>
         <div className="flex-1 flex items-center">
           <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-            <span className="text-xs sm:text-sm font-medium text-zinc-200">
+            <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
               {status || "—"}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
-        <div className="w-36 sm:w-44 shrink-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
-            Original language
-          </span>
-        </div>
-        <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
-            <span className="text-xs font-bold uppercase text-zinc-200">
-              {originalLanguage?.toUpperCase() || "—"}
+      {format && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+          <div className="w-36 sm:w-44 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+              Format
             </span>
           </div>
+          <div className="flex-1 flex items-center">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+              <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                {format}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {season && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+          <div className="w-36 sm:w-44 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+              Season
+            </span>
+          </div>
+          <div className="flex-1 flex items-center">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+              <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
+                {season}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {originalLanguage && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+          <div className="w-36 sm:w-44 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+              Original language
+            </span>
+          </div>
+          <div className="flex-1 flex items-center">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+              <span className="text-xs font-bold uppercase text-zinc-200">
+                {originalLanguage.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {typeof seasonsCount === "number" && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
@@ -134,6 +175,23 @@ export default function DetailsTab({
             <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {seasonsCount} Seasons • {episodesCount ?? 0} Episodes
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {typeof seasonsCount !== "number" && typeof episodesCount === "number" && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+          <div className="w-36 sm:w-44 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+              Episodes
+            </span>
+          </div>
+          <div className="flex-1 flex items-center">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80">
+              <span className="text-xs sm:text-sm font-medium text-zinc-200">
+                {episodesCount}
               </span>
             </div>
           </div>
@@ -182,16 +240,21 @@ export default function DetailsTab({
         </div>
         <div className="flex-1 flex flex-wrap gap-2 items-center">
           {genres && genres.length > 0 ? (
-            genres.map((g) => (
-              <div
-                key={g.id}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80"
-              >
-                <span className="text-xs font-medium text-zinc-200">
-                  {g.name}
-                </span>
-              </div>
-            ))
+            genres.map((g, idx) => {
+              const genreName = typeof g === "string" ? g : g.name;
+              const genreKey =
+                typeof g === "string" ? `${g}-${idx}` : g.id ?? `${g.name}-${idx}`;
+              return (
+                <div
+                  key={genreKey}
+                  className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80"
+                >
+                  <span className="text-xs font-medium text-zinc-200">
+                    {genreName}
+                  </span>
+                </div>
+              );
+            })
           ) : (
             <span className="text-xs text-zinc-500">—</span>
           )}

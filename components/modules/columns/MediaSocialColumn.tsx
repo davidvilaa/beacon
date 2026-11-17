@@ -2,7 +2,7 @@
 
 interface MediaSocialColumnProps {
   mediaId?: string | number;
-  mediaType?: "movie" | "tv";
+  mediaType?: "movie" | "tv" | "anime";
   className?: string;
 }
 

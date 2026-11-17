@@ -37,6 +37,7 @@ interface MediaActionColumnProps {
   onToggleFavorite: () => void;
   onOpenListModal?: () => void;
   children?: React.ReactNode;
+  footerContent?: React.ReactNode;
   isReleased?: boolean;
   className?: string;
 }
@@ -55,6 +56,7 @@ export default function MediaActionColumn({
   onToggleFavorite,
   onOpenListModal,
   children,
+  footerContent,
   isReleased = true,
   className = "",
 }: MediaActionColumnProps) {
@@ -269,6 +271,12 @@ export default function MediaActionColumn({
           </div>
         </div>
       </div>
+
+      {footerContent && (
+        <div className="w-56 sm:w-full mt-3">
+          {footerContent}
+        </div>
+      )}
     </div>
   );
 }

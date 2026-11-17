@@ -1,0 +1,204 @@
+import { NextResponse } from "next/server";
+import { getAnimeById, fetchAniList } from "@/lib/anilist";
+import { Episode } from "@/components/modules/tabs/EpisodesTab";
+
+const animeEpisodesCache = new Map<string, { episodes: Episode[]; timestamp: number }>();
+const CACHE_TTL = 1000 * 60 * 60 * 24;
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const animeId = parseInt(id, 10);
+    if (!animeId || isNaN(animeId)) {
+      return NextResponse.json({ error: "Valid Anime ID is required" }, { status: 400 });
+    }
+
+    const cached = animeEpisodesCache.get(id);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return NextResponse.json({ episodes: cached.episodes });
+    }
+
+    const anime = await getAnimeById(animeId);
+    if (!anime) {
+      return NextResponse.json({ error: "Anime not found" }, { status: 404 });
+    }
+
+    if (anime.format === "MOVIE" || anime.episodes === 1) {
+      animeEpisodesCache.set(id, { episodes: [], timestamp: Date.now() });
+      return NextResponse.json({ episodes: [] });
+    }
+
+    const token = process.env.TMDB_ACCESS_TOKEN?.trim();
+    const apiKey = process.env.TMDB_API_KEY?.trim();
+    const isJwt = (val?: string) => Boolean(val && (val.startsWith("ey") || val.length > 50));
+    const bearerToken = isJwt(token) ? token : isJwt(apiKey) ? apiKey : null;
+    const rawKey = !isJwt(apiKey) && apiKey ? apiKey : !isJwt(token) && token ? token : null;
+
+    const headers: HeadersInit = { Accept: "application/json" };
+    if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;
+
+    const queries = [
+      anime.title.english,
+      anime.title.romaji,
+      anime.title.native,
+    ].filter(Boolean) as string[];
+
+    let tmdbTvId: number | null = null;
+    for (const query of queries) {
+      const cleanQuery = query.trim();
+      if (!cleanQuery) continue;
+
+      const url = new URL("https://api.themoviedb.org/3/search/tv");
+      url.searchParams.set("query", cleanQuery);
+      if (rawKey) url.searchParams.set("api_key", rawKey);
+
+      const res = await fetch(url.toString(), { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          tmdbTvId = data.results[0].id;
+          break;
+        }
+      }
+    }
+
+    if (!tmdbTvId) {
+      for (const query of queries) {
+        const cleanQuery = query.trim();
+        if (!cleanQuery) continue;
+
+        const multiUrl = new URL("https://api.themoviedb.org/3/search/multi");
+        multiUrl.searchParams.set("query", cleanQuery);
+        if (rawKey) multiUrl.searchParams.set("api_key", rawKey);
+
+        const mRes = await fetch(multiUrl.toString(), { headers });
+        if (mRes.ok) {
+          const mData = await mRes.json();
+          const tvResult = (mData.results || []).find((r: any) => r.media_type === "tv");
+          if (tvResult) {
+            tmdbTvId = tvResult.id;
+            break;
+          }
+        }
+      }
+    }
+
+    if (tmdbTvId) {
+      const tvUrl = new URL(`https://api.themoviedb.org/3/tv/${tmdbTvId}`);
+      if (rawKey) tvUrl.searchParams.set("api_key", rawKey);
+
+      const tvRes = await fetch(tvUrl.toString(), { headers });
+      if (tvRes.ok) {
+        const tvData = await tvRes.json();
+        const seasons = (tvData.seasons || []).filter((s: any) => s.season_number > 0);
+
+        if (seasons.length > 0) {
+          const startYear = anime.startDate?.year;
+          let matchedSeason = seasons.find(
+            (s: any) =>
+              s.episode_count === anime.episodes &&
+              startYear &&
+              s.air_date?.startsWith(String(startYear))
+          );
+
+          if (!matchedSeason && startYear) {
+            matchedSeason = seasons.find((s: any) =>
+              s.air_date?.startsWith(String(startYear))
+            );
+          }
+
+          if (!matchedSeason && anime.episodes) {
+            matchedSeason = seasons.find((s: any) => s.episode_count === anime.episodes);
+          }
+
+          if (!matchedSeason) {
+            matchedSeason = seasons[0];
+          }
+
+          if (matchedSeason) {
+            const seasonUrl = new URL(
+              `https://api.themoviedb.org/3/tv/${tmdbTvId}/season/${matchedSeason.season_number}`
+            );
+            if (rawKey) seasonUrl.searchParams.set("api_key", rawKey);
+
+            const seasonRes = await fetch(seasonUrl.toString(), { headers });
+            if (seasonRes.ok) {
+              const seasonData = await seasonRes.json();
+              if (seasonData.episodes && seasonData.episodes.length > 0) {
+                const episodes: Episode[] = seasonData.episodes.map((e: any) => ({
+                  id: e.id,
+                  episode_number: e.episode_number,
+                  name: e.name || `Episode ${e.episode_number}`,
+                  air_date: e.air_date || null,
+                  runtime: e.runtime || anime.duration || null,
+                  overview: e.overview || null,
+                  still_path: e.still_path || null,
+                }));
+
+                animeEpisodesCache.set(id, { episodes, timestamp: Date.now() });
+                return NextResponse.json({ episodes });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    try {
+      const anilistQuery = `
+        query ($id: Int) {
+          Media(id: $id) {
+            streamingEpisodes {
+              title
+              thumbnail
+            }
+          }
+        }
+      `;
+      const anilistData = await fetchAniList<{
+        data?: {
+          Media?: {
+            streamingEpisodes?: { title?: string; thumbnail?: string }[];
+          };
+        };
+      }>(anilistQuery, { id: animeId });
+
+      const streamingList = anilistData.data?.Media?.streamingEpisodes;
+      if (streamingList && streamingList.length > 0) {
+        const episodes: Episode[] = streamingList.map((sEp, idx) => {
+          let epNum = idx + 1;
+          let epName = sEp.title || `Episode ${idx + 1}`;
+          const epMatch = sEp.title?.match(/Episode\s+(\d+)\s*[-:]?\s*(.*)/i);
+          if (epMatch) {
+            epNum = parseInt(epMatch[1], 10) || idx + 1;
+            epName = epMatch[2]?.trim() || `Episode ${epNum}`;
+          }
+          return {
+            id: idx + 1,
+            episode_number: epNum,
+            name: epName,
+            air_date: null,
+            runtime: anime.duration || null,
+            overview: null,
+            still_path: sEp.thumbnail || null,
+          };
+        });
+
+        animeEpisodesCache.set(id, { episodes, timestamp: Date.now() });
+        return NextResponse.json({ episodes });
+      }
+    } catch {
+    }
+
+    animeEpisodesCache.set(id, { episodes: [], timestamp: Date.now() });
+    return NextResponse.json({ episodes: [] });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to fetch episodes" },
+      { status: 500 }
+    );
+  }
+}

@@ -27,6 +27,7 @@ import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
+import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
 import MediaCard from "@/components/ui/MediaCard";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { isMediaReleased } from "@/lib/media-utils";
@@ -75,9 +76,11 @@ function AnimeDetailContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "cast" | "relations" | "details" | "trailer"
+    "cast" | "relations" | "details" | "episodes" | "trailer"
   >("cast");
   const [isCastExpanded, setIsCastExpanded] = useState(false);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
   const releaseDateStr = useMemo(() => {
     if (!anime?.startDate?.year) return null;
@@ -251,6 +254,39 @@ function AnimeDetailContent() {
       ignore = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchEpisodes() {
+      if (!id || !anime || anime.format === "MOVIE" || anime.episodes === 1) {
+        setEpisodes([]);
+        return;
+      }
+      try {
+        setLoadingEpisodes(true);
+        const res = await fetch(`/api/anime/${id}/episodes`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!ignore && data.episodes?.length) {
+            setEpisodes(data.episodes);
+          } else if (!ignore) {
+            setEpisodes([]);
+          }
+        }
+      } catch {
+        if (!ignore) setEpisodes([]);
+      } finally {
+        if (!ignore) setLoadingEpisodes(false);
+      }
+    }
+
+    fetchEpisodes();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, anime]);
 
   const handleSelectPoster = (filePath: string) => {
     setCustomPoster(filePath);
@@ -590,10 +626,13 @@ function AnimeDetailContent() {
   const characters = anime.characters?.edges || [];
   const displayedCharacters = isCastExpanded ? characters : characters.slice(0, 12);
 
+  const hasEpisodes = episodes.length > 0;
+
   const tabs = [
     { key: "cast", label: "Cast" },
     { key: "relations", label: `Relations (${relations.length})` },
     { key: "details", label: "Details" },
+    ...(hasEpisodes ? [{ key: "episodes", label: "Episodes" }] : []),
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
   ];
 
@@ -939,6 +978,13 @@ function AnimeDetailContent() {
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === "episodes" && hasEpisodes && (
+            <EpisodesTab
+              episodes={episodes}
+              isLoading={loadingEpisodes}
+            />
           )}
 
           {activeTab === "trailer" && hasTrailer && (

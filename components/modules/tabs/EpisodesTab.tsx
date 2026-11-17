@@ -7,7 +7,7 @@ import Loading from "@/components/ui/Loading";
 import { getPosterUrl } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";
 
-interface Episode {
+export interface Episode {
   id: number;
   episode_number: number;
   name: string;

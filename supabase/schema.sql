@@ -4,9 +4,11 @@ drop table if exists public.lists cascade;
 drop table if exists public.user_movies cascade;
 drop table if exists public.user_series cascade;
 drop table if exists public.user_animes cascade;
+drop table if exists public.user_games cascade;
 drop table if exists public.movies cascade;
 drop table if exists public.series cascade;
 drop table if exists public.animes cascade;
+drop table if exists public.games cascade;
 
 create or replace function public.handle_updated_at()
 returns trigger as $$
@@ -94,6 +96,32 @@ create policy "animes_update_policy"
 
 create trigger trigger_animes_updated_at
   before update on public.animes
+  for each row execute function public.handle_updated_at();
+
+create table public.games (
+  id bigint not null primary key,
+  name text not null,
+  summary text null,
+  cover_url text null,
+  backdrop_url text null,
+  first_release_date timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.games enable row level security;
+
+create policy "games_read_policy"
+  on public.games for select using (true);
+
+create policy "games_insert_policy"
+  on public.games for insert with check (auth.role() = 'authenticated');
+
+create policy "games_update_policy"
+  on public.games for update using (auth.role() = 'authenticated');
+
+create trigger trigger_games_updated_at
+  before update on public.games
   for each row execute function public.handle_updated_at();
 
 create table public.user_movies (
@@ -293,6 +321,73 @@ $$ language plpgsql;
 create trigger trigger_user_animes_favorites_limit
   before insert or update on public.user_animes
   for each row execute function public.check_user_animes_favorites_limit();
+
+create table public.user_games (
+  id uuid not null default gen_random_uuid() primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  game_id bigint not null references public.games(id) on delete cascade,
+  status text not null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist', 'playing', 'completed', 'backlog')),
+  is_favorite boolean not null default false,
+  rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
+  review text null,
+  has_spoilers boolean not null default false,
+  custom_poster_path text null,
+  custom_backdrop_path text null,
+  hours_played numeric(5, 1) null default 0,
+  platform text null,
+  start_date date null,
+  end_date date null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint user_games_user_game_unique unique (user_id, game_id)
+);
+
+create index idx_user_games_user_id on public.user_games (user_id);
+create index idx_user_games_game_id on public.user_games (game_id);
+create index idx_user_games_status on public.user_games (user_id, status);
+create index idx_user_games_favorite on public.user_games (user_id, is_favorite);
+
+alter table public.user_games enable row level security;
+
+create policy "user_games_select_policy"
+  on public.user_games for select using (true);
+
+create policy "user_games_insert_policy"
+  on public.user_games for insert with check (auth.uid() = user_id);
+
+create policy "user_games_update_policy"
+  on public.user_games for update using (auth.uid() = user_id);
+
+create policy "user_games_delete_policy"
+  on public.user_games for delete using (auth.uid() = user_id);
+
+create trigger trigger_user_games_updated_at
+  before update on public.user_games
+  for each row execute function public.handle_updated_at();
+
+create or replace function public.check_user_games_favorites_limit()
+returns trigger as $$
+declare
+  fav_count integer;
+begin
+  if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    select count(*) into fav_count
+    from public.user_games
+    where user_id = new.user_id
+      and is_favorite = true
+      and game_id <> new.game_id;
+
+    if fav_count >= 5 then
+      raise exception 'Maximum of 5 favorite games reached';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trigger_user_games_favorites_limit
+  before insert or update on public.user_games
+  for each row execute function public.check_user_games_favorites_limit();
 
 create table public.lists (
   id uuid not null default gen_random_uuid() primary key,

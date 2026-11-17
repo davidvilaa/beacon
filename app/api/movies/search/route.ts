@@ -15,6 +15,7 @@ import {
   getAnimeBackdropUrl,
   stripHtml,
 } from "@/lib/anilist";
+import { searchGames, getIgdbImageUrl } from "@/lib/igdb";
 import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
 import { createClient } from "@supabase/supabase-js";
 
@@ -335,6 +336,37 @@ export async function GET(request: Request) {
         total_pages: Math.min(Math.ceil((animeData.pageInfo?.total || 0) / 10), 1000),
         total_results: animeData.pageInfo?.total || 0,
       });
+    } else if (moduleType === "games") {
+      const gamesData = await searchGames(query, uiPage, 10, sortBy);
+      const results = (gamesData.results || []).map((g) => {
+        const releaseDate = g.first_release_date
+          ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
+          : "";
+        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "cover_big");
+        return {
+          id: g.id,
+          title: g.name,
+          original_title: g.name,
+          overview: g.summary || "",
+          poster_path: coverUrl,
+          backdrop_path: null,
+          release_date: releaseDate,
+          vote_average: g.rating ? g.rating / 10 : 0,
+          vote_count: 0,
+          popularity: g.total_rating || g.rating || 0,
+          genre_ids: [],
+          moduleType: "games",
+          media_type: "game",
+          href: `/game/${g.id}`,
+        };
+      });
+
+      return NextResponse.json({
+        page: uiPage,
+        results,
+        total_pages: Math.min(Math.ceil((gamesData.total || 0) / 10), 1000),
+        total_results: gamesData.total || 0,
+      });
     } else if (
       moduleType &&
       moduleType !== "movies" &&
@@ -342,7 +374,8 @@ export async function GET(request: Request) {
       moduleType !== "people" &&
       moduleType !== "companies" &&
       moduleType !== "users" &&
-      moduleType !== "lists"
+      moduleType !== "lists" &&
+      moduleType !== "games"
     ) {
       rawResults = [];
       totalResults = 0;
@@ -352,7 +385,7 @@ export async function GET(request: Request) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const [multiData, usersRes, listsRes, companyData, animeData] = await Promise.all([
+      const [multiData, usersRes, listsRes, companyData, animeData, gamesData] = await Promise.all([
         searchMulti(query, tmdbPage),
         uiPage === 1
           ? supabase
@@ -395,6 +428,9 @@ export async function GET(request: Request) {
         uiPage === 1
           ? searchAnime(query, 1, 3, sortBy)
           : Promise.resolve({ results: [] as any[], pageInfo: { total: 0, currentPage: 1, lastPage: 1, hasNextPage: false, perPage: 3 } }),
+        uiPage === 1
+          ? searchGames(query, 1, 3, sortBy)
+          : Promise.resolve({ results: [], total: 0, page: 1, limit: 3 }),
       ]);
 
       const lowerQuery = query.trim().toLowerCase();
@@ -542,16 +578,40 @@ export async function GET(request: Request) {
         };
       });
 
+      const gameItems = (gamesData.results || []).map((g: any) => {
+        const releaseDate = g.first_release_date
+          ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
+          : "";
+        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "cover_big");
+        return {
+          id: g.id,
+          title: g.name,
+          original_title: g.name,
+          overview: g.summary || "",
+          poster_path: coverUrl,
+          backdrop_path: null,
+          release_date: releaseDate,
+          vote_average: g.rating ? g.rating / 10 : 0,
+          vote_count: 0,
+          popularity: g.total_rating || g.rating || 0,
+          genre_ids: [],
+          moduleType: "games",
+          media_type: "game",
+          href: `/game/${g.id}`,
+        };
+      });
+
       const allCandidates = [
         ...userItems,
         ...listItems,
         ...companyItems,
         ...animeItems,
+        ...gameItems,
         ...tmdbItems,
       ];
 
       rawResults = sortItems(allCandidates, sortBy);
-      totalResults = (multiData.total_results || 0) + userItems.length + listItems.length + companyItems.length + animeItems.length;
+      totalResults = (multiData.total_results || 0) + userItems.length + listItems.length + companyItems.length + animeItems.length + gameItems.length;
     }
 
     const startIndex = ((uiPage - 1) % 2) * 10;

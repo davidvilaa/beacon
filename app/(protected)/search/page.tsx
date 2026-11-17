@@ -374,17 +374,29 @@ function SearchContent() {
                 movie.media_type === "movie" || movie.moduleType === "movies";
               const isAnime =
                 movie.media_type === "anime" || movie.moduleType === "anime";
+              const isGame =
+                movie.media_type === "game" || movie.moduleType === "games";
               const releaseYear = movie.release_date
                 ? movie.release_date.slice(0, 4)
                 : "";
 
               const resolvedHref =
                 movie.href ||
-                (isAnime
+                (isGame
+                  ? `/game/${movie.id}`
+                  : isAnime
                   ? `/anime/${movie.id}`
                   : isMovie
                   ? `/movie/${movie.id}`
                   : `/tv/${movie.id}`);
+
+              const resolvedMediaType = isGame
+                ? "game"
+                : isAnime
+                ? "anime"
+                : isMovie
+                ? "movie"
+                : "tv";
 
               return (
                 <MediaCard
@@ -392,7 +404,7 @@ function SearchContent() {
                   variant="horizontal"
                   id={movie.id}
                   href={resolvedHref}
-                  mediaType={isAnime ? "anime" : isMovie ? "movie" : "tv"}
+                  mediaType={resolvedMediaType}
                   title={movie.title}
                   posterPath={movie.poster_path}
                   backdropPath={movie.backdrop_path}

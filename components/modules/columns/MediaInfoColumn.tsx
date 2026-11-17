@@ -51,11 +51,15 @@ export default function MediaInfoColumn({
           <Calendar className="w-3.5 h-3.5 text-zinc-500" />
           <span>{formattedDate}</span>
         </span>
-        <span>•</span>
-        <span className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-zinc-500" />
-          <span>{formatRuntime(runtimeMinutes || null)}</span>
-        </span>
+        {typeof runtimeMinutes === "number" && runtimeMinutes > 0 && (
+          <>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-zinc-500" />
+              <span>{formatRuntime(runtimeMinutes)}</span>
+            </span>
+          </>
+        )}
         {typeof episodesCount === "number" && episodesCount > 0 && (
           <>
             <span>•</span>

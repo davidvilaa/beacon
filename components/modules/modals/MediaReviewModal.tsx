@@ -101,7 +101,7 @@ interface MediaReviewModalProps {
   episodesCount?: number | null;
   posterUrl: string | null;
   backdropUrl: string | null;
-  mediaType: "movie" | "tv" | "anime";
+  mediaType: "movie" | "tv" | "anime" | "game";
   status: MediaStatus;
   isFavorite: boolean;
   canAddFavorite?: boolean;
@@ -227,11 +227,34 @@ export default function MediaReviewModal({
     { key: "watchlist", label: "Watchlist", icon: Bookmark },
   ];
 
+  const gameStatusOptions: {
+    key: Exclude<MediaStatus, null>;
+    label: string;
+    icon: typeof Eye;
+  }[] = [
+    { key: "watched", label: "Completed", icon: Eye },
+    { key: "watching", label: "Playing", icon: PlayCircle },
+    { key: "paused", label: "Paused", icon: PauseCircle },
+    { key: "dropped", label: "Dropped", icon: XCircle },
+    { key: "watchlist", label: "Backlog", icon: Bookmark },
+  ];
+
   const statusOptions =
-    mediaType === "movie" ? movieStatusOptions : tvStatusOptions;
+    mediaType === "movie"
+      ? movieStatusOptions
+      : mediaType === "game"
+      ? gameStatusOptions
+      : tvStatusOptions;
 
   const resolvedTypeLabel =
-    typeLabel || (mediaType === "movie" ? "Movie" : mediaType === "anime" ? "Anime" : "Series");
+    typeLabel ||
+    (mediaType === "movie"
+      ? "Movie"
+      : mediaType === "anime"
+      ? "Anime"
+      : mediaType === "game"
+      ? "Game"
+      : "Series");
   const formattedDate = releaseDate
     ? formatFullDate(releaseDate)
     : year

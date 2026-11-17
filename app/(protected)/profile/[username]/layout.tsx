@@ -39,7 +39,7 @@ function ProfileSubNav({
       case "games":
         return [
           { id: "overview", label: "Overview", href: `${basePath}/games`, disabled: false },
-          { id: "games", label: "Games", href: `${basePath}/games?tab=games`, disabled: true },
+          { id: "games", label: "Games", href: `${basePath}/games?tab=games`, disabled: false },
         ];
       default:
         return [];

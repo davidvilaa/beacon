@@ -29,7 +29,7 @@ interface MediaActionColumnProps {
   title: string;
   hasMultiplePosters?: boolean;
   onOpenPosterPicker?: () => void;
-  mediaType: "movie" | "tv" | "anime";
+  mediaType: "movie" | "tv" | "anime" | "game";
   status: MediaStatus;
   isFavorite: boolean;
   hasLog?: boolean;
@@ -102,7 +102,20 @@ export default function MediaActionColumn({
     { statusKey: "watchlist" as const, label: "Watchlist", icon: Bookmark },
   ];
 
-  const statusOptions = mediaType === "movie" ? movieOptions : tvOptions;
+  const gameOptions = [
+    { statusKey: "watched" as const, label: "Completed", icon: Eye },
+    { statusKey: "watching" as const, label: "Playing", icon: PlayCircle },
+    { statusKey: "paused" as const, label: "Paused", icon: PauseCircle },
+    { statusKey: "dropped" as const, label: "Dropped", icon: XCircle },
+    { statusKey: "watchlist" as const, label: "Backlog", icon: Bookmark },
+  ];
+
+  const statusOptions =
+    mediaType === "movie"
+      ? movieOptions
+      : mediaType === "game"
+      ? gameOptions
+      : tvOptions;
   const iconSizeClass =
     mediaType === "movie"
       ? "w-6 h-6"

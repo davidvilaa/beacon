@@ -26,10 +26,13 @@ export async function fetchCachedMediaMap(
   const animeIds = Array.from(
     new Set(items.filter((i) => i.media_type === "anime").map((i) => i.media_id))
   );
+  const gameIds = Array.from(
+    new Set(items.filter((i) => i.media_type === "game").map((i) => i.media_id))
+  );
 
   const map = new Map<string, CachedMediaMeta>();
 
-  const [moviesRes, seriesRes, animesRes] = await Promise.all([
+  const [moviesRes, seriesRes, animesRes, gamesRes] = await Promise.all([
     movieIds.length > 0
       ? supabase.from("movies").select("id, title, poster_path, backdrop_path").in("id", movieIds)
       : Promise.resolve({
@@ -44,6 +47,11 @@ export async function fetchCachedMediaMap(
       ? supabase.from("animes").select("id, title, poster_path, backdrop_path").in("id", animeIds)
       : Promise.resolve({
           data: [] as { id: number; title: string; poster_path: string | null; backdrop_path: string | null }[],
+        }),
+    gameIds.length > 0
+      ? supabase.from("games").select("id, name, cover_url, backdrop_url").in("id", gameIds)
+      : Promise.resolve({
+          data: [] as { id: number; name: string; cover_url: string | null; backdrop_url: string | null }[],
         }),
   ]);
 
@@ -71,6 +79,13 @@ export async function fetchCachedMediaMap(
       title: titleStr,
       posterPath: a.poster_path,
       backdropPath: a.backdrop_path,
+    });
+  }
+  for (const g of (gamesRes.data as any) || []) {
+    map.set(`game-${g.id}`, {
+      title: g.name,
+      posterPath: g.cover_url,
+      backdropPath: g.backdrop_url,
     });
   }
 

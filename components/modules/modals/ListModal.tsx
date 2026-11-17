@@ -351,6 +351,18 @@ export default function ListModal({
             addToast("Error saving anime metadata", "error");
             return;
           }
+        } else if (media.mediaType === "game") {
+          const { error: cacheError } = await supabase.from("games").upsert({
+            id: media.mediaId,
+            name: media.title,
+            summary: media.overview ?? null,
+            cover_url: media.posterPath ?? null,
+            backdrop_url: media.backdropPath ?? null,
+          });
+          if (cacheError) {
+            addToast("Error saving game metadata", "error");
+            return;
+          }
         } else {
           const { error: cacheError } = await supabase.from("series").upsert({
             id: media.mediaId,

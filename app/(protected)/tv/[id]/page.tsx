@@ -9,6 +9,7 @@ import {
   MovieImage,
   getPosterUrl,
   getBackdropUrl,
+  getBestTmdbTrailer,
 } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import SeasonRevolver from "@/components/ui/SeasonRevolver";
@@ -67,7 +68,9 @@ function TvDetailContent() {
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"cast" | "crew" | "details" | "episodes">("cast");
+  const [activeTab, setActiveTab] = useState<
+    "cast" | "crew" | "details" | "episodes" | "trailer"
+  >("cast");
 
   const supabase = createClient();
   const { addToast } = useToast();
@@ -84,6 +87,21 @@ function TvDetailContent() {
   }, [tv, activeSeason]);
 
   const currentSeasonDetails = seasonCache[activeSeason] || null;
+
+  const trailer = useMemo(() => {
+    return (
+      getBestTmdbTrailer(currentSeasonDetails?.videos) ||
+      getBestTmdbTrailer(tv?.videos)
+    );
+  }, [currentSeasonDetails?.videos, tv?.videos]);
+
+  const hasTrailer = Boolean(trailer?.key);
+
+  useEffect(() => {
+    if (activeTab === "trailer" && !hasTrailer) {
+      setActiveTab("cast");
+    }
+  }, [activeTab, hasTrailer]);
 
   const rawDate =
     currentSeasonDetails?.air_date ||
@@ -840,6 +858,7 @@ function TvDetailContent() {
               { key: "crew", label: "Crew" },
               { key: "details", label: "Details" },
               { key: "episodes", label: "Episodes" },
+              ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
             ]}
             activeTab={activeTab}
             onChange={(key) => setActiveTab(key as any)}
@@ -868,6 +887,17 @@ function TvDetailContent() {
               episodes={currentSeasonDetails?.episodes}
               isLoading={isSeasonLoading}
             />
+          )}
+          {activeTab === "trailer" && trailer?.key && (
+            <div className="aspect-video w-full max-w-4xl rounded-sm overflow-hidden border border-zinc-800 bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailer.key}`}
+                title={`${tv.name} Trailer`}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
           )}
         </MediaInfoColumn>
       </MediaLayout>

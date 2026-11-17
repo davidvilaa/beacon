@@ -321,6 +321,15 @@ export interface CollectionDetails {
   parts: Movie[];
 }
 
+export interface TmdbVideo {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official?: boolean;
+}
+
 export interface MovieDetails extends Movie {
   tagline: string | null;
   runtime: number | null;
@@ -337,6 +346,9 @@ export interface MovieDetails extends Movie {
   images?: {
     backdrops: MovieImage[];
     posters: MovieImage[];
+  };
+  videos?: {
+    results: TmdbVideo[];
   };
   release_dates?: {
     results: MovieCountryRelease[];
@@ -446,7 +458,7 @@ export async function getMovieDetails(
   id: string | number
 ): Promise<MovieDetails> {
   const data = await fetchFromTmdb<MovieDetails>(`/movie/${id}`, {
-    append_to_response: "credits,images,release_dates,alternative_titles",
+    append_to_response: "credits,images,release_dates,alternative_titles,videos",
     include_image_language: "en,null",
   });
 
@@ -717,6 +729,9 @@ export interface TvSeasonDetails extends TvSeasonSummary {
   images?: {
     posters: MovieImage[];
   };
+  videos?: {
+    results: TmdbVideo[];
+  };
 }
 
 export interface TvDetails {
@@ -761,7 +776,24 @@ export interface TvDetails {
     backdrops: MovieImage[];
     posters: MovieImage[];
   };
+  videos?: {
+    results: TmdbVideo[];
+  };
   initialSeason?: TvSeasonDetails;
+}
+
+export function getBestTmdbTrailer(
+  videos?: { results?: TmdbVideo[] } | null
+): TmdbVideo | null {
+  if (!videos?.results || videos.results.length === 0) return null;
+  const list = videos.results;
+  return (
+    list.find((v) => v.site === "YouTube" && v.type === "Trailer" && v.official) ||
+    list.find((v) => v.site === "YouTube" && v.type === "Trailer") ||
+    list.find((v) => v.site === "YouTube" && v.type === "Teaser") ||
+    list.find((v) => v.site === "YouTube") ||
+    null
+  );
 }
 
 export async function getTvDetails(
@@ -769,7 +801,7 @@ export async function getTvDetails(
   initialSeasonNumber: number = 1
 ): Promise<TvDetails> {
   const data = await fetchFromTmdb<TvDetails>(`/tv/${id}`, {
-    append_to_response: "images,credits,aggregate_credits,external_ids",
+    append_to_response: "images,credits,aggregate_credits,external_ids,videos",
     include_image_language: "en,null",
   });
 
@@ -794,7 +826,7 @@ export async function getTvSeasonDetails(
   seasonNumber: number
 ): Promise<TvSeasonDetails> {
   const season = await fetchFromTmdb<TvSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`, {
-    append_to_response: "credits,images",
+    append_to_response: "credits,images,videos",
   });
   return season;
 }

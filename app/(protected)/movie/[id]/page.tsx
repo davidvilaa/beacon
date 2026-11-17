@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
 import { createClient } from "@/lib/supabase/client";
@@ -50,7 +50,22 @@ function MovieDetailContent() {
   const [watchedDate, setWatchedDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"cast" | "staff" | "details" | "releases">("cast");
+  const [activeTab, setActiveTab] = useState<
+    "cast" | "staff" | "details" | "releases" | "trailer"
+  >("cast");
+
+  const trailer = useMemo(() => {
+    if (!movie?.videos) return null;
+    return getBestTmdbTrailer(movie.videos);
+  }, [movie?.videos]);
+
+  const hasTrailer = Boolean(trailer?.key);
+
+  useEffect(() => {
+    if (activeTab === "trailer" && !hasTrailer) {
+      setActiveTab("cast");
+    }
+  }, [activeTab, hasTrailer]);
 
   const isReleased = useMemo(() => {
     if (!movie) return true;
@@ -613,6 +628,7 @@ function MovieDetailContent() {
               { key: "staff", label: "Crew" },
               { key: "details", label: "Details" },
               { key: "releases", label: "Releases" },
+              ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
             ]}
             activeTab={activeTab}
             onChange={(key) => setActiveTab(key as any)}
@@ -632,6 +648,18 @@ function MovieDetailContent() {
             />
           )}
           {activeTab === "releases" && <ReleasesTab groups={releaseDateGroups} />}
+
+          {activeTab === "trailer" && trailer?.key && (
+            <div className="aspect-video w-full max-w-4xl rounded-sm overflow-hidden border border-zinc-800 bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailer.key}`}
+                title={`${movie.title} Trailer`}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
 
           {movie.collection?.parts && movie.collection.parts.length > 0 && (
             <div className="mt-12 sm:mt-14">

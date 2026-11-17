@@ -5,6 +5,44 @@ import { Episode } from "@/components/modules/tabs/EpisodesTab";
 const animeEpisodesCache = new Map<string, { episodes: Episode[]; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24;
 
+function dateDiffDays(d1: string, d2: string): number {
+  return Math.abs(new Date(d1).getTime() - new Date(d2).getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function sliceSeasonEpisodes(allEpisodes: any[], anime: any): any[] {
+  if (!anime.episodes || allEpisodes.length <= anime.episodes) {
+    return allEpisodes.slice(0, anime.episodes || allEpisodes.length);
+  }
+
+  const startYear = anime.startDate?.year;
+  const startMonth = anime.startDate?.month || 1;
+  const startDay = anime.startDate?.day || 1;
+  const startStr = startYear
+    ? `${startYear}-${String(startMonth).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`
+    : null;
+
+  let startIndex = 0;
+  if (startStr) {
+    let closestIndex = -1;
+    let minDiff = Infinity;
+    allEpisodes.forEach((ep: any, idx: number) => {
+      if (ep.air_date) {
+        const diff = dateDiffDays(ep.air_date, startStr);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIndex = idx;
+        }
+      }
+    });
+
+    if (closestIndex !== -1 && minDiff <= 30) {
+      startIndex = closestIndex;
+    }
+  }
+
+  return allEpisodes.slice(startIndex, startIndex + anime.episodes);
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -40,11 +78,20 @@ export async function GET(
     const headers: HeadersInit = { Accept: "application/json" };
     if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;
 
-    const queries = [
+    const rawQueries = [
       anime.title.english,
       anime.title.romaji,
       anime.title.native,
     ].filter(Boolean) as string[];
+
+    const queries: string[] = [];
+    rawQueries.forEach((t) => {
+      queries.push(t);
+      const cleaned = t.replace(/\s+(Season\s+\d+|\d+(st|nd|rd|th)\s+Season|Part\s+\d+|Final\s+Season).*$/i, "").trim();
+      if (cleaned && cleaned !== t) {
+        queries.push(cleaned);
+      }
+    });
 
     let tmdbTvId: number | null = null;
     for (const query of queries) {
@@ -128,10 +175,11 @@ export async function GET(
             if (seasonRes.ok) {
               const seasonData = await seasonRes.json();
               if (seasonData.episodes && seasonData.episodes.length > 0) {
-                const episodes: Episode[] = seasonData.episodes.map((e: any) => ({
+                const rawEpisodes = sliceSeasonEpisodes(seasonData.episodes, anime);
+                const episodes: Episode[] = rawEpisodes.map((e: any, idx: number) => ({
                   id: e.id,
-                  episode_number: e.episode_number,
-                  name: e.name || `Episode ${e.episode_number}`,
+                  episode_number: idx + 1,
+                  name: e.name || `Episode ${idx + 1}`,
                   air_date: e.air_date || null,
                   runtime: e.runtime || anime.duration || null,
                   overview: e.overview || null,
@@ -168,17 +216,16 @@ export async function GET(
 
       const streamingList = anilistData.data?.Media?.streamingEpisodes;
       if (streamingList && streamingList.length > 0) {
-        const episodes: Episode[] = streamingList.map((sEp, idx) => {
-          let epNum = idx + 1;
+        const targetList = anime.episodes ? streamingList.slice(0, anime.episodes) : streamingList;
+        const episodes: Episode[] = targetList.map((sEp, idx) => {
           let epName = sEp.title || `Episode ${idx + 1}`;
           const epMatch = sEp.title?.match(/Episode\s+(\d+)\s*[-:]?\s*(.*)/i);
           if (epMatch) {
-            epNum = parseInt(epMatch[1], 10) || idx + 1;
-            epName = epMatch[2]?.trim() || `Episode ${epNum}`;
+            epName = epMatch[2]?.trim() || `Episode ${idx + 1}`;
           }
           return {
             id: idx + 1,
-            episode_number: epNum,
+            episode_number: idx + 1,
             name: epName,
             air_date: null,
             runtime: anime.duration || null,

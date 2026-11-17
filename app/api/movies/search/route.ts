@@ -342,7 +342,7 @@ export async function GET(request: Request) {
         const releaseDate = g.first_release_date
           ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
           : "";
-        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "cover_big");
+        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "1080p");
         return {
           id: g.id,
           title: g.name,
@@ -582,7 +582,7 @@ export async function GET(request: Request) {
         const releaseDate = g.first_release_date
           ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
           : "";
-        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "cover_big");
+        const coverUrl = getIgdbImageUrl(g.cover?.image_id, "1080p");
         return {
           id: g.id,
           title: g.name,

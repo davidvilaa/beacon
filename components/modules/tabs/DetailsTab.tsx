@@ -33,6 +33,7 @@ interface DetailsTabProps {
   genres?: (Genre | string)[];
   format?: string | null;
   season?: string | null;
+  storyline?: string | null;
 }
 
 export default function DetailsTab({
@@ -52,6 +53,7 @@ export default function DetailsTab({
   genres,
   format,
   season,
+  storyline,
 }: DetailsTabProps) {
   const hasCompanies = productionCompanies && productionCompanies.length > 0;
   const companiesLabel =
@@ -379,6 +381,21 @@ export default function DetailsTab({
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {storyline && (
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 py-4 px-2 hover:bg-zinc-800/40 rounded-sm transition-colors">
+          <div className="w-36 sm:w-44 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+              Storyline
+            </span>
+          </div>
+          <div className="flex-1">
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+              {storyline}
+            </p>
           </div>
         </div>
       )}

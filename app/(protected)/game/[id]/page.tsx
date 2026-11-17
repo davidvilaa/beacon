@@ -24,7 +24,7 @@ import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider"
 import { isMediaReleased } from "@/lib/media-utils";
 
 async function syncGameRecord(supabaseClient: any, currentGame: IGDBGameDetail) {
-  const coverUrl = getIgdbImageUrl(currentGame.cover?.image_id, "cover_big");
+  const coverUrl = getIgdbImageUrl(currentGame.cover?.image_id, "1080p");
   const backdropUrl = getIgdbImageUrl(
     currentGame.artworks?.[0]?.image_id || currentGame.screenshots?.[0]?.image_id,
     "1080p"
@@ -139,7 +139,7 @@ function GameDetailContent() {
         items.push({
           id: d.id,
           title: d.name,
-          posterPath: getIgdbImageUrl(d.cover?.image_id, "cover_big"),
+          posterPath: getIgdbImageUrl(d.cover?.image_id, "1080p"),
           mediaType: "game",
           year,
         });
@@ -168,7 +168,7 @@ function GameDetailContent() {
         items.push({
           id: g.id,
           title: g.name,
-          posterPath: getIgdbImageUrl(g.cover?.image_id, "cover_big"),
+          posterPath: getIgdbImageUrl(g.cover?.image_id, "1080p"),
           mediaType: "game",
           year,
         });
@@ -193,7 +193,7 @@ function GameDetailContent() {
     return list;
   }, [trailerVideo, dlcItems.length, franchiseItems.length]);
 
-  const defaultPoster = getIgdbImageUrl(game?.cover?.image_id, "cover_big");
+  const defaultPoster = getIgdbImageUrl(game?.cover?.image_id, "1080p");
   const defaultBackdrop = getIgdbImageUrl(
     game?.artworks?.[0]?.image_id || game?.screenshots?.[0]?.image_id,
     "1080p"
@@ -574,8 +574,8 @@ function GameDetailContent() {
           title={game.name}
           originalTitle={game.name}
           releaseDate={releaseDateStr}
-          tagline={game.storyline || null}
-          overview={game.summary || null}
+          tagline={null}
+          overview={game.summary || game.storyline || null}
         >
           <MediaTabsNav
             tabs={tabs}
@@ -591,6 +591,11 @@ function GameDetailContent() {
               genres={game.genres?.map((g) => g.name) || []}
               gameModes={game.game_modes?.map((m) => m.name) || []}
               themes={game.themes?.map((t) => t.name) || []}
+              storyline={
+                game.storyline && game.storyline !== game.summary
+                  ? game.storyline
+                  : null
+              }
             />
           )}
 

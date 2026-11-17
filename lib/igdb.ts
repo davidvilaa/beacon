@@ -139,12 +139,13 @@ export function getIgdbImageUrl(
   size:
     | "cover_small"
     | "cover_big"
+    | "cover_big_2x"
     | "screenshot_med"
     | "screenshot_big"
     | "screenshot_huge"
     | "720p"
     | "1080p"
-    | "original" = "cover_big"
+    | "original" = "1080p"
 ): string | null {
   if (!imageId) return null;
   return `https://images.igdb.com/igdb/image/upload/t_${size}/${imageId}.jpg`;
@@ -259,34 +260,64 @@ export async function getGameArtworks(id: number): Promise<{
   posters: string[];
   backdrops: string[];
 }> {
-  const body = `
-    fields id, cover.image_id, screenshots.image_id, artworks.image_id;
+  const gameBody = `
+    fields id, cover.image_id, cover.width, cover.height,
+           screenshots.image_id,
+           artworks.image_id, artworks.width, artworks.height;
     where id = ${id};
     limit 1;
   `;
 
-  const results = await fetchFromIgdb<IGDBGameDetail[]>("games", body);
-  const game = results?.[0];
+  const [games, covers] = await Promise.all([
+    fetchFromIgdb<any[]>("games", gameBody),
+    fetchFromIgdb<any[]>("covers", `fields image_id, width, height; where game = ${id}; limit 20;`).catch(() => []),
+  ]);
+
+  const game = games?.[0];
   if (!game) return { posters: [], backdrops: [] };
 
   const posters: string[] = [];
   if (game.cover?.image_id) {
-    const url = getIgdbImageUrl(game.cover.image_id, "cover_big");
+    const url = getIgdbImageUrl(game.cover.image_id, "1080p");
     if (url) posters.push(url);
   }
+
+  for (const c of covers || []) {
+    if (c.image_id) {
+      const url = getIgdbImageUrl(c.image_id, "1080p");
+      if (url && !posters.includes(url)) posters.push(url);
+    }
+  }
+
   for (const a of game.artworks || []) {
-    const url = getIgdbImageUrl(a.image_id, "cover_big");
-    if (url && !posters.includes(url)) posters.push(url);
+    if (
+      a.image_id &&
+      typeof a.height === "number" &&
+      typeof a.width === "number" &&
+      a.height > a.width
+    ) {
+      const url = getIgdbImageUrl(a.image_id, "1080p");
+      if (url && !posters.includes(url)) posters.push(url);
+    }
   }
 
   const backdrops: string[] = [];
   for (const s of game.screenshots || []) {
-    const url = getIgdbImageUrl(s.image_id, "1080p");
-    if (url && !backdrops.includes(url)) backdrops.push(url);
+    if (s.image_id) {
+      const url = getIgdbImageUrl(s.image_id, "1080p");
+      if (url && !backdrops.includes(url)) backdrops.push(url);
+    }
   }
   for (const a of game.artworks || []) {
-    const url = getIgdbImageUrl(a.image_id, "1080p");
-    if (url && !backdrops.includes(url)) backdrops.push(url);
+    if (
+      a.image_id &&
+      (typeof a.width !== "number" ||
+        typeof a.height !== "number" ||
+        a.width >= a.height)
+    ) {
+      const url = getIgdbImageUrl(a.image_id, "1080p");
+      if (url && !backdrops.includes(url)) backdrops.push(url);
+    }
   }
 
   return { posters, backdrops };

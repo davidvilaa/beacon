@@ -64,6 +64,7 @@ function TvDetailContent() {
   const [hasSpoilers, setHasSpoilers] = useState(false);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [lastWatchedEpisode, setLastWatchedEpisode] = useState<number>(0);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -87,6 +88,14 @@ function TvDetailContent() {
   }, [tv, activeSeason]);
 
   const currentSeasonDetails = seasonCache[activeSeason] || null;
+
+  const currentSeasonEpisodeCount = useMemo(() => {
+    return (
+      currentSeasonDetails?.episodes?.length ||
+      currentSeasonSummary?.episode_count ||
+      0
+    );
+  }, [currentSeasonDetails, currentSeasonSummary]);
 
   const trailer = useMemo(() => {
     return (
@@ -138,6 +147,7 @@ function TvDetailContent() {
           setHasSpoilers(Boolean(data.has_spoilers));
           setStartDate(data.start_date || "");
           setEndDate(data.end_date || "");
+          setLastWatchedEpisode(data.last_watched_episode || 0);
           if (data.custom_poster_path) {
             setCustomPosters((prev) => ({
               ...prev,
@@ -158,6 +168,7 @@ function TvDetailContent() {
           setHasSpoilers(false);
           setStartDate("");
           setEndDate("");
+          setLastWatchedEpisode(0);
         }
 
         const { data: favData } = await supabase
@@ -214,6 +225,7 @@ function TvDetailContent() {
         setHasSpoilers(false);
         setStartDate("");
         setEndDate("");
+        setLastWatchedEpisode(0);
         setCanAddFavorite(true);
         setCustomPosters((prev) => {
           const next = { ...prev };
@@ -257,6 +269,11 @@ function TvDetailContent() {
         number_of_episodes: tv.number_of_episodes,
       });
 
+      const nextEpisode =
+        newStatus === "watched" && currentSeasonEpisodeCount > 0
+          ? currentSeasonEpisodeCount
+          : lastWatchedEpisode;
+
       const { error } = await supabase.from("user_series").upsert(
         {
           user_id: session.user.id,
@@ -269,6 +286,7 @@ function TvDetailContent() {
           has_spoilers: hasSpoilers,
           start_date: startDate || null,
           end_date: endDate || null,
+          last_watched_episode: nextEpisode,
           custom_poster_path: customPosters[activeSeason] || null,
           custom_backdrop_path: customBackdrops[activeSeason] || null,
         },
@@ -282,6 +300,9 @@ function TvDetailContent() {
 
       setSeriesStatus(newStatus);
       setIsFavorite(newFavorite);
+      if (newStatus === "watched" && currentSeasonEpisodeCount > 0) {
+        setLastWatchedEpisode(currentSeasonEpisodeCount);
+      }
 
       if (newStatus !== seriesStatus) {
         if (newStatus === "watching") addToast("Marked as Watching", "success");
@@ -295,6 +316,69 @@ function TvDetailContent() {
       }
     } catch (err) {
       addToast("Error saving action", "error");
+    }
+  };
+
+  const handleEpisodeChange = async (delta: number) => {
+    if (!tv) return;
+    const maxEpisodes = currentSeasonEpisodeCount || 9999;
+    const nextEpisode = Math.max(0, Math.min(maxEpisodes, lastWatchedEpisode + delta));
+    if (nextEpisode === lastWatchedEpisode) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        addToast("Please log in to update progress", "error");
+        return;
+      }
+
+      setLastWatchedEpisode(nextEpisode);
+
+      const nextStatus =
+        currentSeasonEpisodeCount > 0 && nextEpisode >= currentSeasonEpisodeCount
+          ? "watched"
+          : "watching";
+
+      if (nextStatus !== seriesStatus) {
+        setSeriesStatus(nextStatus);
+      }
+
+      await supabase.from("series").upsert({
+        id: tv.id,
+        name: tv.name,
+        overview: tv.overview,
+        poster_path: tv.poster_path,
+        backdrop_path: tv.backdrop_path,
+        number_of_seasons: tv.number_of_seasons,
+        number_of_episodes: tv.number_of_episodes,
+      });
+
+      const { error } = await supabase.from("user_series").upsert(
+        {
+          user_id: session.user.id,
+          series_id: tv.id,
+          season_number: activeSeason,
+          status: nextStatus,
+          is_favorite: isFavorite,
+          rating: rating > 0 ? rating : null,
+          review: review.trim() || null,
+          has_spoilers: hasSpoilers,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          last_watched_episode: nextEpisode,
+          custom_poster_path: customPosters[activeSeason] || null,
+          custom_backdrop_path: customBackdrops[activeSeason] || null,
+        },
+        { onConflict: "user_id,series_id,season_number" }
+      );
+
+      if (error) throw error;
+      if (nextStatus === "watched" && seriesStatus !== "watched") {
+        addToast("Completed season!", "success");
+      }
+    } catch (err: any) {
+      console.error(err);
+      addToast("Failed to update episode count", "error");
     }
   };
 
@@ -328,6 +412,7 @@ function TvDetailContent() {
       setHasSpoilers(false);
       setStartDate("");
       setEndDate("");
+      setLastWatchedEpisode(0);
       setCustomPosters((prev) => {
         const next = { ...prev };
         delete next[activeSeason];
@@ -395,6 +480,11 @@ function TvDetailContent() {
         return;
       }
 
+      const nextEpisode =
+        reviewData.status === "watched" && currentSeasonEpisodeCount > 0
+          ? currentSeasonEpisodeCount
+          : lastWatchedEpisode;
+
       const { error: logError } = await supabase.from("user_series").upsert(
         {
           user_id: session.user.id,
@@ -407,6 +497,7 @@ function TvDetailContent() {
           has_spoilers: reviewData.hasSpoilers,
           start_date: reviewData.startDate || null,
           end_date: reviewData.endDate || null,
+          last_watched_episode: nextEpisode,
           custom_poster_path:
             reviewData.customPosterPath !== undefined
               ? reviewData.customPosterPath
@@ -423,6 +514,10 @@ function TvDetailContent() {
         addToast("Error saving review", "error");
         setIsSaving(false);
         return;
+      }
+
+      if (reviewData.status === "watched" && currentSeasonEpisodeCount > 0) {
+        setLastWatchedEpisode(currentSeasonEpisodeCount);
       }
 
       if (reviewData.customPosterPath) {
@@ -808,6 +903,9 @@ function TvDetailContent() {
             isReleased={isReleased}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onOpenListModal={() => setIsListModalOpen(true)}
+            currentEpisode={lastWatchedEpisode}
+            totalEpisodes={currentSeasonEpisodeCount}
+            onEpisodeChange={handleEpisodeChange}
             onQuickStatusChange={(newStatus) => {
               handleQuickAction(newStatus, isFavorite);
             }}

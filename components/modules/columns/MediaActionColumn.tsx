@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   Plus,
+  Minus,
   Check,
   ChevronDown,
   Eye,
@@ -38,6 +39,9 @@ interface MediaActionColumnProps {
   onOpenListModal?: () => void;
   children?: React.ReactNode;
   footerContent?: React.ReactNode;
+  currentEpisode?: number;
+  totalEpisodes?: number | null;
+  onEpisodeChange?: (delta: number) => void;
   isReleased?: boolean;
   className?: string;
 }
@@ -57,6 +61,9 @@ export default function MediaActionColumn({
   onOpenListModal,
   children,
   footerContent,
+  currentEpisode,
+  totalEpisodes,
+  onEpisodeChange,
   isReleased = true,
   className = "",
 }: MediaActionColumnProps) {
@@ -251,6 +258,47 @@ export default function MediaActionColumn({
                   />
                 </button>
               </div>
+
+              {status === "watching" && onEpisodeChange && (
+                <div className="border-t border-zinc-800 flex items-stretch bg-zinc-900/60 divide-x divide-zinc-800 h-10 sm:h-11">
+                  <button
+                    type="button"
+                    tabIndex={isOpen ? 0 : -1}
+                    onClick={() => onEpisodeChange(-1)}
+                    disabled={currentEpisode !== undefined && currentEpisode <= 0}
+                    title="Previous episode"
+                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
+                  >
+                    <Minus className="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" />
+                  </button>
+
+                  <div className="flex-1 flex items-center justify-center px-3 min-w-0 select-none">
+                    <span className="text-xs font-semibold text-zinc-300 truncate">
+                      Ep. <span className="font-mono text-zinc-100 font-bold">{currentEpisode ?? 0}</span>
+                      <span className="text-zinc-500 font-mono">
+                        {" "}
+                        / {totalEpisodes && totalEpisodes > 0 ? totalEpisodes : "?"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    tabIndex={isOpen ? 0 : -1}
+                    onClick={() => onEpisodeChange(1)}
+                    disabled={
+                      totalEpisodes !== undefined &&
+                      totalEpisodes !== null &&
+                      totalEpisodes > 0 &&
+                      (currentEpisode ?? 0) >= totalEpisodes
+                    }
+                    title="Next episode"
+                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
+                  >
+                    <Plus className="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+              )}
 
               {onOpenListModal && (
                 <button

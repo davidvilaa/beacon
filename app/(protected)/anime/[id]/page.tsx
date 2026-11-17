@@ -30,7 +30,6 @@ import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import RelationsTab from "@/components/modules/tabs/RelationsTab";
 import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
 import { isMediaReleased } from "@/lib/media-utils";
-import { Plus, Minus } from "lucide-react";
 
 async function syncAnimeRecord(supabaseClient: any, currentAnime: AnimeMedia) {
   const { error } = await supabaseClient.from("animes").upsert({
@@ -376,6 +375,11 @@ function AnimeDetailContent() {
         return;
       }
 
+      const nextEpisode =
+        newStatus === "watched" && anime.episodes
+          ? anime.episodes
+          : lastWatchedEpisode;
+
       const { error: userError } = await supabase.from("user_animes").upsert(
         {
           user_id: session.user.id,
@@ -387,7 +391,7 @@ function AnimeDetailContent() {
           has_spoilers: hasSpoilers,
           start_date: startDate || null,
           end_date: endDate || null,
-          last_watched_episode: lastWatchedEpisode,
+          last_watched_episode: nextEpisode,
           custom_poster_path: customPoster,
           custom_backdrop_path: customBackdrop,
         },
@@ -398,6 +402,10 @@ function AnimeDetailContent() {
         setAnimeStatus(prevStatus);
         setIsFavorite(prevFav);
         throw userError;
+      }
+
+      if (newStatus === "watched" && anime.episodes) {
+        setLastWatchedEpisode(anime.episodes);
       }
 
       addToast("Updated library", "success");
@@ -427,7 +435,7 @@ function AnimeDetailContent() {
       const nextStatus =
         anime.episodes && nextEpisode >= anime.episodes
           ? "watched"
-          : animeStatus || "watching";
+          : "watching";
 
       if (nextStatus !== animeStatus) {
         setAnimeStatus(nextStatus);
@@ -454,6 +462,9 @@ function AnimeDetailContent() {
       );
 
       if (error) throw error;
+      if (nextStatus === "watched" && animeStatus !== "watched") {
+        addToast("Completed anime!", "success");
+      }
     } catch (err: any) {
       console.error(err);
       addToast("Failed to update episode count", "error");
@@ -647,6 +658,9 @@ function AnimeDetailContent() {
             isReleased={isReleased}
             onOpenLogModal={() => setIsLogModalOpen(true)}
             onOpenListModal={() => setIsListModalOpen(true)}
+            currentEpisode={lastWatchedEpisode}
+            totalEpisodes={anime.episodes}
+            onEpisodeChange={handleEpisodeChange}
             onQuickStatusChange={(newStatus) => {
               handleQuickAction(newStatus, isFavorite);
             }}
@@ -660,41 +674,6 @@ function AnimeDetailContent() {
                 animeStatus || (isReleased ? "watched" : "watchlist");
               handleQuickAction(nextStatus, nextFav);
             }}
-            footerContent={
-              animeStatus && animeStatus !== "watchlist" ? (
-                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-sm">
-                  <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                    <span>Progress</span>
-                    <span className="font-mono text-zinc-300">
-                      {lastWatchedEpisode} / {anime.episodes || "?"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEpisodeChange(-1)}
-                      disabled={lastWatchedEpisode <= 0}
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                      <span>-1</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleEpisodeChange(1)}
-                      disabled={
-                        Boolean(anime.episodes) &&
-                        lastWatchedEpisode >= (anime.episodes || 0)
-                      }
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-zinc-800 hover:bg-zinc-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 text-xs font-bold rounded-sm transition-colors cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>+1</span>
-                    </button>
-                  </div>
-                </div>
-              ) : null
-            }
           />
         }
       >

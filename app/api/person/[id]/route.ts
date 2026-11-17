@@ -25,8 +25,8 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
   cast: PersonCredit[];
   crew: PersonCredit[];
 } {
-  const cast: PersonCredit[] = [];
-  const crew: PersonCredit[] = [];
+  const castMap = new Map<number, PersonCredit>();
+  const crewMap = new Map<number, PersonCredit>();
 
   const characterEdges = staff.characterMedia?.edges || [];
   for (const edge of characterEdges) {
@@ -36,6 +36,15 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
       .map((c) => c.name.full)
       .filter(Boolean)
       .join(", ");
+
+    if (castMap.has(node.id)) {
+      const existing = castMap.get(node.id)!;
+      if (charNames && existing.character && !existing.character.includes(charNames)) {
+        existing.character += `, ${charNames}`;
+      }
+      continue;
+    }
+
     const releaseDate = formatFuzzyDate(node.startDate);
     const voteAvg = node.averageScore
       ? Number((node.averageScore / 10).toFixed(1))
@@ -46,7 +55,7 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
     const title =
       node.title.romaji || node.title.english || node.title.native || "Untitled";
 
-    cast.push({
+    castMap.set(node.id, {
       id: node.id,
       title,
       character: charNames || "Voice Actor",
@@ -65,6 +74,7 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
   for (const edge of staffEdges) {
     const node = edge.node;
     if (!node) continue;
+    if (crewMap.has(node.id)) continue;
     const releaseDate = formatFuzzyDate(node.startDate);
     const voteAvg = node.averageScore
       ? Number((node.averageScore / 10).toFixed(1))
@@ -75,7 +85,7 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
     const title =
       node.title.romaji || node.title.english || node.title.native || "Untitled";
 
-    crew.push({
+    crewMap.set(node.id, {
       id: node.id,
       title,
       job: edge.staffRole || "Staff",
@@ -91,7 +101,10 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
     });
   }
 
-  return { cast, crew };
+  return {
+    cast: Array.from(castMap.values()),
+    crew: Array.from(crewMap.values()),
+  };
 }
 
 export async function GET(

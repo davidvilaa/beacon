@@ -93,7 +93,15 @@ function CompanyDetailContent() {
   const displayedWorks = useMemo(() => {
     if (!company?.works) return [];
 
-    let list = [...company.works];
+    const uniqueMap = new Map<string, CompanyWorkCredit>();
+    for (const item of company.works) {
+      const key = `${item.media_type}-${item.id}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
+      }
+    }
+
+    let list = Array.from(uniqueMap.values());
 
     if (mediaFilter !== "all") {
       list = list.filter((item) => item.media_type === mediaFilter);

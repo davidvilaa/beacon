@@ -23,10 +23,13 @@ function formatFuzzyDate(
 function mapAniListStudioToWorks(studio: AniListStudio): CompanyWorkCredit[] {
   const works: CompanyWorkCredit[] = [];
   const edges = studio.media?.edges || [];
+  const seen = new Set<number>();
 
   for (const edge of edges) {
     const node = edge.node;
-    if (!node) continue;
+    if (!node || seen.has(node.id)) continue;
+    seen.add(node.id);
+
     const releaseDate = formatFuzzyDate(node.startDate);
     const voteAvg = node.averageScore
       ? Number((node.averageScore / 10).toFixed(1))
@@ -52,6 +55,27 @@ function mapAniListStudioToWorks(studio: AniListStudio): CompanyWorkCredit[] {
   }
 
   return works;
+}
+
+function mergeStudioWorks(
+  animeWorks: CompanyWorkCredit[],
+  tmdbWorks: CompanyWorkCredit[]
+): CompanyWorkCredit[] {
+  const normalizedAnimeTitles = new Set(
+    animeWorks
+      .map((w) => (w.title || "").toLowerCase().replace(/[^a-z0-9]/g, ""))
+      .filter(Boolean)
+  );
+
+  const filteredTmdb = tmdbWorks.filter((w) => {
+    const norm = (w.title || w.name || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    if (norm && normalizedAnimeTitles.has(norm)) return false;
+    return true;
+  });
+
+  return [...animeWorks, ...filteredTmdb];
 }
 
 export async function GET(
@@ -89,7 +113,7 @@ export async function GET(
       } catch {}
 
       const tmdbWorks = tmdbDetails?.works || [];
-      const mergedWorks = [...animeWorks, ...tmdbWorks];
+      const mergedWorks = mergeStudioWorks(animeWorks, tmdbWorks);
 
       const responseData: CompanyDetails = {
         id,
@@ -134,7 +158,7 @@ export async function GET(
             logo_path: matchDetails?.logo_path || null,
             origin_country: matchDetails?.origin_country || "JP",
             parent_company: matchDetails?.parent_company || null,
-            works: [...animeWorks, ...tmdbWorks],
+            works: mergeStudioWorks(animeWorks, tmdbWorks),
           };
 
           return NextResponse.json(responseData);
@@ -154,7 +178,7 @@ export async function GET(
       if (!tmdbDetails.homepage && studio.siteUrl) {
         tmdbDetails.homepage = studio.siteUrl;
       }
-      tmdbDetails.works = [...animeWorks, ...currentWorks];
+      tmdbDetails.works = mergeStudioWorks(animeWorks, currentWorks);
     }
 
     return NextResponse.json(tmdbDetails);

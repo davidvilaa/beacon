@@ -782,10 +782,17 @@ export async function getStudioDetails(id: number): Promise<AniListStudio | null
     const data = await fetchAniList<{ data?: { Studio?: any } }>(query, { id });
     const s = data.data?.Studio;
     if (!s) return null;
+    const allEdges = [...(s.p1?.edges || []), ...(s.p2?.edges || [])];
+    const seen = new Set<number>();
+    const uniqueEdges = allEdges.filter((e: any) => {
+      if (!e.node?.id || seen.has(e.node.id)) return false;
+      seen.add(e.node.id);
+      return true;
+    });
     return {
       ...s,
       media: {
-        edges: [...(s.p1?.edges || []), ...(s.p2?.edges || [])],
+        edges: uniqueEdges,
       },
     };
   } catch {
@@ -807,10 +814,17 @@ export async function searchStudioByName(search: string): Promise<AniListStudio 
     const data = await fetchAniList<{ data?: { Studio?: any } }>(query, { search: search.trim() });
     const s = data.data?.Studio;
     if (!s) return null;
+    const allEdges = [...(s.p1?.edges || []), ...(s.p2?.edges || [])];
+    const seen = new Set<number>();
+    const uniqueEdges = allEdges.filter((e: any) => {
+      if (!e.node?.id || seen.has(e.node.id)) return false;
+      seen.add(e.node.id);
+      return true;
+    });
     return {
       ...s,
       media: {
-        edges: [...(s.p1?.edges || []), ...(s.p2?.edges || [])],
+        edges: uniqueEdges,
       },
     };
   } catch {

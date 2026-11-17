@@ -27,8 +27,8 @@ import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import CastTab, { CastMember } from "@/components/modules/tabs/CastTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
-import RelationsTab from "@/components/modules/tabs/RelationsTab";
 import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
+import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider";
 import { isMediaReleased } from "@/lib/media-utils";
 
 async function syncAnimeRecord(supabaseClient: any, currentAnime: AnimeMedia) {
@@ -81,8 +81,9 @@ function AnimeDetailContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "cast" | "relations" | "details" | "episodes" | "trailer"
+    "cast" | "details" | "episodes" | "trailer"
   >("cast");
+  const [selectedFranchiseCategory, setSelectedFranchiseCategory] = useState<string>("all");
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
@@ -223,6 +224,7 @@ function AnimeDetailContent() {
   useEffect(() => {
     setFallbackPoster(null);
     setFallbackBackdrop(null);
+    setSelectedFranchiseCategory("all");
   }, [id]);
 
   useEffect(() => {
@@ -619,15 +621,130 @@ function AnimeDetailContent() {
   const hasTrailer = Boolean(
     anime.trailer?.id && anime.trailer?.site?.toLowerCase() === "youtube"
   );
-  const relations = (anime.relations?.edges || []).filter(
-    (r) => r.node?.format !== "MANGA" && r.node?.format !== "NOVEL"
-  );
+
+  const franchiseItems: (FranchiseItem & { category: string; sortKey: number })[] = useMemo(() => {
+    if (!anime) return [];
+
+    const validRelations = (anime.relations?.edges || []).filter(
+      (r) =>
+        r.node?.format !== "MANGA" &&
+        r.node?.format !== "NOVEL" &&
+        r.node?.format !== "ONE_SHOT"
+    );
+
+    const getSortKey = (
+      startDate?: { year?: number | null; month?: number | null; day?: number | null } | null
+    ) => {
+      if (!startDate?.year) return 99999999;
+      const y = startDate.year;
+      const m = startDate.month || 1;
+      const d = startDate.day || 1;
+      return y * 10000 + m * 100 + d;
+    };
+
+    const getCategory = (
+      type: string
+    ): "main" | "spin_off" | "side_story" | "alternative" | "other" => {
+      switch (type) {
+        case "CURRENT":
+        case "PREQUEL":
+        case "SEQUEL":
+        case "PARENT":
+          return "main";
+        case "SIDE_STORY":
+          return "side_story";
+        case "SPIN_OFF":
+        case "CHARACTER":
+          return "spin_off";
+        case "ALTERNATIVE":
+          return "alternative";
+        default:
+          return "other";
+      }
+    };
+
+    const formatLabel = (type: string) => {
+      if (type === "CURRENT") return "Current";
+      return type
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
+    const itemsMap = new Map<number, FranchiseItem & { category: string; sortKey: number }>();
+
+    itemsMap.set(anime.id, {
+      id: anime.id,
+      title: getAnimeTitle(anime.title),
+      posterPath: getAnimePosterUrl(anime),
+      mediaType: "anime",
+      subtitle: `Current • ${anime.format || "TV"}`,
+      category: "main",
+      sortKey: getSortKey(anime.startDate),
+    });
+
+    for (const r of validRelations) {
+      if (!itemsMap.has(r.node.id)) {
+        const title = r.node.title.english || r.node.title.romaji || "Untitled";
+        const poster =
+          r.node.coverImage?.extraLarge ||
+          r.node.coverImage?.large ||
+          r.node.coverImage?.medium ||
+          null;
+        const relLabel = formatLabel(r.relationType);
+        const formatText = r.node.format || "Anime";
+
+        itemsMap.set(r.node.id, {
+          id: r.node.id,
+          title,
+          posterPath: poster,
+          mediaType: "anime",
+          subtitle: `${relLabel} • ${formatText}`,
+          category: getCategory(r.relationType),
+          sortKey: getSortKey(r.node.startDate),
+        });
+      }
+    }
+
+    return Array.from(itemsMap.values()).sort((a, b) => a.sortKey - b.sortKey);
+  }, [anime]);
+
+  const franchiseCategories = useMemo(() => {
+    if (franchiseItems.length <= 1) return [];
+
+    const defs = [
+      { id: "all", label: "All" },
+      { id: "main", label: "Main" },
+      { id: "side_story", label: "Side Story" },
+      { id: "spin_off", label: "Spin-Off" },
+      { id: "alternative", label: "Alternative" },
+      { id: "other", label: "Other" },
+    ];
+
+    return defs
+      .map((def) => {
+        const count =
+          def.id === "all"
+            ? franchiseItems.length
+            : franchiseItems.filter((item) => item.category === def.id).length;
+        return { ...def, count };
+      })
+      .filter((cat) => cat.count > 0);
+  }, [franchiseItems]);
+
+  const displayedFranchiseItems = useMemo(() => {
+    if (selectedFranchiseCategory === "all") {
+      return franchiseItems;
+    }
+    return franchiseItems.filter(
+      (item) => item.category === selectedFranchiseCategory
+    );
+  }, [franchiseItems, selectedFranchiseCategory]);
 
   const hasEpisodes = episodes.length > 0;
 
   const tabs = [
     { key: "cast", label: "Cast" },
-    { key: "relations", label: `Relations (${relations.length})` },
     { key: "details", label: "Details" },
     ...(hasEpisodes ? [{ key: "episodes", label: "Episodes" }] : []),
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
@@ -694,7 +811,6 @@ function AnimeDetailContent() {
           />
 
           {activeTab === "cast" && <CastTab cast={castList} />}
-          {activeTab === "relations" && <RelationsTab relations={relations} />}
           {activeTab === "details" && (
             <DetailsTab
               productionCompanies={studioList}
@@ -726,6 +842,47 @@ function AnimeDetailContent() {
                 className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+              />
+            </div>
+          )}
+
+          {franchiseItems.length > 1 && (
+            <div className="mt-12 sm:mt-14">
+              <div className="relative border-b border-zinc-800/60 mb-2 pb-3">
+                <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
+                  Franchise
+                </span>
+              </div>
+
+              {franchiseCategories.length > 1 && (
+                <div className="border-b border-zinc-700/80 rounded-b-sm py-2.5 px-1 flex items-center gap-5 overflow-x-auto scrollbar-none mb-4">
+                  {franchiseCategories.map((cat) => {
+                    const isActive = selectedFranchiseCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedFranchiseCategory(cat.id)}
+                        className={`text-xs font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer ${
+                          isActive
+                            ? "text-[#a8dadc]"
+                            : "text-zinc-500 hover:text-zinc-300"
+                        }`}
+                      >
+                        {cat.label}
+                        <span className="text-[10px] text-zinc-500 font-mono ml-1.5">
+                          ({cat.count})
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <FranchiseSlider
+                parts={displayedFranchiseItems}
+                currentMovieId={anime.id}
+                mediaType="anime"
               />
             </div>
           )}

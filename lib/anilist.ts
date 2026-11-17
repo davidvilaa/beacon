@@ -63,6 +63,7 @@ export interface AnimeRelationEdge {
       english: string | null;
     };
     format: string | null;
+    startDate?: AnimeFuzzyDate | null;
     coverImage: {
       extraLarge?: string | null;
       large?: string | null;
@@ -395,6 +396,11 @@ export async function getAnimeById(id: number): Promise<AnimeMedia | null> {
                 english
               }
               format
+              startDate {
+                year
+                month
+                day
+              }
               coverImage {
                 extraLarge
                 large

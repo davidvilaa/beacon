@@ -5,14 +5,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
 import MediaCard from "@/components/ui/MediaCard";
 
+export interface FranchiseItem {
+  id: number;
+  title: string;
+  poster_path?: string | null;
+  posterPath?: string | null;
+  mediaType?: "movie" | "tv" | "anime" | "game";
+  subtitle?: string | React.ReactNode;
+  href?: string;
+  year?: string | number | null;
+}
+
 interface FranchiseSliderProps {
-  parts: Movie[];
+  parts: (Movie | FranchiseItem)[];
   currentMovieId: number;
+  mediaType?: "movie" | "tv" | "anime" | "game";
 }
 
 export default function FranchiseSlider({
   parts,
   currentMovieId,
+  mediaType = "movie",
 }: FranchiseSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -77,7 +90,7 @@ export default function FranchiseSlider({
         behavior: "smooth",
       });
     }
-  }, [currentMovieId]);
+  }, [currentMovieId, parts]);
 
   const handleThumbPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -149,19 +162,34 @@ export default function FranchiseSlider({
         ref={scrollRef}
         className="flex items-center gap-3.5 sm:gap-4 overflow-x-auto py-2 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        {parts.map((item) => (
-          <MediaCard
-            key={item.id}
-            ref={item.id === currentMovieId ? currentPosterRef : null}
-            id={item.id}
-            mediaType="movie"
-            title={item.title}
-            posterPath={item.poster_path}
-            isCurrent={item.id === currentMovieId}
-            className="w-28 sm:w-32 md:w-36 shrink-0"
-            sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
-          />
-        ))}
+        {parts.map((item) => {
+          const poster =
+            "poster_path" in item && item.poster_path !== undefined
+              ? item.poster_path
+              : (item as FranchiseItem).posterPath;
+          const resolvedMediaType =
+            (item as FranchiseItem).mediaType || mediaType || "movie";
+          const resolvedHref =
+            (item as FranchiseItem).href || `/${resolvedMediaType}/${item.id}`;
+          const resolvedSubtitle = (item as FranchiseItem).subtitle;
+          const isCurr = item.id === currentMovieId;
+
+          return (
+            <MediaCard
+              key={item.id}
+              ref={isCurr ? currentPosterRef : null}
+              id={item.id}
+              mediaType={resolvedMediaType}
+              href={resolvedHref}
+              title={item.title}
+              posterPath={poster}
+              subtitle={resolvedSubtitle}
+              isCurrent={isCurr}
+              className="w-28 sm:w-32 md:w-36 shrink-0"
+              sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
+            />
+          );
+        })}
       </div>
 
       {canScroll && (

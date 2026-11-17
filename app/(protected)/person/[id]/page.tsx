@@ -38,7 +38,7 @@ function PersonDetailContent() {
   const [person, setPerson] = useState<PersonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<string>("all");
-  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [mediaFilter, setMediaFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
   const [isBioExpanded, setIsBioExpanded] = useState(false);
 
@@ -85,7 +85,7 @@ function PersonDetailContent() {
     const allMap = new Map<string, DisplayedCredit>();
 
     rawCast.forEach((item) => {
-      const isVoice = /\(voice/i.test(item.character || "");
+      const isVoice = /\(voice/i.test(item.character || "") || item.media_type === "anime";
       const role = item.character?.trim() || "Actor";
       const key = `${item.media_type}-${item.id}`;
 
@@ -178,6 +178,28 @@ function PersonDetailContent() {
 
     return list;
   }, [categorizedCredits]);
+
+  const availableMediaOptions = useMemo(() => {
+    const list: { id: string; label: string }[] = [{ id: "all", label: "All Formats" }];
+    const hasMovies = categorizedCredits.all.some((c) => c.media_type === "movie");
+    const hasTv = categorizedCredits.all.some((c) => c.media_type === "tv");
+    const hasAnime = categorizedCredits.all.some((c) => c.media_type === "anime");
+
+    if (hasMovies) list.push({ id: "movie", label: "Movies" });
+    if (hasTv) list.push({ id: "tv", label: "Series" });
+    if (hasAnime) list.push({ id: "anime", label: "Anime" });
+
+    return list;
+  }, [categorizedCredits.all]);
+
+  useEffect(() => {
+    if (
+      mediaFilter !== "all" &&
+      !availableMediaOptions.some((o) => o.id === mediaFilter)
+    ) {
+      setMediaFilter("all");
+    }
+  }, [availableMediaOptions, mediaFilter]);
 
   const displayedCredits = useMemo(() => {
     let list: DisplayedCredit[] = [];
@@ -339,8 +361,8 @@ function PersonDetailContent() {
 
             <Select
               value={mediaFilter}
-              onChange={(val) => setMediaFilter(val as "all" | "movie" | "tv")}
-              options={MEDIA_OPTIONS}
+              onChange={(val) => setMediaFilter(val)}
+              options={availableMediaOptions}
               variant="compact"
               className="w-36 sm:w-40"
             />
@@ -363,7 +385,7 @@ function PersonDetailContent() {
                   <MediaCard
                     key={`${credit.media_type}-${credit.id}-${idx}`}
                     id={credit.id}
-                    mediaType={credit.media_type === "movie" ? "movie" : "tv"}
+                    mediaType={credit.media_type}
                     title={credit.title || credit.name || "Untitled"}
                     posterPath={credit.poster_path}
                     asRole={credit.asRole || "Actor"}

@@ -744,7 +744,51 @@ function AnimeDetailContent() {
                     const vaProfileUrl = va?.image?.medium || va?.image?.large || null;
                     const charImageUrl = char.image?.large || char.image?.medium || null;
 
-                    return (
+                    return va?.id ? (
+                      <Link
+                        key={`${char.id}-${va.id}`}
+                        href={`/person/al-${va.id}`}
+                        className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11 cursor-pointer"
+                      >
+                        <CardGradientBorder roundedClassName="rounded-sm" />
+                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                          {vaProfileUrl ? (
+                            <Image
+                              src={vaProfileUrl}
+                              alt={vaName}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <User className="w-4 h-4 text-zinc-500" />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
+                          <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
+                            {vaName}
+                          </p>
+                          <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                            as <span className="text-zinc-300 font-medium">{char.name.full}</span>
+                          </p>
+                        </div>
+
+                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                          {charImageUrl ? (
+                            <Image
+                              src={charImageUrl}
+                              alt={char.name.full}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <User className="w-4 h-4 text-zinc-500" />
+                          )}
+                        </div>
+                      </Link>
+                    ) : (
                       <div
                         key={`${char.id}-${va?.id || "none"}`}
                         className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11"

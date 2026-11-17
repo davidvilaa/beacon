@@ -374,14 +374,14 @@ export interface PersonCredit {
   first_air_date?: string;
   vote_average: number;
   vote_count: number;
-  media_type: "movie" | "tv";
+  media_type: "movie" | "tv" | "anime";
   popularity: number;
   genre_ids?: number[];
   overview?: string;
 }
 
 export interface PersonDetails {
-  id: number;
+  id: number | string;
   name: string;
   biography: string;
   birthday: string | null;

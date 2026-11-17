@@ -866,7 +866,6 @@ function AnimeDetailContent() {
                 parts={displayedFranchiseItems}
                 currentMovieId={anime.id}
                 mediaType="anime"
-                showConnectors={selectedFranchiseCategory === "main"}
               />
             </div>
           )}

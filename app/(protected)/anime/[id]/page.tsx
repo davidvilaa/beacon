@@ -214,8 +214,8 @@ function AnimeDetailContent() {
 
     const defs = [
       { id: "main", label: "Main" },
-      { id: "spin_off", label: "Spin-Off" },
       { id: "side_story", label: "Side Story" },
+      { id: "spin_off", label: "Spin-Off" },
       { id: "alternative", label: "Alternative" },
       { id: "other", label: "Other" },
     ];

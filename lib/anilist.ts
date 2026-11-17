@@ -358,7 +358,7 @@ export async function getAnimeById(id: number): Promise<AnimeMedia | null> {
           airingAt
           timeUntilAiring
         }
-        characters(page: 1, perPage: 12, sort: [ROLE, RELEVANCE, ID]) {
+        characters(page: 1, perPage: 24, sort: [ROLE, RELEVANCE, ID]) {
           edges {
             role
             node {

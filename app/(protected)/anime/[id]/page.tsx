@@ -30,7 +30,7 @@ import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import MediaCard from "@/components/ui/MediaCard";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { isMediaReleased } from "@/lib/media-utils";
-import { User, Plus, Minus } from "lucide-react";
+import { User, Plus, Minus, ChevronDown, ChevronUp } from "lucide-react";
 
 function formatRelationLabel(type: string): string {
   return type
@@ -75,8 +75,9 @@ function AnimeDetailContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "characters" | "relations" | "details" | "trailer"
-  >("characters");
+    "cast" | "relations" | "details" | "trailer"
+  >("cast");
+  const [isCastExpanded, setIsCastExpanded] = useState(false);
 
   const releaseDateStr = useMemo(() => {
     if (!anime?.startDate?.year) return null;
@@ -587,9 +588,10 @@ function AnimeDetailContent() {
     (r) => r.node?.format !== "MANGA" && r.node?.format !== "NOVEL"
   );
   const characters = anime.characters?.edges || [];
+  const displayedCharacters = isCastExpanded ? characters : characters.slice(0, 12);
 
   const tabs = [
-    { key: "characters", label: "Characters" },
+    { key: "cast", label: "Cast" },
     { key: "relations", label: `Relations (${relations.length})` },
     { key: "details", label: "Details" },
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
@@ -688,68 +690,83 @@ function AnimeDetailContent() {
             onChange={(key) => setActiveTab(key as any)}
           />
 
-          {activeTab === "characters" && (
+          {activeTab === "cast" && (
             <div>
               {characters.length === 0 ? (
                 <p className="text-xs text-zinc-500 py-4">
-                  No character information available.
+                  No cast information available.
                 </p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-                  {characters.map((edge) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3">
+                  {displayedCharacters.map((edge) => {
                     const char = edge.node;
                     const va = edge.voiceActors?.[0];
+                    const vaName = va?.name.full || "Unknown Voice";
+                    const vaProfileUrl = va?.image?.medium || va?.image?.large || null;
+                    const charImageUrl = char.image?.large || char.image?.medium || null;
+
                     return (
                       <div
-                        key={char.id}
-                        className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 min-w-0 overflow-hidden h-14"
+                        key={`${char.id}-${va?.id || "none"}`}
+                        className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11"
                       >
                         <CardGradientBorder roundedClassName="rounded-sm" />
-                        <div className="relative h-full aspect-square w-14 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
-                          {char.image?.large || char.image?.medium ? (
+                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                          {vaProfileUrl ? (
                             <Image
-                              src={char.image.large || char.image.medium!}
-                              alt={char.name.full}
+                              src={vaProfileUrl}
+                              alt={vaName}
                               fill
-                              sizes="56px"
+                              sizes="48px"
                               className="object-cover"
                             />
                           ) : (
-                            <User className="w-6 h-6 text-zinc-600" />
+                            <User className="w-4 h-4 text-zinc-500" />
                           )}
                         </div>
 
-                        <div className="flex-1 min-w-0 px-3 py-1.5 flex flex-col justify-center">
-                          <p className="text-xs sm:text-sm font-bold text-zinc-100 truncate">
-                            {char.name.full}
+                        <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
+                          <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
+                            {vaName}
                           </p>
-                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                            {edge.role === "MAIN" ? (
-                              <span className="text-[#a8dadc] font-semibold">
-                                Main
-                              </span>
-                            ) : (
-                              <span className="text-zinc-500">Supporting</span>
-                            )}
-                            {va ? ` • VA: ${va.name.full}` : ""}
+                          <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                            as <span className="text-zinc-300 font-medium">{char.name.full}</span>
                           </p>
                         </div>
 
-                        {va?.image?.medium && (
-                          <div className="relative h-full aspect-square w-14 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden">
+                        <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                          {charImageUrl ? (
                             <Image
-                              src={va.image.medium}
-                              alt={va.name.full}
+                              src={charImageUrl}
+                              alt={char.name.full}
                               fill
-                              sizes="56px"
+                              sizes="48px"
                               className="object-cover"
-                              title={`Voice Actor: ${va.name.full}`}
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <User className="w-4 h-4 text-zinc-500" />
+                          )}
+                        </div>
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {characters.length > 12 && (
+                <div className="flex justify-start mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsCastExpanded(!isCastExpanded)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+                  >
+                    <span>{isCastExpanded ? "less..." : "more..."}</span>
+                    {isCastExpanded ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                    )}
+                  </button>
                 </div>
               )}
             </div>

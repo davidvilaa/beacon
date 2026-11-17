@@ -902,15 +902,16 @@ function AnimeDetailContent() {
                 <div className="flex-1 flex flex-wrap gap-2 items-center">
                   {anime.studios?.nodes && anime.studios.nodes.length > 0 ? (
                     anime.studios.nodes.map((s) => (
-                      <div
+                      <Link
                         key={s.id}
-                        className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group overflow-hidden"
+                        href={`/company/al-${s.id}`}
+                        className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group overflow-hidden cursor-pointer"
                       >
                         <CardGradientBorder roundedClassName="rounded-sm" />
                         <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
                           {s.name}
                         </span>
-                      </div>
+                      </Link>
                     ))
                   ) : (
                     <span className="text-xs text-zinc-500">—</span>

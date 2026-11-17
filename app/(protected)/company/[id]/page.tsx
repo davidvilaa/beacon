@@ -30,7 +30,7 @@ function CompanyDetailContent() {
   const [company, setCompany] = useState<CompanyDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [mediaFilter, setMediaFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
 
   useEffect(() => {
@@ -66,6 +66,29 @@ function CompanyDetailContent() {
       ignore = true;
     };
   }, [id]);
+
+  const availableMediaOptions = useMemo(() => {
+    const works = company?.works || [];
+    const list: Option[] = [{ id: "all", label: "All Formats" }];
+    const hasMovies = works.some((w) => w.media_type === "movie");
+    const hasTv = works.some((w) => w.media_type === "tv");
+    const hasAnime = works.some((w) => w.media_type === "anime");
+
+    if (hasMovies) list.push({ id: "movie", label: "Movies" });
+    if (hasTv) list.push({ id: "tv", label: "Series" });
+    if (hasAnime) list.push({ id: "anime", label: "Anime" });
+
+    return list;
+  }, [company?.works]);
+
+  useEffect(() => {
+    if (
+      mediaFilter !== "all" &&
+      !availableMediaOptions.some((o) => o.id === mediaFilter)
+    ) {
+      setMediaFilter("all");
+    }
+  }, [availableMediaOptions, mediaFilter]);
 
   const displayedWorks = useMemo(() => {
     if (!company?.works) return [];
@@ -243,8 +266,8 @@ function CompanyDetailContent() {
           <div className="mt-4 sm:mt-5 pb-3.5 border-b border-zinc-800/80 flex items-center gap-2.5 flex-wrap">
             <Select
               value={mediaFilter}
-              onChange={(val) => setMediaFilter(val as "all" | "movie" | "tv")}
-              options={MEDIA_OPTIONS}
+              onChange={(val) => setMediaFilter(val)}
+              options={availableMediaOptions}
               variant="compact"
               className="w-36 sm:w-40"
             />
@@ -267,7 +290,7 @@ function CompanyDetailContent() {
                   <MediaCard
                     key={`${work.media_type}-${work.id}-${idx}`}
                     id={work.id}
-                    mediaType={work.media_type === "movie" ? "movie" : "tv"}
+                    mediaType={work.media_type}
                     title={work.title || work.name || "Untitled"}
                     posterPath={work.poster_path}
                   />

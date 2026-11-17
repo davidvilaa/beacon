@@ -682,3 +682,138 @@ export async function searchStaffByName(search: string): Promise<AniListStaff | 
     return null;
   }
 }
+
+export interface AniListStudioMediaEdge {
+  isMainStudio?: boolean;
+  node: {
+    id: number;
+    title: AnimeTitle;
+    coverImage: AnimeCoverImage;
+    bannerImage?: string | null;
+    format?: string | null;
+    episodes?: number | null;
+    startDate?: AnimeFuzzyDate | null;
+    popularity?: number | null;
+    averageScore?: number | null;
+  };
+}
+
+export interface AniListStudio {
+  id: number;
+  name: string;
+  isAnimationStudio?: boolean;
+  siteUrl?: string | null;
+  media?: {
+    edges?: AniListStudioMediaEdge[];
+  };
+}
+
+const STUDIO_DETAIL_FIELDS = `
+  id
+  name
+  isAnimationStudio
+  siteUrl
+  p1: media(page: 1, perPage: 25, sort: [POPULARITY_DESC]) {
+    edges {
+      isMainStudio
+      node {
+        id
+        title {
+          romaji
+          english
+          native
+        }
+        coverImage {
+          large
+          medium
+        }
+        bannerImage
+        format
+        episodes
+        startDate {
+          year
+          month
+          day
+        }
+        popularity
+        averageScore
+      }
+    }
+  }
+  p2: media(page: 2, perPage: 25, sort: [POPULARITY_DESC]) {
+    edges {
+      isMainStudio
+      node {
+        id
+        title {
+          romaji
+          english
+          native
+        }
+        coverImage {
+          large
+          medium
+        }
+        bannerImage
+        format
+        episodes
+        startDate {
+          year
+          month
+          day
+        }
+        popularity
+        averageScore
+      }
+    }
+  }
+`;
+
+export async function getStudioDetails(id: number): Promise<AniListStudio | null> {
+  const query = `
+    query ($id: Int) {
+      Studio(id: $id) {
+        ${STUDIO_DETAIL_FIELDS}
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchAniList<{ data?: { Studio?: any } }>(query, { id });
+    const s = data.data?.Studio;
+    if (!s) return null;
+    return {
+      ...s,
+      media: {
+        edges: [...(s.p1?.edges || []), ...(s.p2?.edges || [])],
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function searchStudioByName(search: string): Promise<AniListStudio | null> {
+  if (!search.trim()) return null;
+  const query = `
+    query ($search: String) {
+      Studio(search: $search) {
+        ${STUDIO_DETAIL_FIELDS}
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchAniList<{ data?: { Studio?: any } }>(query, { search: search.trim() });
+    const s = data.data?.Studio;
+    if (!s) return null;
+    return {
+      ...s,
+      media: {
+        edges: [...(s.p1?.edges || []), ...(s.p2?.edges || [])],
+      },
+    };
+  } catch {
+    return null;
+  }
+}

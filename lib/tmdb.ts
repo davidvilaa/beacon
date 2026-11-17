@@ -578,13 +578,13 @@ export interface CompanyWorkCredit {
   vote_average?: number;
   vote_count?: number;
   popularity?: number;
-  media_type: "movie" | "tv";
+  media_type: "movie" | "tv" | "anime";
   overview?: string;
   genre_ids?: number[];
 }
 
 export interface CompanyDetails {
-  id: number;
+  id: number | string;
   name: string;
   description?: string;
   headquarters?: string;

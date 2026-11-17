@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
 import MediaCard from "@/components/ui/MediaCard";
@@ -20,12 +20,14 @@ interface FranchiseSliderProps {
   parts: (Movie | FranchiseItem)[];
   currentMovieId: number;
   mediaType?: "movie" | "tv" | "anime" | "game";
+  showConnectors?: boolean;
 }
 
 export default function FranchiseSlider({
   parts,
   currentMovieId,
   mediaType = "movie",
+  showConnectors = false,
 }: FranchiseSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -160,9 +162,11 @@ export default function FranchiseSlider({
     <div className="w-full">
       <div
         ref={scrollRef}
-        className="flex items-center gap-3.5 sm:gap-4 overflow-x-auto py-2 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex items-center overflow-x-auto py-2 px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${
+          showConnectors ? "gap-0" : "gap-3.5 sm:gap-4"
+        }`}
       >
-        {parts.map((item) => {
+        {parts.map((item, idx) => {
           const poster =
             "poster_path" in item && item.poster_path !== undefined
               ? item.poster_path
@@ -174,20 +178,39 @@ export default function FranchiseSlider({
           const resolvedSubtitle = (item as FranchiseItem).subtitle;
           const isCurr = item.id === currentMovieId;
 
+          const currentIndex = parts.findIndex((p) => p.id === currentMovieId);
+          const nextItem = parts[idx + 1];
+          const hasConnectorAfter = showConnectors && Boolean(nextItem);
+          const connectorLabel =
+            currentIndex !== -1 && idx < currentIndex ? "Prequel" : "Sequel";
+
           return (
-            <MediaCard
-              key={item.id}
-              ref={isCurr ? currentPosterRef : null}
-              id={item.id}
-              mediaType={resolvedMediaType}
-              href={resolvedHref}
-              title={item.title}
-              posterPath={poster}
-              subtitle={resolvedSubtitle}
-              isCurrent={isCurr}
-              className="w-28 sm:w-32 md:w-36 shrink-0"
-              sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
-            />
+            <React.Fragment key={item.id}>
+              <MediaCard
+                ref={isCurr ? currentPosterRef : null}
+                id={item.id}
+                mediaType={resolvedMediaType}
+                href={resolvedHref}
+                title={item.title}
+                posterPath={poster}
+                subtitle={resolvedSubtitle}
+                isCurrent={isCurr}
+                className="w-28 sm:w-32 md:w-36 shrink-0 aspect-[2/3]"
+                sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 144px"
+              />
+
+              {hasConnectorAfter && (
+                <div className="w-14 sm:w-18 md:w-22 shrink-0 flex items-center justify-center px-2 select-none">
+                  <div className="w-full flex items-center">
+                    <div className="h-[2px] flex-1 bg-[#a8dadc]/80 rounded-full" />
+                    <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#a8dadc] border border-[#a8dadc]/50 bg-zinc-900 rounded-sm shrink-0">
+                      {connectorLabel}
+                    </span>
+                    <div className="h-[2px] flex-1 bg-[#a8dadc]/80 rounded-full" />
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
           );
         })}
       </div>

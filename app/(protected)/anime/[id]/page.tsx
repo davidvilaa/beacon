@@ -83,7 +83,7 @@ function AnimeDetailContent() {
   const [activeTab, setActiveTab] = useState<
     "cast" | "details" | "episodes" | "trailer"
   >("cast");
-  const [selectedFranchiseCategory, setSelectedFranchiseCategory] = useState<string>("all");
+  const [selectedFranchiseCategory, setSelectedFranchiseCategory] = useState<string>("main");
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
@@ -172,14 +172,6 @@ function AnimeDetailContent() {
       }
     };
 
-    const formatLabel = (type: string) => {
-      if (type === "CURRENT") return "Current";
-      return type
-        .replace(/_/g, " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-    };
-
     const itemsMap = new Map<number, FranchiseItem & { category: string; sortKey: number }>();
 
     itemsMap.set(anime.id, {
@@ -187,7 +179,6 @@ function AnimeDetailContent() {
       title: getAnimeTitle(anime.title),
       posterPath: getAnimePosterUrl(anime),
       mediaType: "anime",
-      subtitle: `Current • ${anime.format || "TV"}`,
       category: "main",
       sortKey: getSortKey(anime.startDate),
     });
@@ -200,54 +191,49 @@ function AnimeDetailContent() {
           r.node.coverImage?.large ||
           r.node.coverImage?.medium ||
           null;
-        const relLabel = formatLabel(r.relationType);
-        const formatText = r.node.format || "Anime";
 
         itemsMap.set(r.node.id, {
           id: r.node.id,
           title,
           posterPath: poster,
           mediaType: "anime",
-          subtitle: `${relLabel} • ${formatText}`,
           category: getCategory(r.relationType),
           sortKey: getSortKey(r.node.startDate),
         });
       }
     }
 
-    return Array.from(itemsMap.values()).sort((a, b) => a.sortKey - b.sortKey);
+    return Array.from(itemsMap.values()).sort((a, b) => {
+      if (a.sortKey !== b.sortKey) return a.sortKey - b.sortKey;
+      return a.id - b.id;
+    });
   }, [anime]);
 
   const franchiseCategories = useMemo(() => {
     if (franchiseItems.length <= 1) return [];
 
     const defs = [
-      { id: "all", label: "All" },
       { id: "main", label: "Main" },
-      { id: "side_story", label: "Side Story" },
       { id: "spin_off", label: "Spin-Off" },
+      { id: "side_story", label: "Side Story" },
       { id: "alternative", label: "Alternative" },
       { id: "other", label: "Other" },
     ];
 
     return defs
       .map((def) => {
-        const count =
-          def.id === "all"
-            ? franchiseItems.length
-            : franchiseItems.filter((item) => item.category === def.id).length;
+        const count = franchiseItems.filter((item) => item.category === def.id).length;
         return { ...def, count };
       })
       .filter((cat) => cat.count > 0);
   }, [franchiseItems]);
 
   const displayedFranchiseItems = useMemo(() => {
-    if (selectedFranchiseCategory === "all") {
-      return franchiseItems;
-    }
-    return franchiseItems.filter(
+    const filtered = franchiseItems.filter(
       (item) => item.category === selectedFranchiseCategory
     );
+    if (filtered.length > 0) return filtered;
+    return franchiseItems.filter((item) => item.category === "main");
   }, [franchiseItems, selectedFranchiseCategory]);
 
   useEffect(() => {
@@ -343,7 +329,7 @@ function AnimeDetailContent() {
   useEffect(() => {
     setFallbackPoster(null);
     setFallbackBackdrop(null);
-    setSelectedFranchiseCategory("all");
+    setSelectedFranchiseCategory("main");
   }, [id]);
 
   useEffect(() => {
@@ -848,14 +834,14 @@ function AnimeDetailContent() {
 
           {franchiseItems.length > 1 && (
             <div className="mt-12 sm:mt-14">
-              <div className="relative border-b border-zinc-800/60 mb-2 pb-3">
-                <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
+              <div className="relative border-b border-zinc-800/60">
+                <span className="text-sm font-bold uppercase tracking-wider text-zinc-100 block pb-3">
                   Franchise
                 </span>
               </div>
 
               {franchiseCategories.length > 1 && (
-                <div className="border-b border-zinc-700/80 rounded-b-sm py-2.5 px-1 flex items-center gap-5 overflow-x-auto scrollbar-none mb-4">
+                <div className="border-b border-zinc-700/80 rounded-b-sm py-3 px-2 flex items-center gap-6 overflow-x-auto scrollbar-none mb-6">
                   {franchiseCategories.map((cat) => {
                     const isActive = selectedFranchiseCategory === cat.id;
                     return (
@@ -870,9 +856,6 @@ function AnimeDetailContent() {
                         }`}
                       >
                         {cat.label}
-                        <span className="text-[10px] text-zinc-500 font-mono ml-1.5">
-                          ({cat.count})
-                        </span>
                       </button>
                     );
                   })}
@@ -883,6 +866,7 @@ function AnimeDetailContent() {
                 parts={displayedFranchiseItems}
                 currentMovieId={anime.id}
                 mediaType="anime"
+                showConnectors={selectedFranchiseCategory === "main"}
               />
             </div>
           )}

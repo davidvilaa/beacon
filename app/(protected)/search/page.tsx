@@ -79,6 +79,24 @@ function SearchContent() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setSelectedFilter("all");
+    setSortBy("popularity");
+  }, [query]);
+
+  useEffect(() => {
+    const handleSearchExecuted = () => {
+      setSelectedFilter("all");
+      setSortBy("popularity");
+    };
+    window.addEventListener("beacon-search-executed", handleSearchExecuted);
+    return () => {
+      window.removeEventListener("beacon-search-executed", handleSearchExecuted);
+      setSelectedFilter("all");
+      setSortBy("popularity");
+    };
+  }, []);
+
+  useEffect(() => {
     if (!query.trim()) {
       setMovies([]);
       setTotalPages(0);

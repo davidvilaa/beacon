@@ -43,6 +43,22 @@ function PersonDetailContent() {
   const [isBioExpanded, setIsBioExpanded] = useState(false);
 
   useEffect(() => {
+    setSelectedRole("all");
+    setMediaFilter("all");
+    setSortBy("popularity");
+    setIsBioExpanded(false);
+  }, [id]);
+
+  useEffect(() => {
+    return () => {
+      setSelectedRole("all");
+      setMediaFilter("all");
+      setSortBy("popularity");
+      setIsBioExpanded(false);
+    };
+  }, []);
+
+  useEffect(() => {
     let ignore = false;
     setLoading(true);
 

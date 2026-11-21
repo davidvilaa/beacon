@@ -87,6 +87,18 @@ function ProfileGamesContent() {
   const supabase = createClient();
 
   useEffect(() => {
+    setStatusFilter("all");
+    setSortBy("recent");
+  }, [currentSubTab, profileUser?.id]);
+
+  useEffect(() => {
+    return () => {
+      setStatusFilter("all");
+      setSortBy("recent");
+    };
+  }, []);
+
+  useEffect(() => {
     let ignore = false;
 
     async function fetchUserGames() {

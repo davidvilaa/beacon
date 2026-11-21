@@ -34,6 +34,18 @@ function CompanyDetailContent() {
   const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
 
   useEffect(() => {
+    setMediaFilter("all");
+    setSortBy("popularity");
+  }, [id]);
+
+  useEffect(() => {
+    return () => {
+      setMediaFilter("all");
+      setSortBy("popularity");
+    };
+  }, []);
+
+  useEffect(() => {
     let ignore = false;
 
     async function fetchCompany() {

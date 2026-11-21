@@ -119,8 +119,10 @@ export default function Navbar() {
   const profileHref = username ? `/profile/${encodeURIComponent(username)}` : "/profile";
 
   const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    const trimmed = searchQuery.trim().slice(0, 50);
+    if (trimmed) {
+      window.dispatchEvent(new CustomEvent("beacon-search-executed"));
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
       setIsSearchOpen(false);
       setSearchQuery("");
     }
@@ -223,8 +225,9 @@ export default function Navbar() {
             <input
               ref={searchInputRef}
               type="text"
+              maxLength={50}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+              onChange={(e) => setSearchQuery(e.target.value.slice(0, 50).toUpperCase())}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSearchSubmit();

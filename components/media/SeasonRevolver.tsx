@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { TvSeasonSummary } from "@/lib/tmdb";
+import type { TvSeasonSummary } from "@/lib/providers/tmdb/types";
 
 interface SeasonRevolverProps {
   seasons: TvSeasonSummary[];

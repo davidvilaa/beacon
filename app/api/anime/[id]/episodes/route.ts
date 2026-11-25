@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cacheLife } from "next/cache";
-import { getAnimeById, fetchAniList } from "@/lib/anilist";
-import { Episode } from "@/components/media/tabs/EpisodesTab";
+import { fetchAniList } from "@/lib/providers/anilist/client";
+import { getAnimeById } from "@/lib/providers/anilist/media";
+import type { Episode } from "@/lib/media/types";
 
 function dateDiffDays(d1: string, d2: string): number {
   return Math.abs(new Date(d1).getTime() - new Date(d2).getTime()) / (1000 * 60 * 60 * 24);

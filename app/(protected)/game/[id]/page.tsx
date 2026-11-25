@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams } from "next/navigation";
-import { IGDBGameDetail, IGDBRelatedGame, getIgdbImageUrl } from "@/lib/igdb";
+import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
+import type { IGDBGameDetail, IGDBRelatedGame } from "@/lib/providers/igdb/types";
 import Loading from "@/components/ui/Loading";
 import MediaLayout from "@/components/media/MediaLayout";
 import MediaActionColumn from "@/components/media/columns/MediaActionColumn";
@@ -14,7 +15,7 @@ import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
 import DetailsTab from "@/components/media/tabs/DetailsTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/media/FranchiseSlider";
-import { isMediaReleased } from "@/lib/media-utils";
+import { isMediaReleased } from "@/lib/media/release";
 import { gameCacheInput } from "@/lib/media/cache";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";

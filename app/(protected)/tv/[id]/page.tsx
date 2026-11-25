@@ -3,13 +3,8 @@
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import {
-  TvDetails,
-  TvSeasonDetails,
-  getPosterUrl,
-  getBackdropUrl,
-  getBestTmdbTrailer,
-} from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/providers/tmdb/client";
+import type { TvDetails, TvSeasonDetails } from "@/lib/providers/tmdb/types";
 import Loading from "@/components/ui/Loading";
 import SeasonRevolver from "@/components/media/SeasonRevolver";
 import MediaLayout from "@/components/media/MediaLayout";
@@ -24,7 +19,8 @@ import CastTab from "@/components/media/tabs/CastTab";
 import CrewTab from "@/components/media/tabs/CrewTab";
 import DetailsTab from "@/components/media/tabs/DetailsTab";
 import EpisodesTab from "@/components/media/tabs/EpisodesTab";
-import { getTvCrewSections, isMediaReleased } from "@/lib/media-utils";
+import { getTvCrewSections } from "@/lib/media/credits";
+import { isMediaReleased } from "@/lib/media/release";
 import { tvCacheInput } from "@/lib/media/cache";
 import { pickRandomBackdrop } from "@/lib/artwork/pick";
 import { useMediaLog } from "@/hooks/useMediaLog";

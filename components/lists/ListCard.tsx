@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Lock, Check, Layers, CalendarSync } from "lucide-react";
-import { getPosterUrl } from "@/lib/tmdb";
-import { formatFullDate } from "@/lib/media-utils";
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
+import { formatFullDate } from "@/lib/media/format";
 
 export interface ListCardData {
   id: string;

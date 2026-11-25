@@ -15,15 +15,16 @@ import {
   Star,
 } from "lucide-react";
 import { MediaStatus } from "@/components/media/columns/MediaActionColumn";
-import { formatRuntime, formatFullDate } from "@/lib/media-utils";
+import { formatRuntime, formatFullDate } from "@/lib/media/format";
 import DatePicker from "@/components/ui/DatePicker";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
 import ArtworkPickerModal from "@/components/media/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
 import { favoriteLimitToast, type LogStatus } from "@/lib/media/log";
 import type { MediaReviewInput } from "@/hooks/useMediaLog";
+import type { MediaType } from "@/lib/media/types";
 
 function StarRating({
   value,
@@ -92,7 +93,7 @@ interface MediaReviewModalProps {
   episodesCount?: number | null;
   posterUrl: string | null;
   backdropUrl: string | null;
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
   status: MediaStatus;
   hasLog?: boolean;
   isFavorite: boolean;

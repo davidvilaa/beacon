@@ -9,14 +9,15 @@ import CreateListModal, { CreatedOrUpdatedList } from "@/components/lists/Create
 import ArtworkPickerModal from "@/components/media/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
 import ListCard from "@/components/lists/ListCard";
-import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists/media-map";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
 import { upsertMediaCache } from "@/lib/media/cache";
+import type { MediaType } from "@/lib/media/types";
 
 const CACHE_ERROR_LABELS = { movie: "movie", tv: "series", anime: "anime", game: "game" } as const;
 
 export interface ListMediaPayload {
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
   mediaId: number;
   title: string;
   seasonNumber?: number | null;

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { X, Check } from "lucide-react";
 import Loading from "@/components/ui/Loading";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
 
 interface ArtworkPickerModalProps {
   isOpen: boolean;

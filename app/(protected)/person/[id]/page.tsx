@@ -9,7 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
+import type { PersonDetails, PersonCredit } from "@/lib/providers/tmdb/types";
 import Loading from "@/components/ui/Loading";
 import Select from "@/components/ui/Select";
 import MediaCard from "@/components/media/MediaCard";

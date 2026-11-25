@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  getPersonDetails,
-  searchPerson,
-  PersonDetails,
-  PersonCredit,
-} from "@/lib/tmdb";
-import {
-  getStaffDetails,
-  searchStaffByName,
-  cleanAniListDescription,
-  AniListStaff,
-} from "@/lib/anilist";
+import { getPersonDetails } from "@/lib/providers/tmdb/people";
+import { searchPerson } from "@/lib/providers/tmdb/search";
+import type { PersonDetails, PersonCredit } from "@/lib/providers/tmdb/types";
+import { cleanAniListDescription } from "@/lib/providers/anilist/client";
+import { getStaffDetails, searchStaffByName } from "@/lib/providers/anilist/staff";
+import type { AniListStaff } from "@/lib/providers/anilist/types";
 
 function formatFuzzyDate(
   date?: { year: number | null; month: number | null; day: number | null } | null

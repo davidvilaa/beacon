@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
-import { formatCurrency } from "@/lib/media-utils";
+import { formatCurrency } from "@/lib/media/format";
 
 interface Company {
   id: number | string;

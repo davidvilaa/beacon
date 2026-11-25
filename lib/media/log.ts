@@ -1,6 +1,7 @@
-import { gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
+import { gameStatusToShared, sharedStatusToGame } from "@/lib/media/status";
+import type { MediaType } from "@/lib/media/types";
 
-export type LogMediaType = "movie" | "tv" | "anime" | "game";
+export type LogMediaType = MediaType;
 export type LogStatus = "watched" | "watching" | "paused" | "dropped" | "watchlist";
 
 export interface MediaLogState {

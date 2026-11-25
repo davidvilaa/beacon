@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { User, ChevronDown, ChevronUp } from "lucide-react";
-import { getPosterUrl } from "@/lib/tmdb";
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 export interface CastMember {

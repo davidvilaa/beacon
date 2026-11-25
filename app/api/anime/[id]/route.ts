@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAnimeById } from "@/lib/anilist";
-import { getAnimeTmdbTagline } from "@/lib/tmdb";
+import { getAnimeById } from "@/lib/providers/anilist/media";
+import { getAnimeTmdbTagline } from "@/lib/providers/tmdb/anime";
 
 export async function GET(
   request: Request,

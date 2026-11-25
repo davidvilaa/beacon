@@ -21,9 +21,10 @@ import { useToast } from "@/components/ui/Toast";
 import CreateListModal, {
   CreatedOrUpdatedList,
 } from "@/components/lists/CreateListModal";
-import { fetchCachedMediaMap } from "@/lib/lists";
-import { getBackdropUrl } from "@/lib/tmdb";
-import { formatFullDate } from "@/lib/media-utils";
+import { fetchCachedMediaMap } from "@/lib/lists/media-map";
+import { getBackdropUrl } from "@/lib/providers/tmdb/client";
+import { formatFullDate } from "@/lib/media/format";
+import type { MediaType } from "@/lib/media/types";
 
 interface ListOwner {
   id: string;
@@ -45,7 +46,7 @@ interface ListDetailRecord {
 
 interface ListGridItem {
   id: string;
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
   mediaId: number;
   seasonNumber?: number | null;
   title: string;

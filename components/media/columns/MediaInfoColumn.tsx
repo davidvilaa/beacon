@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Calendar, Clock } from "lucide-react";
-import { formatRuntime, formatFullDate } from "@/lib/media-utils";
+import { formatRuntime, formatFullDate } from "@/lib/media/format";
 
 interface MediaInfoColumnProps {
   typeLabel: string;

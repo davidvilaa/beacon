@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  searchMovies,
-  searchTv,
-  searchMulti,
-  searchPerson,
-  searchCompany,
-  getBestMoviePoster,
-  getCompanyTopWorks,
-} from "@/lib/tmdb";
-import { searchAnime } from "@/lib/anilist";
-import { searchGames } from "@/lib/igdb";
-import { fetchCachedMediaMap } from "@/lib/lists";
+import { getCompanyTopWorks } from "@/lib/providers/tmdb/companies";
+import { getBestMoviePoster } from "@/lib/providers/tmdb/movies";
+import { searchMovies, searchTv, searchMulti, searchPerson, searchCompany } from "@/lib/providers/tmdb/search";
+import { searchAnime } from "@/lib/providers/anilist/media";
+import { searchGames } from "@/lib/providers/igdb/games";
+import { fetchCachedMediaMap } from "@/lib/lists/media-map";
 import { createAnonClient } from "@/lib/supabase/server";
 import {
   escapeLike,

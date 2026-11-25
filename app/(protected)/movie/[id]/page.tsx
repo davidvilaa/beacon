@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MovieDetails, getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/providers/tmdb/client";
+import type { MovieDetails } from "@/lib/providers/tmdb/types";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/media/FranchiseSlider";
 import MediaLayout from "@/components/media/MediaLayout";
@@ -17,7 +18,8 @@ import CastTab from "@/components/media/tabs/CastTab";
 import CrewTab from "@/components/media/tabs/CrewTab";
 import DetailsTab from "@/components/media/tabs/DetailsTab";
 import ReleasesTab from "@/components/media/tabs/ReleasesTab";
-import { getMovieCrewSections, getReleaseDateGroups, isMediaReleased } from "@/lib/media-utils";
+import { getMovieCrewSections, getReleaseDateGroups } from "@/lib/media/credits";
+import { isMediaReleased } from "@/lib/media/release";
 import { movieCacheInput } from "@/lib/media/cache";
 import { pickRandomBackdrop, pickRandomPoster } from "@/lib/artwork/pick";
 import { useMediaLog } from "@/hooks/useMediaLog";

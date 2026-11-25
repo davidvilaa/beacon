@@ -4,18 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Film, ChevronDown, ChevronUp } from "lucide-react";
 import Loading from "@/components/ui/Loading";
-import { getPosterUrl } from "@/lib/tmdb";
-import { formatFullDate } from "@/lib/media-utils";
-
-export interface Episode {
-  id: number;
-  episode_number: number;
-  name: string;
-  air_date?: string | null;
-  runtime?: number | null;
-  overview?: string | null;
-  still_path?: string | null;
-}
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
+import { formatFullDate } from "@/lib/media/format";
+import type { Episode } from "@/lib/media/types";
 
 interface EpisodesTabProps {
   episodes?: Episode[];

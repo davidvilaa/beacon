@@ -3,12 +3,13 @@
 import { forwardRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
+import type { MediaType } from "@/lib/media/types";
 
 export interface MediaCardProps {
   id?: number | string;
-  mediaType?: "movie" | "tv" | "anime" | "game";
+  mediaType?: MediaType;
   href?: string;
   title: string;
   posterPath?: string | null;

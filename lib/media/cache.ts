@@ -1,15 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { MovieDetails, TvDetails } from "@/lib/tmdb";
-import {
-  getAnimeTitle,
-  getAnimePosterUrl,
-  getAnimeBackdropUrl,
-  stripHtml,
-  type AnimeMedia,
-} from "@/lib/anilist";
-import { getIgdbImageUrl, type IGDBGameDetail } from "@/lib/igdb";
+import type { MovieDetails, TvDetails } from "@/lib/providers/tmdb/types";
+import { getAnimeTitle, getAnimePosterUrl, getAnimeBackdropUrl, stripHtml } from "@/lib/providers/anilist/client";
+import type { AnimeMedia } from "@/lib/providers/anilist/types";
+import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
+import type { IGDBGameDetail } from "@/lib/providers/igdb/types";
+import type { MediaType } from "@/lib/media/types";
 
-export type CachedMediaType = "movie" | "tv" | "anime" | "game";
+export type CachedMediaType = MediaType;
 
 export interface MediaCacheInput {
   id: number;

@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
-import {
-  getCompanyDetails,
-  searchCompany,
-  CompanyDetails,
-  CompanyWorkCredit,
-} from "@/lib/tmdb";
-import {
-  getStudioDetails,
-  searchStudioByName,
-  AniListStudio,
-} from "@/lib/anilist";
+import { getCompanyDetails } from "@/lib/providers/tmdb/companies";
+import { searchCompany } from "@/lib/providers/tmdb/search";
+import type { CompanyDetails, CompanyWorkCredit } from "@/lib/providers/tmdb/types";
+import { getStudioDetails, searchStudioByName } from "@/lib/providers/anilist/studios";
+import type { AniListStudio } from "@/lib/providers/anilist/types";
 
 function formatFuzzyDate(
   date?: { year: number | null; month: number | null; day: number | null } | null

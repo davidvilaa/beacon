@@ -2,14 +2,9 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  AnimeMedia,
-  getAnimeTitle,
-  getAnimePosterUrl,
-  getAnimeBackdropUrl,
-  stripHtml,
-} from "@/lib/anilist";
-import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { getAnimeTitle, getAnimePosterUrl, getAnimeBackdropUrl, stripHtml } from "@/lib/providers/anilist/client";
+import type { AnimeMedia } from "@/lib/providers/anilist/types";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
 import Loading from "@/components/ui/Loading";
 import MediaLayout from "@/components/media/MediaLayout";
 import MediaActionColumn from "@/components/media/columns/MediaActionColumn";
@@ -21,9 +16,10 @@ import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
 import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
 import CastTab, { CastMember } from "@/components/media/tabs/CastTab";
 import DetailsTab from "@/components/media/tabs/DetailsTab";
-import EpisodesTab, { Episode } from "@/components/media/tabs/EpisodesTab";
+import EpisodesTab from "@/components/media/tabs/EpisodesTab";
+import type { Episode } from "@/lib/media/types";
 import FranchiseSlider, { FranchiseItem } from "@/components/media/FranchiseSlider";
-import { isMediaReleased } from "@/lib/media-utils";
+import { isMediaReleased } from "@/lib/media/release";
 import { animeCacheInput } from "@/lib/media/cache";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";

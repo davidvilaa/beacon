@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import type { MovieImage } from "@/lib/tmdb";
+import type { MovieImage } from "@/lib/providers/tmdb/types";
 import type { ArtworkKind } from "@/lib/artwork/pick";
 
 interface Fingerprint {

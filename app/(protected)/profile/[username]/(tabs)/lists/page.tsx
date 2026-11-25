@@ -10,7 +10,7 @@ import ProfileListsTab, {
 import CreateListModal, {
   CreatedOrUpdatedList,
 } from "@/components/lists/CreateListModal";
-import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
+import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists/media-map";
 
 interface RawListRow {
   id: string;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Film, Star, StarHalf, AlignJustify } from "lucide-react";
 import Select, { Option } from "@/components/ui/Select";
 import MediaCard from "@/components/media/MediaCard";
+import type { MediaType } from "@/lib/media/types";
 
 export interface ProfileMediaItem {
   id: number | string;
@@ -13,7 +14,7 @@ export interface ProfileMediaItem {
   title: string;
   posterPath: string | null;
   href?: string;
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
   rating?: number | null;
   review?: string | null;
   seasonNumber?: number;

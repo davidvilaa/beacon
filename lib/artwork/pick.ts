@@ -1,4 +1,4 @@
-import type { MovieImage } from "@/lib/tmdb";
+import type { MovieImage } from "@/lib/providers/tmdb/types";
 
 export type ArtworkKind = "poster" | "backdrop";
 

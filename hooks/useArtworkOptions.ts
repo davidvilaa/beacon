@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { MovieImage } from "@/lib/tmdb";
+import type { MovieImage } from "@/lib/providers/tmdb/types";
 import { pickRandomPath } from "@/lib/artwork/pick";
 
 interface CachedArtwork {

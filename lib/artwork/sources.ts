@@ -1,6 +1,8 @@
 import { cacheLife } from "next/cache";
-import { fetchFromTmdb, type MovieImage } from "@/lib/tmdb";
-import { getAnimeById, type AnimeMedia } from "@/lib/anilist";
+import { fetchFromTmdb } from "@/lib/providers/tmdb/client";
+import type { MovieImage } from "@/lib/providers/tmdb/types";
+import { getAnimeById } from "@/lib/providers/anilist/media";
+import type { AnimeMedia } from "@/lib/providers/anilist/types";
 import { dedupeImages } from "@/lib/artwork/dedupe";
 import {
   filterByAspect,

@@ -1,13 +1,9 @@
-import type { MultiSearchItem } from "@/lib/tmdb";
-import {
-  getAnimeTitle,
-  getAnimePosterUrl,
-  getAnimeBackdropUrl,
-  stripHtml,
-  type AnimeMedia,
-} from "@/lib/anilist";
-import { getIgdbImageUrl, type IGDBSearchItem } from "@/lib/igdb";
-import type { CachedMediaMeta, RawListItemRef } from "@/lib/lists";
+import type { MultiSearchItem } from "@/lib/providers/tmdb/types";
+import { getAnimeTitle, getAnimePosterUrl, getAnimeBackdropUrl, stripHtml } from "@/lib/providers/anilist/client";
+import type { AnimeMedia } from "@/lib/providers/anilist/types";
+import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
+import type { IGDBSearchItem } from "@/lib/providers/igdb/types";
+import type { CachedMediaMeta, RawListItemRef } from "@/lib/lists/media-map";
 
 export interface SearchUserRow {
   id: string;

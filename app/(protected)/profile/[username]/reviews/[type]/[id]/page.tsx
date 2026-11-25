@@ -27,17 +27,15 @@ import SeasonRevolver from "@/components/media/SeasonRevolver";
 import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/media/modals/MediaReviewModal";
-import { getPosterUrl, getBackdropUrl, TvSeasonSummary } from "@/lib/tmdb";
-import { formatFullDate, gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
-import { getIgdbImageUrl } from "@/lib/igdb";
-import {
-  getAnimeTitle,
-  getAnimePosterUrl,
-  getAnimeBackdropUrl,
-  stripHtml,
-} from "@/lib/anilist";
+import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
+import type { TvSeasonSummary } from "@/lib/providers/tmdb/types";
+import { formatFullDate } from "@/lib/media/format";
+import { gameStatusToShared, sharedStatusToGame } from "@/lib/media/status";
+import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
+import { getAnimeTitle, getAnimePosterUrl, getAnimeBackdropUrl, stripHtml } from "@/lib/providers/anilist/client";
+import type { MediaType } from "@/lib/media/types";
 
-type ReviewMediaType = "movie" | "tv" | "anime" | "game";
+type ReviewMediaType = MediaType;
 
 const REVIEW_MEDIA_TYPES: ReviewMediaType[] = ["movie", "tv", "anime", "game"];
 

@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Movie, getPosterUrl } from "@/lib/tmdb";
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
+import type { Movie } from "@/lib/providers/tmdb/types";
 import Loading from "@/components/ui/Loading";
 import MediaCard from "@/components/media/MediaCard";
 import ListCard from "@/components/lists/ListCard";

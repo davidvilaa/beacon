@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { X, Check } from "lucide-react";
 import Loading from "@/components/ui/Loading";
-import { getBackdropUrl } from "@/lib/tmdb";
+import { getBackdropUrl } from "@/lib/providers/tmdb/client";
 
 interface BackdropPickerModalProps {
   isOpen: boolean;

@@ -2,15 +2,16 @@
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Movie } from "@/lib/tmdb";
+import type { Movie } from "@/lib/providers/tmdb/types";
 import MediaCard from "@/components/media/MediaCard";
+import type { MediaType } from "@/lib/media/types";
 
 export interface FranchiseItem {
   id: number;
   title: string;
   poster_path?: string | null;
   posterPath?: string | null;
-  mediaType?: "movie" | "tv" | "anime" | "game";
+  mediaType?: MediaType;
   subtitle?: string | React.ReactNode;
   href?: string;
   year?: string | number | null;
@@ -19,7 +20,7 @@ export interface FranchiseItem {
 interface FranchiseSliderProps {
   parts: (Movie | FranchiseItem)[];
   currentMovieId: number;
-  mediaType?: "movie" | "tv" | "anime" | "game";
+  mediaType?: MediaType;
 }
 
 export default function FranchiseSlider({

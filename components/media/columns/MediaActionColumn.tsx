@@ -15,6 +15,7 @@ import {
   XCircle,
   ListPlus,
 } from "lucide-react";
+import type { MediaType } from "@/lib/media/types";
 
 export type MediaStatus =
   | "watched"
@@ -29,7 +30,7 @@ interface MediaActionColumnProps {
   title: string;
   hasMultiplePosters?: boolean;
   onOpenPosterPicker?: () => void;
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
   status: MediaStatus;
   isFavorite: boolean;
   hasLog?: boolean;

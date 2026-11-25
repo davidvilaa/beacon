@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails } from "@/lib/providers/tmdb/movies";
 
 export async function GET(
   request: Request,

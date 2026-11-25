@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGameDetails } from "@/lib/igdb";
+import { getGameDetails } from "@/lib/providers/igdb/games";
 
 export async function GET(
   request: Request,

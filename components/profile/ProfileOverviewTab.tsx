@@ -1,13 +1,14 @@
 "use client";
 
 import MediaCard from "@/components/media/MediaCard";
+import type { MediaType } from "@/lib/media/types";
 
 export interface FavoriteMediaItem {
   id: number | string;
   title: string;
   posterPath: string | null;
   href?: string;
-  mediaType: "movie" | "tv" | "anime" | "game";
+  mediaType: MediaType;
 }
 
 interface ProfileOverviewTabProps {

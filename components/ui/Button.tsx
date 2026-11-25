@@ -11,8 +11,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles =
       variant === "primary"
-        ? "font-semibold px-4 py-2 bg-[#a8dadc] hover:bg-[#8ec5c8] text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] active:shadow-none"
-        : "font-medium px-4 py-2 bg-zinc-800 text-zinc-300 hover:bg-[#a8dadc] hover:text-zinc-950 border border-zinc-700 hover:border-transparent";
+        ? "font-semibold px-4 py-2 bg-accent hover:bg-accent-hover text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] active:shadow-none"
+        : "font-medium px-4 py-2 bg-zinc-800 text-zinc-300 hover:bg-accent hover:text-zinc-950 border border-zinc-700 hover:border-transparent";
 
     return (
       <button

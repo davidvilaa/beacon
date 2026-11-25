@@ -33,8 +33,8 @@ interface UserMovieEntry {
 
 const STATUS_OPTIONS: Option[] = [
   { id: "all", label: "All status" },
-  { id: "watched", label: "Watched", icon: <Eye className="w-3.5 h-3.5 text-[#a8dadc]" /> },
-  { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
+  { id: "watched", label: "Watched", icon: <Eye className="w-3.5 h-3.5 text-accent" /> },
+  { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-accent fill-accent" /> },
 ];
 
 const SORT_OPTIONS: Option[] = [

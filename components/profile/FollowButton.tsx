@@ -131,7 +131,7 @@ export default function FollowButton({
       } ${
         isFollowing
           ? "bg-zinc-900 border border-zinc-700/80 text-zinc-300 hover:border-rose-500/60 hover:text-rose-400 hover:bg-rose-500/10"
-          : "bg-[#a8dadc] text-zinc-950 hover:bg-[#a8dadc]/90 border border-transparent"
+          : "bg-accent text-zinc-950 hover:bg-accent/90 border border-transparent"
       } ${className}`}
     >
       {isFollowing ? "Following" : "Follow"}

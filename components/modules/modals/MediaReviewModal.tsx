@@ -48,13 +48,13 @@ function StarRating({
 
             {isFull && (
               <div className="absolute inset-0">
-                <Star className="w-6 h-6 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                <Star className="w-6 h-6 text-accent fill-accent stroke-[1.5]" />
               </div>
             )}
 
             {isHalf && (
               <div className="absolute inset-0 overflow-hidden w-1/2">
-                <Star className="w-6 h-6 text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                <Star className="w-6 h-6 text-accent fill-accent stroke-[1.5]" />
               </div>
             )}
 
@@ -472,7 +472,7 @@ export default function MediaReviewModal({
                             !isAllowed
                               ? "opacity-25 cursor-not-allowed text-zinc-600"
                               : isSelected
-                              ? "bg-[#a8dadc] text-zinc-950 font-bold cursor-pointer"
+                              ? "bg-accent text-zinc-950 font-bold cursor-pointer"
                               : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 cursor-pointer"
                           }`}
                         >
@@ -503,8 +503,8 @@ export default function MediaReviewModal({
                       }
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all cursor-pointer ${
                         draftFavorite
-                          ? "bg-[#a8dadc] text-zinc-950 font-bold"
-                          : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/60"
+                          ? "bg-accent text-zinc-950 font-bold"
+                          : "text-zinc-400 hover:text-accent hover:bg-zinc-800/60"
                       }`}
                     >
                       <Heart
@@ -521,7 +521,7 @@ export default function MediaReviewModal({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-accent/80 transition-colors">
               <textarea
                 value={draftReview}
                 onChange={(e) => setDraftReview(e.target.value)}
@@ -565,7 +565,7 @@ export default function MediaReviewModal({
                   type="button"
                   onClick={handleSaveClick}
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-sm text-xs font-bold bg-accent text-zinc-950 hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? "Saving..." : "Save review"}
                 </button>

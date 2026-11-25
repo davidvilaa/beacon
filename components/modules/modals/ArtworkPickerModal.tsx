@@ -86,7 +86,7 @@ export default function ArtworkPickerModal({
                       isPoster ? "aspect-[2/3]" : "aspect-[16/9]"
                     } ${
                       isSelected
-                        ? "border-[#a8dadc]"
+                        ? "border-accent"
                         : "border-zinc-800 hover:border-zinc-600 hover:opacity-80"
                     }`}
                   >
@@ -104,7 +104,7 @@ export default function ArtworkPickerModal({
                       />
                     )}
                     {isSelected && (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-accent text-zinc-950 flex items-center justify-center shadow-md z-10">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                     )}

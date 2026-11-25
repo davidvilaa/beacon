@@ -51,7 +51,7 @@ export default function ListCard({
         <span
           className={`w-6 h-6 sm:w-7 sm:h-7 rounded-sm border flex items-center justify-center shrink-0 mt-1 sm:mt-1.5 transition-all ${
             selected
-              ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
+              ? "bg-accent border-accent text-zinc-950"
               : "bg-zinc-950/80 border-zinc-700 group-hover:border-zinc-500"
           }`}
         >
@@ -92,7 +92,7 @@ export default function ListCard({
 
       <div className="flex-1 min-w-0 flex flex-col justify-start gap-2 pt-0.5 sm:pt-1">
         <div className="flex items-center gap-2.5 min-w-0">
-          <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-100 tracking-tight leading-tight group-hover:text-[#a8dadc] transition-colors truncate">
+          <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-100 tracking-tight leading-tight group-hover:text-accent transition-colors truncate">
             {list.title}
           </h3>
           {list.isPrivate && (
@@ -103,7 +103,7 @@ export default function ListCard({
         {list.author && (
           <p className="text-xs sm:text-sm text-zinc-400 -mt-0.5">
             by{" "}
-            <span className="text-zinc-200 font-medium group-hover:text-[#a8dadc] transition-colors">
+            <span className="text-zinc-200 font-medium group-hover:text-accent transition-colors">
               {list.author}
             </span>
           </p>

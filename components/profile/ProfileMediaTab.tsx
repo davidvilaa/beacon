@@ -111,10 +111,10 @@ export default function ProfileMediaTab({
                       return (
                         <div key={star} className="relative w-2.5 sm:w-3 h-2.5 sm:h-3 shrink-0">
                           {isFull && (
-                            <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                            <Star className="w-full h-full text-accent fill-accent stroke-[1.5]" />
                           )}
                           {isHalf && (
-                            <StarHalf className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                            <StarHalf className="w-full h-full text-accent fill-accent stroke-[1.5]" />
                           )}
                         </div>
                       );
@@ -126,7 +126,7 @@ export default function ProfileMediaTab({
                   <Link
                     href={`/review/${item.entryLogId}?type=${item.mediaType}`}
                     title="Read review"
-                    className="p-0.5 transition-colors cursor-pointer shrink-0 ml-auto text-zinc-400 hover:text-[#a8dadc]"
+                    className="p-0.5 transition-colors cursor-pointer shrink-0 ml-auto text-zinc-400 hover:text-accent"
                   >
                     <AlignJustify className="w-3.5 h-3.5" />
                   </Link>

@@ -51,12 +51,12 @@ export default function Select({
         className={`w-full flex items-center justify-between rounded-sm focus:outline-none text-left transition-all cursor-pointer ${
           isCompact
             ? `px-2.5 py-1 bg-zinc-800 border ${
-                isOpen ? "border-[#a8dadc]" : "border-zinc-700/80"
-              } text-xs font-medium hover:bg-zinc-700/50 hover:border-[#a8dadc]/60 ${
+                isOpen ? "border-accent" : "border-zinc-700/80"
+              } text-xs font-medium hover:bg-zinc-700/50 hover:border-accent/60 ${
                 !selectedOption ? "text-zinc-400" : "text-zinc-200"
               }`
             : `p-2 bg-zinc-950 border ${
-                isOpen ? "border-[#a8dadc]" : "border-zinc-800"
+                isOpen ? "border-accent" : "border-zinc-800"
               } text-sm hover:bg-zinc-900/50 ${
                 !selectedOption ? "text-zinc-500" : "text-zinc-300"
               }`
@@ -94,14 +94,14 @@ export default function Select({
                   isCompact ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-sm"
                 } ${
                   value === option.id
-                    ? "bg-zinc-800 text-[#a8dadc] font-medium"
+                    ? "bg-zinc-800 text-accent font-medium"
                     : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
                 {option.icon && (
                   <span
                     className={
-                      value === option.id ? "text-[#a8dadc]" : "text-zinc-400"
+                      value === option.id ? "text-accent" : "text-zinc-400"
                     }
                   >
                     {option.icon}

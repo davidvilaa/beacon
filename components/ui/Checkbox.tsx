@@ -41,7 +41,7 @@ export default function Checkbox({
         }}
         className={`w-4 h-4 rounded-sm border transition-all flex items-center justify-center shrink-0 ${
           checked
-            ? "bg-[#a8dadc] border-[#a8dadc] text-zinc-950"
+            ? "bg-accent border-accent text-zinc-950"
             : "bg-zinc-900 border-zinc-700 hover:border-zinc-500"
         }`}
       >

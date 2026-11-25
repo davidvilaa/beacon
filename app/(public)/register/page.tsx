@@ -111,7 +111,7 @@ export default function Register() {
                 maxLength={20}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none"
                 required
               />
             </div>
@@ -125,7 +125,7 @@ export default function Register() {
                 maxLength={254}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ export default function Register() {
                 maxLength={30}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none"
                 required
               />
               {password.length > 0 && (
@@ -172,7 +172,7 @@ export default function Register() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          Already have an account? <Link href="/login" className="text-[#a8dadc] hover:underline">Sign in</Link>
+          Already have an account? <Link href="/login" className="text-accent hover:underline">Sign in</Link>
         </div>
       </div>
     </div>

@@ -565,7 +565,7 @@ function MovieDetailContent() {
         <p className="text-zinc-400 mb-4">Movie could not be found.</p>
         <button
           onClick={() => router.back()}
-          className="text-xs text-[#a8dadc] hover:underline cursor-pointer"
+          className="text-xs text-accent hover:underline cursor-pointer"
         >
           ← Go back
         </button>

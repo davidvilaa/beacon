@@ -216,7 +216,7 @@ export default function FranchiseSlider({
               onPointerUp={handleThumbPointerUp}
               onPointerCancel={handleThumbPointerUp}
               className={`absolute top-0 bottom-0 rounded-full transition-colors cursor-grab active:cursor-grabbing ${
-                isDragging ? "bg-[#a8dadc]" : "bg-zinc-600 hover:bg-[#a8dadc]"
+                isDragging ? "bg-accent" : "bg-zinc-600 hover:bg-accent"
               }`}
               style={{
                 left: `${thumbLeftPercent}%`,

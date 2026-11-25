@@ -135,7 +135,7 @@ export default function ProfileNetworkTab({
                   )}
                 </div>
 
-                <div className="px-3.5 flex items-center text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-100 group-hover:text-[#a8dadc] transition-colors whitespace-nowrap">
+                <div className="px-3.5 flex items-center text-xs sm:text-sm font-bold uppercase tracking-wider text-zinc-100 group-hover:text-accent transition-colors whitespace-nowrap">
                   {u.username}
                 </div>
               </Link>

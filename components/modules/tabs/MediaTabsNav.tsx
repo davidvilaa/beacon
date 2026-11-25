@@ -53,7 +53,7 @@ export default function MediaTabsNav({
         ))}
 
         <div
-          className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 pointer-events-none"
+          className="absolute bottom-0 h-0.5 bg-accent transition-all duration-300 pointer-events-none"
           style={{
             left: `${indicatorStyle.left}px`,
             width: `${indicatorStyle.width}px`,

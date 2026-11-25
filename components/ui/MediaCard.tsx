@@ -80,7 +80,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
 
           <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
             <div className="flex items-baseline gap-2.5 min-w-0 mb-1.5 flex-wrap">
-              <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-accent transition-colors truncate">
                 {title}
               </h3>
               {year && (
@@ -109,7 +109,7 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
         title={title}
         className={`group relative flex flex-col rounded-sm overflow-hidden cursor-pointer transition-all duration-200 select-none ${
           isCurrent
-            ? "border-2 border-[#a8dadc]"
+            ? "border-2 border-accent"
             : "border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10"
         } ${hasFooter ? "w-full" : "aspect-[2/3] w-full"} ${className}`}
       >

@@ -168,11 +168,11 @@ export default function DatePicker({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-sm bg-zinc-800 border text-xs font-medium transition-all cursor-pointer ${
           isOpen
-            ? "border-[#a8dadc] text-zinc-100 bg-zinc-700/60"
-            : "border-zinc-700/80 text-zinc-300 hover:border-[#a8dadc]/60 hover:text-white hover:bg-zinc-700/50"
+            ? "border-accent text-zinc-100 bg-zinc-700/60"
+            : "border-zinc-700/80 text-zinc-300 hover:border-accent/60 hover:text-white hover:bg-zinc-700/50"
         }`}
       >
-        <CalendarIcon className="w-3.5 h-3.5 text-[#a8dadc] shrink-0" />
+        <CalendarIcon className="w-3.5 h-3.5 text-accent shrink-0" />
         <span className={value ? "text-zinc-200" : "text-zinc-400 font-mono tracking-wider"}>
           {value ? formatDisplayDate(value) : placeholder}
         </span>
@@ -235,9 +235,9 @@ export default function DatePicker({
                   onClick={() => handleSelectDay(d)}
                   className={`h-7 rounded-sm text-[11px] font-medium transition-all flex items-center justify-center cursor-pointer ${
                     active
-                      ? "bg-[#a8dadc] text-zinc-950 font-bold"
+                      ? "bg-accent text-zinc-950 font-bold"
                       : current
-                      ? "border border-[#a8dadc]/50 text-zinc-200 hover:bg-zinc-800"
+                      ? "border border-accent/50 text-zinc-200 hover:bg-zinc-800"
                       : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                   }`}
                 >
@@ -260,7 +260,7 @@ export default function DatePicker({
             <button
               type="button"
               onClick={handleSetToday}
-              className="text-[#a8dadc] hover:underline font-semibold cursor-pointer"
+              className="text-accent hover:underline font-semibold cursor-pointer"
             >
               Today
             </button>

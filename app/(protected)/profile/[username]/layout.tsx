@@ -71,7 +71,7 @@ function ProfileSubNav({
             href={subTab.href}
             className={`text-xs font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer ${
               isActive
-                ? "text-[#a8dadc]"
+                ? "text-accent"
                 : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
@@ -228,7 +228,7 @@ function UserProfileContent({
         </p>
         <Link
           href="/"
-          className="text-xs font-semibold text-[#a8dadc] hover:underline"
+          className="text-xs font-semibold text-accent hover:underline"
         >
           Back to home
         </Link>
@@ -287,7 +287,7 @@ function UserProfileContent({
                       href={getSocialUrl(link.platform, link.value)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-[#a8dadc] transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-accent transition-colors"
                     >
                       {renderSocialIcon(link.platform, "w-3.5 h-3.5")}
                       <span>{link.value.replace(/^https?:\/\/(www\.)?/, "")}</span>
@@ -329,7 +329,7 @@ function UserProfileContent({
           </div>
 
           <span
-            className="absolute bottom-0 h-0.5 bg-[#a8dadc] transition-all duration-300 ease-out"
+            className="absolute bottom-0 h-0.5 bg-accent transition-all duration-300 ease-out"
             style={{
               left: `${indicatorStyle.left}px`,
               width: `${indicatorStyle.width}px`,

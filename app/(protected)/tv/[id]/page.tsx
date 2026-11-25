@@ -857,7 +857,7 @@ function TvDetailContent() {
     return (
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 text-center">
         <p className="text-zinc-400 mb-4">TV Show could not be found.</p>
-        <Link href="/search" className="text-xs text-[#a8dadc] hover:underline">
+        <Link href="/search" className="text-xs text-accent hover:underline">
           ← Back to search
         </Link>
       </div>

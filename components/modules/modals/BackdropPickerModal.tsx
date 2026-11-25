@@ -76,7 +76,7 @@ export default function BackdropPickerModal({
                     }}
                     className={`relative w-full aspect-video rounded-sm overflow-hidden border-2 transition-all cursor-pointer ${
                       isSelected
-                        ? "border-[#a8dadc]"
+                        ? "border-accent"
                         : "border-zinc-800 hover:border-zinc-600 hover:opacity-90"
                     }`}
                   >
@@ -90,7 +90,7 @@ export default function BackdropPickerModal({
                       />
                     )}
                     {isSelected && (
-                      <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-[#a8dadc] text-zinc-950 flex items-center justify-center shadow-md z-10">
+                      <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-accent text-zinc-950 flex items-center justify-center shadow-md z-10">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                     )}

@@ -42,7 +42,7 @@ export default function ProfileListsTab({
           <button
             type="button"
             onClick={onCreateList}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-colors cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-bold bg-accent text-zinc-950 hover:bg-accent-hover transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>New list</span>

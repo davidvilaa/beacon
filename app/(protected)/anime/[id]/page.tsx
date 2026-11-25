@@ -697,7 +697,7 @@ function AnimeDetailContent() {
         <h1 className="text-2xl font-bold text-zinc-300">Anime not found</h1>
         <button
           onClick={() => router.back()}
-          className="mt-4 text-xs font-bold uppercase tracking-wider text-[#a8dadc] hover:underline cursor-pointer"
+          className="mt-4 text-xs font-bold uppercase tracking-wider text-accent hover:underline cursor-pointer"
         >
           ← Go back
         </button>
@@ -851,7 +851,7 @@ function AnimeDetailContent() {
                         onClick={() => setSelectedFranchiseCategory(cat.id)}
                         className={`text-xs font-bold uppercase tracking-wider transition-colors shrink-0 cursor-pointer ${
                           isActive
-                            ? "text-[#a8dadc]"
+                            ? "text-accent"
                             : "text-zinc-500 hover:text-zinc-300"
                         }`}
                       >

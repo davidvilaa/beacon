@@ -108,7 +108,7 @@ function ToastItem({
           ? 'border-b-2 border-b-emerald-400' 
           : toast.type === 'error'
           ? 'border-b-2 border-b-red-400'
-          : 'border-b-2 border-b-[#a8dadc]'
+          : 'border-b-2 border-b-accent'
       }`}
     >
       <div className="flex items-start gap-2.5 flex-1 min-w-0">
@@ -117,7 +117,7 @@ function ToastItem({
         ) : toast.type === 'error' ? (
           <CircleX className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
         ) : (
-          <span className="w-2 h-2 rounded-full bg-[#a8dadc] shrink-0 mt-1.5" />
+          <span className="w-2 h-2 rounded-full bg-accent shrink-0 mt-1.5" />
         )}
         <span className="text-sm font-medium text-zinc-200 leading-snug break-words">
           {toast.message}

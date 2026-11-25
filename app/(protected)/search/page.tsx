@@ -176,7 +176,7 @@ function SearchContent() {
       <div className="pb-5 mb-8 border-b border-zinc-800/80 flex items-center justify-between gap-4 flex-wrap">
         <p className="text-sm italic text-zinc-400">
           results for{" "}
-          <span className="text-[#a8dadc] not-italic font-medium">
+          <span className="text-accent not-italic font-medium">
             &ldquo;{query.toLowerCase()}&rdquo;
           </span>
         </p>
@@ -279,7 +279,7 @@ function SearchContent() {
                     </div>
 
                     <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
-                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-accent transition-colors truncate">
                         {username}
                       </h3>
                       {movie.overview && (
@@ -325,7 +325,7 @@ function SearchContent() {
                     </div>
 
                     <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
-                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-accent transition-colors truncate">
                         {movie.title}
                       </h3>
                       {famousWorks && (
@@ -375,7 +375,7 @@ function SearchContent() {
                     </div>
 
                     <div className="flex-1 min-w-0 pt-0.5 sm:pt-1">
-                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-[#a8dadc] transition-colors truncate">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-wider text-zinc-200 group-hover:text-accent transition-colors truncate">
                         {movie.title}
                       </h3>
                       {famousWorks && (
@@ -470,7 +470,7 @@ function SearchContent() {
                   onClick={() => handlePageChange(pageNum)}
                   className={`w-8 h-8 rounded-sm text-xs font-medium transition-all cursor-pointer active:scale-95 ${
                     isActive
-                      ? "bg-[#a8dadc] text-zinc-950 font-bold border border-[#a8dadc]"
+                      ? "bg-accent text-zinc-950 font-bold border border-accent"
                       : "border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
                   }`}
                 >

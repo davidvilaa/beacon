@@ -37,11 +37,11 @@ interface UserSeriesEntry {
 
 const STATUS_OPTIONS: Option[] = [
   { id: "all", label: "All status" },
-  { id: "watching", label: "Watching", icon: <PlayCircle className="w-3.5 h-3.5 text-[#a8dadc]" /> },
-  { id: "watched", label: "Watched", icon: <Eye className="w-3.5 h-3.5 text-[#a8dadc]" /> },
+  { id: "watching", label: "Watching", icon: <PlayCircle className="w-3.5 h-3.5 text-accent" /> },
+  { id: "watched", label: "Watched", icon: <Eye className="w-3.5 h-3.5 text-accent" /> },
   { id: "paused", label: "Paused", icon: <PauseCircle className="w-3.5 h-3.5 text-amber-400" /> },
   { id: "dropped", label: "Dropped", icon: <XCircle className="w-3.5 h-3.5 text-rose-400" /> },
-  { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" /> },
+  { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-3.5 h-3.5 text-accent fill-accent" /> },
 ];
 
 const SORT_OPTIONS: Option[] = [

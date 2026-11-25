@@ -157,7 +157,7 @@ export default function CreateListModal({
               maxLength={100}
               placeholder="e.g. Best Sci-Fi Movies, Weekend Binge..."
               autoFocus
-              className="w-full bg-zinc-900/90 border border-zinc-800 rounded-sm px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#a8dadc]/80 transition-colors"
+              className="w-full bg-zinc-900/90 border border-zinc-800 rounded-sm px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-accent/80 transition-colors"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function CreateListModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
               Description
             </label>
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-[#a8dadc]/80 transition-colors">
+            <div className="bg-zinc-900/90 border border-zinc-800 rounded-sm overflow-hidden focus-within:border-accent/80 transition-colors">
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -206,7 +206,7 @@ export default function CreateListModal({
             <button
               type="submit"
               disabled={isSaving}
-              className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-sm text-xs font-bold bg-accent text-zinc-950 hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-50"
             >
               {isSaving
                 ? "Saving..."

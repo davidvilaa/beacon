@@ -109,7 +109,7 @@ export default function EpisodesTab({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-accent/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <span>{isExpanded ? "less..." : "more..."}</span>
             {isExpanded ? (

@@ -43,12 +43,12 @@ const STATUS_OPTIONS: Option[] = [
   {
     id: "watching",
     label: "Watching",
-    icon: <PlayCircle className="w-3.5 h-3.5 text-[#a8dadc]" />,
+    icon: <PlayCircle className="w-3.5 h-3.5 text-accent" />,
   },
   {
     id: "watched",
     label: "Watched",
-    icon: <Eye className="w-3.5 h-3.5 text-[#a8dadc]" />,
+    icon: <Eye className="w-3.5 h-3.5 text-accent" />,
   },
   {
     id: "paused",
@@ -64,7 +64,7 @@ const STATUS_OPTIONS: Option[] = [
     id: "watchlist",
     label: "Watchlist",
     icon: (
-      <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" />
+      <Bookmark className="w-3.5 h-3.5 text-accent fill-accent" />
     ),
   },
 ];

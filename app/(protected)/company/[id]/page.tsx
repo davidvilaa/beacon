@@ -162,7 +162,7 @@ function CompanyDetailContent() {
         <p className="text-zinc-400 mb-4">Studio could not be found.</p>
         <button
           onClick={() => router.back()}
-          className="text-xs text-[#a8dadc] hover:underline cursor-pointer"
+          className="text-xs text-accent hover:underline cursor-pointer"
         >
           ← Go back
         </button>
@@ -234,7 +234,7 @@ function CompanyDetailContent() {
                     </span>
                     <Link
                       href={`/company/${company.parent_company.id}`}
-                      className="text-[#a8dadc] hover:underline font-medium mt-1 block truncate"
+                      className="text-accent hover:underline font-medium mt-1 block truncate"
                     >
                       {company.parent_company.name}
                     </Link>
@@ -250,7 +250,7 @@ function CompanyDetailContent() {
                       href={company.homepage}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#a8dadc] hover:underline font-medium mt-1 inline-flex items-center gap-1 max-w-full truncate"
+                      className="text-accent hover:underline font-medium mt-1 inline-flex items-center gap-1 max-w-full truncate"
                     >
                       <Globe className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">

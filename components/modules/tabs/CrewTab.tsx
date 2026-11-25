@@ -43,7 +43,7 @@ export default function CrewTab({
                 className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
               >
                 <CardGradientBorder roundedClassName="rounded-sm" />
-                <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                <span className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors">
                   {person.name}
                 </span>
               </Link>

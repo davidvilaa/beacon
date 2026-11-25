@@ -282,7 +282,7 @@ function PersonDetailContent() {
         <p className="text-zinc-400 mb-4">Person could not be found.</p>
         <button
           onClick={() => router.back()}
-          className="text-xs text-[#a8dadc] hover:underline cursor-pointer"
+          className="text-xs text-accent hover:underline cursor-pointer"
         >
           ← Go back
         </button>
@@ -336,7 +336,7 @@ function PersonDetailContent() {
                     <button
                       type="button"
                       onClick={() => setIsBioExpanded(!isBioExpanded)}
-                      className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-[#a8dadc] hover:underline cursor-pointer"
+                      className="mt-2.5 inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline cursor-pointer"
                     >
                       <span>{isBioExpanded ? "Show less" : "Read more"}</span>
                       {isBioExpanded ? (

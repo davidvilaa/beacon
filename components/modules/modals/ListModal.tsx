@@ -548,7 +548,7 @@ export default function ListModal({
                       {media.title}
                     </h2>
                     {media.mediaType === "tv" && media.seasonNumber && (
-                      <p className="text-xs font-semibold text-[#a8dadc] mt-0.5">
+                      <p className="text-xs font-semibold text-accent mt-0.5">
                         {media.seasonTitle || `Season ${media.seasonNumber}`}
                       </p>
                     )}
@@ -557,7 +557,7 @@ export default function ListModal({
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-bold bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-[#a8dadc] transition-colors cursor-pointer shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-bold bg-zinc-900 border border-zinc-800 hover:border-accent/60 text-accent transition-colors cursor-pointer shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>New list</span>
@@ -631,7 +631,7 @@ export default function ListModal({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving || isLoading}
-                className="px-5 py-2 rounded-sm text-xs font-bold bg-[#a8dadc] text-zinc-950 hover:bg-[#8ec5c8] transition-all cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-sm text-xs font-bold bg-accent text-zinc-950 hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save"}
               </button>

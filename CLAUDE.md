@@ -9,7 +9,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 ### Design
 - **No neon effects**: never add neon, glow or colored drop-shadow effects (e.g. `shadow-[0_0_..._#a8dadc]`, `shadow-[...rgba(168,218,220,...)]`, `drop-shadow`) anywhere in the UI (buttons, tab indicators, borders, cards, search bars, inputs...). Solid colors and clean borders only.
 - **Logo exception**: the ONLY element allowed to glow is the BEACON logo in `components/ui/Logo.tsx`.
-- **Palette**: dark UI on zinc (`bg-zinc-900` / `#09090b` background, `#fafafa` foreground). Accent `#a8dadc`, accent hover `#8ec5c8`. Reuse these, don't introduce new accent colors.
+- **Palette**: dark UI on zinc (`bg-zinc-900` / `#09090b` background, `#fafafa` foreground). Accent `#a8dadc`, accent hover `#8ec5c8`, defined as theme tokens in `app/globals.css`: always use `text-accent`, `bg-accent`, `border-accent/60`, `hover:bg-accent-hover`... never the raw hex (only `Logo.tsx` keeps it). Don't introduce new accent colors.
 - Reuse existing UI primitives in `components/ui/` (`Button`/`PrimaryButton`/`SecondaryButton`, `Select`, `Checkbox`, `DatePicker`, `Toast`, `Loading`, `MediaCard`, `ListCard`...) instead of hand-rolling new ones.
 
 ### Layout
@@ -17,7 +17,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 
 ### Code
 - **Zero comments**: never add comments (`//` or `/* */`) in code. Applies to every modification.
-- **Dev server**: start it only through the browser pane's `preview_start` with the `beacon` config in `.claude/launch.json` (port 3000), never with `npm run dev` in a shell. Before starting, check `preview_list` and port 3000: if it is already running (started by Claude or by David), reuse it. Restart (`preview_stop` + `preview_start`) only when needed: changes to `next.config.ts`, `.env.local`, `proxy.ts` config, installed dependencies, or a crashed/stuck server. Never stop a server David started himself; ask him instead.
+- **Dev server**: start it only through the browser pane's `preview_start` with the `beacon` config in `.claude/launch.json` (port 3000), never with `npm run dev` in a shell. Before starting, check `preview_list` and port 3000: if it is already running (started by Claude or by David), reuse it. Restart (`preview_stop` + `preview_start`) only when needed: changes to `next.config.ts`, `.env.local`, `proxy.ts` config, `app/globals.css` (the Tailwind Turbopack loader does not hot-reload it), installed dependencies, or a crashed/stuck server. Never stop a server David started himself; ask him instead.
 - **Git**: commit all changes after completing each task, feature or cleanup (only when a shell on David's machine is available; otherwise tell him what to commit).
 - User-facing feedback goes through toasts (`useToast().addToast(message, "error" | ...)`), not `alert()`.
 

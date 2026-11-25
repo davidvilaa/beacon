@@ -591,7 +591,7 @@ function ReviewDetailContent() {
         <p className="text-zinc-400 mb-4">Review could not be found.</p>
         <button
           onClick={() => router.back()}
-          className="text-xs text-[#a8dadc] hover:underline cursor-pointer"
+          className="text-xs text-accent hover:underline cursor-pointer"
         >
           ← Go back
         </button>
@@ -673,7 +673,7 @@ function ReviewDetailContent() {
             type="button"
             onClick={() => setIsEditModalOpen(true)}
             title="Edit review"
-            className="w-full flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-center py-3 sm:py-3.5 text-zinc-400 hover:text-accent hover:bg-zinc-800/70 transition-colors cursor-pointer group"
           >
             <Pencil className="w-5 h-5 stroke-[2] group-hover:scale-110 transition-transform" />
           </button>
@@ -697,7 +697,7 @@ function ReviewDetailContent() {
             {resolvedTypeLabel}
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
-            <Link href={mediaHref} className="hover:text-[#a8dadc] transition-colors">
+            <Link href={mediaHref} className="hover:text-accent transition-colors">
               {resolvedTitle}
             </Link>
           </h1>
@@ -720,7 +720,7 @@ function ReviewDetailContent() {
                 )}
               </div>
 
-              <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors whitespace-nowrap">
+              <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-accent transition-colors whitespace-nowrap">
                 <span className="text-zinc-400 font-normal">by</span>
                 <span>{authorName}</span>
               </div>
@@ -730,10 +730,10 @@ function ReviewDetailContent() {
                 className="border-l border-zinc-700/60 px-3 flex items-center justify-center text-zinc-300 shrink-0"
               >
                 {review.status === "watched" && (
-                  <Eye className="w-4 h-4 text-[#a8dadc]" />
+                  <Eye className="w-4 h-4 text-accent" />
                 )}
                 {review.status === "watching" && (
-                  <PlayCircle className="w-4 h-4 text-[#a8dadc]" />
+                  <PlayCircle className="w-4 h-4 text-accent" />
                 )}
                 {review.status === "paused" && (
                   <PauseCircle className="w-4 h-4 text-amber-400" />
@@ -742,16 +742,16 @@ function ReviewDetailContent() {
                   <XCircle className="w-4 h-4 text-red-400" />
                 )}
                 {review.status === "watchlist" && (
-                  <Bookmark className="w-4 h-4 text-[#a8dadc] fill-[#a8dadc]" />
+                  <Bookmark className="w-4 h-4 text-accent fill-accent" />
                 )}
               </div>
 
               {review.is_favorite && (
                 <div
                   title="Favorite"
-                  className="border-l border-zinc-700/60 px-2.5 flex items-center justify-center text-[#a8dadc] shrink-0"
+                  className="border-l border-zinc-700/60 px-2.5 flex items-center justify-center text-accent shrink-0"
                 >
-                  <Heart className="w-4 h-4 fill-[#a8dadc]" />
+                  <Heart className="w-4 h-4 fill-accent" />
                 </div>
               )}
 
@@ -774,10 +774,10 @@ function ReviewDetailContent() {
                 return (
                   <div key={star} className="relative w-5 sm:w-6 h-5 sm:h-6 shrink-0">
                     {isFull && (
-                      <Star className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                      <Star className="w-full h-full text-accent fill-accent stroke-[1.5]" />
                     )}
                     {isHalf && (
-                      <StarHalf className="w-full h-full text-[#a8dadc] fill-[#a8dadc] stroke-[1.5]" />
+                      <StarHalf className="w-full h-full text-accent fill-accent stroke-[1.5]" />
                     )}
                   </div>
                 );

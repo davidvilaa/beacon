@@ -204,7 +204,7 @@ export default function SeasonRevolver({
             "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
         }}
       >
-        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-sm border border-[#a8dadc]/60 bg-zinc-800/80 pointer-events-none z-0" />
+        <div className="absolute inset-x-1 top-1/2 -translate-y-1/2 h-10 rounded-sm border border-accent/60 bg-zinc-800/80 pointer-events-none z-0" />
 
         <div
           className="relative w-full h-full flex items-center justify-center"
@@ -238,7 +238,7 @@ export default function SeasonRevolver({
                 title={s.name}
                 className={`absolute inset-x-1 h-10 flex items-center justify-center rounded-sm pointer-events-auto z-10 ${
                   isSelected
-                    ? "text-[#a8dadc] font-black text-sm sm:text-base tracking-wider cursor-default"
+                    ? "text-accent font-black text-sm sm:text-base tracking-wider cursor-default"
                     : readOnly
                     ? "text-zinc-500 font-bold text-xs sm:text-sm tracking-wider cursor-default"
                     : "text-zinc-400 font-bold text-xs sm:text-sm tracking-wider hover:text-white cursor-pointer"

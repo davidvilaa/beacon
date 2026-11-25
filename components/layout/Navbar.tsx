@@ -146,7 +146,7 @@ export default function Navbar() {
             <button
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
-              className="p-1.5 text-zinc-400 hover:text-[#a8dadc] transition-colors rounded-full hover:bg-zinc-800 cursor-pointer"
+              className="p-1.5 text-zinc-400 hover:text-accent transition-colors rounded-full hover:bg-zinc-800 cursor-pointer"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -202,7 +202,7 @@ export default function Navbar() {
         </div>
 
         <div 
-          className="absolute top-0 bottom-0 w-[2px] bg-[#a8dadc] transition-all duration-300 ease-in-out pointer-events-none z-30"
+          className="absolute top-0 bottom-0 w-[2px] bg-accent transition-all duration-300 ease-in-out pointer-events-none z-30"
           style={{
             left: isSearchOpen ? "0%" : "calc(100% - 2px)",
             opacity: isSearchOpen ? 1 : 0,
@@ -221,7 +221,7 @@ export default function Navbar() {
           }}
         >
           <div className="flex items-center gap-3 w-full">
-            <Search className="w-5 h-5 text-[#a8dadc] shrink-0" />
+            <Search className="w-5 h-5 text-accent shrink-0" />
             <input
               ref={searchInputRef}
               type="text"

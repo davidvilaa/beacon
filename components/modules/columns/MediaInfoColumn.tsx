@@ -70,7 +70,7 @@ export default function MediaInfoColumn({
 
       <div className="mt-5 space-y-2 max-w-2xl">
         {tagline && (
-          <p className="text-sm italic font-medium text-[#a8dadc]">
+          <p className="text-sm italic font-medium text-accent">
             &ldquo;{tagline}&rdquo;
           </p>
         )}

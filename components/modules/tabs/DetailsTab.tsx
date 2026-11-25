@@ -77,11 +77,11 @@ export default function DetailsTab({
                   className="relative inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer overflow-hidden"
                 >
                   <CardGradientBorder roundedClassName="rounded-sm" />
-                  <span className="text-xs font-medium text-zinc-200 group-hover:text-[#a8dadc] transition-colors">
+                  <span className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors">
                     {company.name}
                   </span>
                   {company.origin_country && (
-                    <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded-sm bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-[#a8dadc]/40 transition-colors">
+                    <span className="ml-1.5 shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 rounded-sm bg-zinc-700/60 text-zinc-300 border border-zinc-600/50 group-hover:border-accent/40 transition-colors">
                       {company.origin_country}
                     </span>
                   )}

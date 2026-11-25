@@ -68,7 +68,7 @@ export default function CastTab({
                 )}
               </div>
               <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors truncate leading-tight">
+                <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-accent transition-colors truncate leading-tight">
                   {actor.name}
                 </p>
                 {actor.character && (
@@ -119,7 +119,7 @@ export default function CastTab({
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-accent/60 text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
           >
             <span>{isExpanded ? "less..." : "more..."}</span>
             {isExpanded ? (

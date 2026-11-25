@@ -299,7 +299,7 @@ function ListDetailContent() {
         </p>
         <Link
           href="/profile"
-          className="text-xs font-semibold text-[#a8dadc] hover:underline"
+          className="text-xs font-semibold text-accent hover:underline"
         >
           Back to profile
         </Link>
@@ -359,7 +359,7 @@ function ListDetailContent() {
                   )}
                 </div>
 
-                <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-[#a8dadc] transition-colors whitespace-nowrap">
+                <div className="px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-accent transition-colors whitespace-nowrap">
                   <span className="text-zinc-400 font-normal">by</span>
                   <span>{authorName}</span>
                 </div>
@@ -368,7 +368,7 @@ function ListDetailContent() {
                   title={`${items.length} ${items.length === 1 ? "item" : "items"}`}
                   className="border-l border-zinc-700/60 px-3 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-300 shrink-0"
                 >
-                  <Layers className="w-4 h-4 text-[#a8dadc]" />
+                  <Layers className="w-4 h-4 text-accent" />
                   <span>{items.length}</span>
                 </div>
 
@@ -389,7 +389,7 @@ function ListDetailContent() {
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-[#a8dadc]/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-zinc-900 border border-zinc-800 hover:border-accent/60 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
             >
               <Pencil className="w-3.5 h-3.5" />
               <span>Edit</span>

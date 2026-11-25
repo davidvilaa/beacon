@@ -55,7 +55,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none"
                 required
               />
             </div>
@@ -65,7 +65,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-[#a8dadc] focus:outline-none"
+                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none"
                 required
               />
             </div>
@@ -85,7 +85,7 @@ export default function Login() {
         <hr className="border-zinc-700/60 my-6" />
 
         <div className="text-center text-sm text-zinc-400">
-          Don&apos;t have an account? <Link href="/register" className="text-[#a8dadc] hover:underline">Sign up</Link>
+          Don&apos;t have an account? <Link href="/register" className="text-accent hover:underline">Sign up</Link>
         </div>
       </div>
     </div>

@@ -168,8 +168,8 @@ export default function MediaActionColumn({
             title={isLogged ? "Edit log" : "Log entry"}
             className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
               isLogged
-                ? "text-[#a8dadc] bg-zinc-800/70 hover:bg-zinc-800/90"
-                : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                ? "text-accent bg-zinc-800/70 hover:bg-zinc-800/90"
+                : "text-zinc-400 hover:text-accent hover:bg-zinc-800/70"
             }`}
           >
             {isLogged ? (
@@ -185,13 +185,13 @@ export default function MediaActionColumn({
             title="Quick actions"
             className={`w-11 sm:w-12 shrink-0 flex items-center justify-center border-l border-zinc-800 transition-colors cursor-pointer ${
               isOpen
-                ? "text-[#a8dadc] bg-zinc-800/70"
-                : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                ? "text-accent bg-zinc-800/70"
+                : "text-zinc-400 hover:text-accent hover:bg-zinc-800/70"
             }`}
           >
             <ChevronDown
               className={`w-4 h-4 transition-transform duration-300 ease-in-out ${
-                isOpen ? "rotate-180 text-[#a8dadc]" : ""
+                isOpen ? "rotate-180 text-accent" : ""
               }`}
             />
           </button>
@@ -234,15 +234,15 @@ export default function MediaActionColumn({
                         !isAllowed
                           ? "opacity-25 cursor-not-allowed text-zinc-600"
                           : isSelected
-                          ? "text-[#a8dadc] bg-zinc-800/80 cursor-pointer"
-                          : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 cursor-pointer"
+                          ? "text-accent bg-zinc-800/80 cursor-pointer"
+                          : "text-zinc-400 hover:text-accent hover:bg-zinc-800/70 cursor-pointer"
                       }`}
                     >
                       <Icon
                         className={`${iconSizeClass} transition-transform ${isAllowed ? "group-hover:scale-110" : ""} ${
                           isSelected
                             ? opt.statusKey === "watchlist"
-                              ? "fill-[#a8dadc] stroke-[2]"
+                              ? "fill-accent stroke-[2]"
                               : "stroke-[2.2]"
                             : "stroke-[1.75]"
                         }`}
@@ -258,14 +258,14 @@ export default function MediaActionColumn({
                   title="Favourite"
                   className={`flex-1 flex items-center justify-center py-3 sm:py-3.5 transition-colors cursor-pointer group ${
                     isFavorite
-                      ? "text-[#a8dadc] bg-zinc-800/80"
-                      : "text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70"
+                      ? "text-accent bg-zinc-800/80"
+                      : "text-zinc-400 hover:text-accent hover:bg-zinc-800/70"
                   }`}
                 >
                   <Heart
                     className={`${iconSizeClass} transition-transform group-hover:scale-110 ${
                       isFavorite
-                        ? "fill-[#a8dadc] stroke-[2]"
+                        ? "fill-accent stroke-[2]"
                         : "stroke-[1.75]"
                     }`}
                   />
@@ -280,7 +280,7 @@ export default function MediaActionColumn({
                     onClick={() => onEpisodeChange(-1)}
                     disabled={currentEpisode !== undefined && currentEpisode <= 0}
                     title="Previous episode"
-                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
+                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-accent hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
                   >
                     <Minus className="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" />
                   </button>
@@ -306,7 +306,7 @@ export default function MediaActionColumn({
                       (currentEpisode ?? 0) >= totalEpisodes
                     }
                     title="Next episode"
-                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
+                    className="w-12 shrink-0 flex items-center justify-center text-zinc-400 hover:text-accent hover:bg-zinc-800/70 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-zinc-400 transition-colors cursor-pointer group"
                   >
                     <Plus className="w-4 h-4 stroke-[2.2] group-hover:scale-110 transition-transform" />
                   </button>
@@ -323,7 +323,7 @@ export default function MediaActionColumn({
                   }}
                   title="Add to list"
                   aria-label="Add to list"
-                  className="w-full border-t border-zinc-800 flex items-center justify-center py-2.5 sm:py-3 text-zinc-400 hover:text-[#a8dadc] hover:bg-zinc-800/70 transition-colors cursor-pointer group"
+                  className="w-full border-t border-zinc-800 flex items-center justify-center py-2.5 sm:py-3 text-zinc-400 hover:text-accent hover:bg-zinc-800/70 transition-colors cursor-pointer group"
                 >
                   <ListPlus className="w-5 h-5 stroke-[1.9] transition-transform group-hover:scale-110" />
                 </button>

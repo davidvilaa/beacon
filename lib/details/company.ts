@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { cacheLife } from "next/cache";
 import { getCompanyDetails } from "@/lib/providers/tmdb/companies";
 import { searchCompany } from "@/lib/providers/tmdb/search";
 import type { CompanyDetails, CompanyWorkCredit } from "@/lib/providers/tmdb/types";
@@ -72,14 +72,10 @@ function mergeStudioWorks(
   return [...animeWorks, ...filteredTmdb];
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function loadCompanyDetail(id: string): Promise<CompanyDetails | null> {
   try {
-    const { id } = await params;
     if (!id) {
-      return NextResponse.json({ error: "Company ID is required" }, { status: 400 });
+      return null;
     }
 
     const isAniList = id.startsWith("al-") || id.startsWith("anilist-");
@@ -87,12 +83,12 @@ export async function GET(
     if (isAniList) {
       const studioId = parseInt(id.replace(/^(al|anilist)-/, ""), 10);
       if (isNaN(studioId)) {
-        return NextResponse.json({ error: "Invalid studio ID" }, { status: 400 });
+        return null;
       }
 
       const studio = await getStudioDetails(studioId);
       if (!studio) {
-        return NextResponse.json({ error: "Studio not found" }, { status: 404 });
+        return null;
       }
 
       const animeWorks = mapAniListStudioToWorks(studio);
@@ -121,7 +117,7 @@ export async function GET(
         works: mergedWorks,
       };
 
-      return NextResponse.json(responseData);
+      return responseData;
     }
 
     let tmdbDetails: CompanyDetails | null = null;
@@ -155,10 +151,10 @@ export async function GET(
             works: mergeStudioWorks(animeWorks, tmdbWorks),
           };
 
-          return NextResponse.json(responseData);
+          return responseData;
         }
       }
-      return NextResponse.json({ error: "Studio not found" }, { status: 404 });
+      return null;
     }
 
     let studio: AniListStudio | null = null;
@@ -175,11 +171,14 @@ export async function GET(
       tmdbDetails.works = mergeStudioWorks(animeWorks, currentWorks);
     }
 
-    return NextResponse.json(tmdbDetails);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to fetch company details" },
-      { status: 500 }
-    );
+    return tmdbDetails;
+  } catch (error) {
+    throw error;
   }
+}
+
+export async function getCompanyDetail(id: string): Promise<CompanyDetails | null> {
+  "use cache";
+  cacheLife("hours");
+  return loadCompanyDetail(id);
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { cacheLife } from "next/cache";
 import { getPersonDetails } from "@/lib/providers/tmdb/people";
 import { searchPerson } from "@/lib/providers/tmdb/search";
 import type { PersonDetails, PersonCredit } from "@/lib/providers/tmdb/types";
@@ -101,14 +101,10 @@ function mapAniListStaffToCredits(staff: AniListStaff): {
   };
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function loadPersonDetail(id: string): Promise<PersonDetails | null> {
   try {
-    const { id } = await params;
     if (!id) {
-      return NextResponse.json({ error: "Person ID is required" }, { status: 400 });
+      return null;
     }
 
     const isAniList = id.startsWith("al-") || id.startsWith("anilist-");
@@ -116,12 +112,12 @@ export async function GET(
     if (isAniList) {
       const staffId = parseInt(id.replace(/^(al|anilist)-/, ""), 10);
       if (isNaN(staffId)) {
-        return NextResponse.json({ error: "Invalid staff ID" }, { status: 400 });
+        return null;
       }
 
       const staff = await getStaffDetails(staffId);
       if (!staff) {
-        return NextResponse.json({ error: "Person not found" }, { status: 404 });
+        return null;
       }
 
       const { cast: animeCast, crew: animeCrew } = mapAniListStaffToCredits(staff);
@@ -185,7 +181,7 @@ export async function GET(
         },
       };
 
-      return NextResponse.json(responseData);
+      return responseData;
     }
 
     let tmdbDetails: PersonDetails | null = null;
@@ -253,10 +249,10 @@ export async function GET(
             },
           };
 
-          return NextResponse.json(responseData);
+          return responseData;
         }
       }
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return null;
     }
 
     let staff: AniListStaff | null = null;
@@ -300,11 +296,14 @@ export async function GET(
       };
     }
 
-    return NextResponse.json(tmdbDetails);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to fetch person details" },
-      { status: 500 }
-    );
+    return tmdbDetails;
+  } catch (error) {
+    throw error;
   }
+}
+
+export async function getPersonDetail(id: string): Promise<PersonDetails | null> {
+  "use cache";
+  cacheLife("hours");
+  return loadPersonDetail(id);
 }

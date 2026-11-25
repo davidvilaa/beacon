@@ -1,0 +1,251 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Building2, Globe } from "lucide-react";
+import { getPosterUrl } from "@/lib/providers/tmdb/client";
+import type { CompanyDetails, CompanyWorkCredit } from "@/lib/providers/tmdb/types";
+import Select, { Option } from "@/components/ui/Select";
+import MediaCard from "@/components/media/MediaCard";
+
+const MEDIA_OPTIONS: Option[] = [
+  { id: "all", label: "All Formats" },
+  { id: "movie", label: "Movies" },
+  { id: "tv", label: "Series" },
+];
+
+const SORT_OPTIONS: Option[] = [
+  { id: "popularity", label: "Most Popular" },
+  { id: "newest", label: "Newest" },
+  { id: "oldest", label: "Oldest" },
+];
+
+export default function CompanyView({ company }: { company: CompanyDetails }) {
+
+  const [mediaFilter, setMediaFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"popularity" | "newest" | "oldest">("popularity");
+
+
+  const availableMediaOptions = useMemo(() => {
+    const works = company.works || [];
+    const list: Option[] = [{ id: "all", label: "All Formats" }];
+    const hasMovies = works.some((w) => w.media_type === "movie");
+    const hasTv = works.some((w) => w.media_type === "tv");
+    const hasAnime = works.some((w) => w.media_type === "anime");
+
+    if (hasMovies) list.push({ id: "movie", label: "Movies" });
+    if (hasTv) list.push({ id: "tv", label: "Series" });
+    if (hasAnime) list.push({ id: "anime", label: "Anime" });
+
+    return list;
+  }, [company.works]);
+
+  useEffect(() => {
+    if (
+      mediaFilter !== "all" &&
+      !availableMediaOptions.some((o) => o.id === mediaFilter)
+    ) {
+      setMediaFilter("all");
+    }
+  }, [availableMediaOptions, mediaFilter]);
+
+  const displayedWorks = useMemo(() => {
+    if (!company.works) return [];
+
+    const uniqueMap = new Map<string, CompanyWorkCredit>();
+    for (const item of company.works) {
+      const key = `${item.media_type}-${item.id}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
+      }
+    }
+
+    let list = Array.from(uniqueMap.values());
+
+    if (mediaFilter !== "all") {
+      list = list.filter((item) => item.media_type === mediaFilter);
+    }
+
+    return list.sort((a, b) => {
+      if (sortBy === "popularity") {
+        const votesA = a.vote_count ?? 0;
+        const votesB = b.vote_count ?? 0;
+        if (votesB !== votesA) return votesB - votesA;
+        return (b.popularity ?? 0) - (a.popularity ?? 0);
+      }
+
+      const dateA = a.release_date || a.first_air_date || "";
+      const dateB = b.release_date || b.first_air_date || "";
+
+      if (sortBy === "newest") {
+        if (!dateA && !dateB) return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateB.localeCompare(dateA);
+      }
+
+      if (sortBy === "oldest") {
+        if (!dateA && !dateB) return (a.vote_count ?? 0) - (b.vote_count ?? 0);
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateA.localeCompare(dateB);
+      }
+
+      return 0;
+    });
+  }, [company.works, mediaFilter, sortBy]);
+
+  const logoUrl = getPosterUrl(company.logo_path, "w500");
+
+  return (
+    <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 font-[family-name:var(--font-geist-sans)]">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+        <aside className="w-full lg:w-80 shrink-0">
+          <div className="w-56 sm:w-64 lg:w-full mx-auto rounded-sm overflow-hidden bg-zinc-900/40 border border-zinc-800 shadow-xl">
+            <div className={`relative aspect-[2/3] w-full border-b border-zinc-800 flex items-center justify-center p-6 ${logoUrl ? "bg-white" : "bg-zinc-900"}`}>
+              {logoUrl ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Image
+                    src={logoUrl}
+                    alt={company.name}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 256px, 320px"
+                    className="object-contain p-6"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-700 bg-zinc-900 p-6">
+                  <Building2 className="w-16 h-16 mb-2 stroke-[1.5] text-zinc-700" />
+                  <span className="text-xs uppercase tracking-wider font-bold text-zinc-600">
+                    No Logo
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 space-y-3.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 pb-2 border-b border-zinc-800">
+                Studio Info
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                {company.origin_country && (
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider text-[10px] font-semibold">
+                      Origin Country
+                    </span>
+                    <p className="text-zinc-200 font-medium mt-1">
+                      {company.origin_country}
+                    </p>
+                  </div>
+                )}
+
+                {company.headquarters && (
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider text-[10px] font-semibold">
+                      Headquarters
+                    </span>
+                    <p className="text-zinc-200 font-medium mt-1 leading-snug">
+                      {company.headquarters}
+                    </p>
+                  </div>
+                )}
+
+                {company.parent_company && (
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider text-[10px] font-semibold">
+                      Parent Company
+                    </span>
+                    <Link
+                      href={`/company/${company.parent_company.id}`}
+                      className="text-accent hover:underline font-medium mt-1 block truncate"
+                    >
+                      {company.parent_company.name}
+                    </Link>
+                  </div>
+                )}
+
+                {company.homepage && (
+                  <div>
+                    <span className="text-zinc-500 block uppercase tracking-wider text-[10px] font-semibold">
+                      Website
+                    </span>
+                    <a
+                      href={company.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:underline font-medium mt-1 inline-flex items-center gap-1 max-w-full truncate"
+                    >
+                      <Globe className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">
+                        {company.homepage.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                      </span>
+                    </a>
+                  </div>
+                )}
+
+                {!company.origin_country &&
+                  !company.headquarters &&
+                  !company.parent_company &&
+                  !company.homepage && (
+                    <p className="text-xs text-zinc-500 italic">
+                      No studio info available.
+                    </p>
+                  )}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section className="flex-1 min-w-0 w-full">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
+              Studio
+            </p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
+              {company.name}
+            </h1>
+          </div>
+
+          <div className="mt-4 sm:mt-5 pb-3.5 border-b border-zinc-800/80 flex items-center gap-2.5 flex-wrap">
+            <Select
+              value={mediaFilter}
+              onChange={(val) => setMediaFilter(val)}
+              options={availableMediaOptions}
+              variant="compact"
+              className="w-36 sm:w-40"
+            />
+
+            <Select
+              value={sortBy}
+              onChange={(val) => setSortBy(val as "popularity" | "newest" | "oldest")}
+              options={SORT_OPTIONS}
+              variant="compact"
+              className="w-36 sm:w-40"
+            />
+          </div>
+
+          <div className="mt-6">
+            {displayedWorks.length === 0 ? (
+              <div className="py-20 rounded-sm border border-zinc-800/40 bg-zinc-900/10 min-h-[180px]" />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {displayedWorks.map((work, idx) => (
+                  <MediaCard
+                    key={`${work.media_type}-${work.id}-${idx}`}
+                    id={work.id}
+                    mediaType={work.media_type}
+                    title={work.title || work.name || "Untitled"}
+                    posterPath={work.poster_path}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

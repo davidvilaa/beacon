@@ -28,13 +28,52 @@ import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/modules/modals/MediaReviewModal";
 import { getPosterUrl, getBackdropUrl, TvSeasonSummary } from "@/lib/tmdb";
-import { formatFullDate } from "@/lib/media-utils";
+import { formatFullDate, gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
+import { getIgdbImageUrl } from "@/lib/igdb";
 import {
   getAnimeTitle,
   getAnimePosterUrl,
   getAnimeBackdropUrl,
   stripHtml,
 } from "@/lib/anilist";
+
+type ReviewMediaType = "movie" | "tv" | "anime" | "game";
+
+const REVIEW_MEDIA_TYPES: ReviewMediaType[] = ["movie", "tv", "anime", "game"];
+
+const REVIEW_TABLES: Record<ReviewMediaType, string> = {
+  movie: "user_movies",
+  tv: "user_series",
+  anime: "user_animes",
+  game: "user_games",
+};
+
+const REVIEW_TYPE_LABELS: Record<ReviewMediaType, string> = {
+  movie: "Movie",
+  tv: "Series",
+  anime: "Anime",
+  game: "Game",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  watched: "Watched",
+  watching: "Watching",
+  paused: "Paused",
+  dropped: "Dropped",
+  watchlist: "Watchlist",
+};
+
+const GAME_STATUS_LABELS: Record<string, string> = {
+  watched: "Completed",
+  watching: "Playing",
+  paused: "Paused",
+  dropped: "Dropped",
+  watchlist: "Backlog",
+};
+
+function isReviewMediaType(value: string | null): value is ReviewMediaType {
+  return REVIEW_MEDIA_TYPES.includes(value as ReviewMediaType);
+}
 
 interface ReviewUser {
   id: string;
@@ -46,7 +85,7 @@ interface ReviewRecord {
   id: string;
   user_id: string;
   media_id: number;
-  media_type: "movie" | "tv" | "anime";
+  media_type: ReviewMediaType;
   title: string;
   overview: string | null;
   poster_path: string | null;
@@ -118,8 +157,11 @@ function ReviewDetailContent() {
         }
 
         let record: ReviewRecord | null = null;
+        const typesToTry: ReviewMediaType[] = isReviewMediaType(typeHint)
+          ? [typeHint]
+          : REVIEW_MEDIA_TYPES;
 
-        if (typeHint !== "tv") {
+        if (typesToTry.includes("movie")) {
           const { data: movieData } = await supabase
             .from("user_movies")
             .select(`
@@ -180,7 +222,7 @@ function ReviewDetailContent() {
           }
         }
 
-        if (!record && typeHint !== "movie") {
+        if (!record && typesToTry.includes("tv")) {
           const { data: seriesData } = await supabase
             .from("user_series")
             .select(`
@@ -248,7 +290,7 @@ function ReviewDetailContent() {
           }
         }
 
-        if (!record && typeHint !== "movie" && typeHint !== "tv") {
+        if (!record && typesToTry.includes("anime")) {
           const { data: animeData } = await supabase
             .from("user_animes")
             .select(`
@@ -321,6 +363,68 @@ function ReviewDetailContent() {
           }
         }
 
+        if (!record && typesToTry.includes("game")) {
+          const { data: gameData } = await supabase
+            .from("user_games")
+            .select(`
+              id,
+              user_id,
+              game_id,
+              status,
+              is_favorite,
+              rating,
+              review,
+              has_spoilers,
+              custom_poster_path,
+              custom_backdrop_path,
+              start_date,
+              end_date,
+              created_at,
+              updated_at,
+              users (
+                id,
+                username,
+                avatar_url
+              ),
+              games (
+                id,
+                name,
+                summary,
+                cover_url,
+                backdrop_url
+              )
+            `)
+            .eq("id", id)
+            .maybeSingle();
+
+          if (gameData) {
+            const g = gameData as any;
+            record = {
+              id: g.id,
+              user_id: g.user_id,
+              media_id: g.game_id,
+              media_type: "game",
+              title: g.games?.name || "Game",
+              overview: g.games?.summary || null,
+              poster_path: g.games?.cover_url || null,
+              backdrop_path: g.games?.backdrop_url || null,
+              custom_poster_path: g.custom_poster_path || null,
+              custom_backdrop_path: g.custom_backdrop_path || null,
+              status: gameStatusToShared(g.status) ?? "watched",
+              is_favorite: Boolean(g.is_favorite),
+              rating: g.rating ? Number(g.rating) : null,
+              review: g.review || null,
+              has_spoilers: Boolean(g.has_spoilers),
+              watched_date: null,
+              start_date: g.start_date || null,
+              end_date: g.end_date || null,
+              created_at: g.created_at,
+              updated_at: g.updated_at,
+              users: g.users || null,
+            };
+          }
+        }
+
         if (!ignore) {
           setReview(record);
         }
@@ -331,6 +435,8 @@ function ReviewDetailContent() {
               ? `/api/movies/${record.media_id}`
               : record.media_type === "anime"
               ? `/api/anime/${record.media_id}`
+              : record.media_type === "game"
+              ? `/api/games/${record.media_id}`
               : `/api/tv/${record.media_id}?season=${record.season_number || 1}`;
 
           fetch(endpoint)
@@ -356,7 +462,13 @@ function ReviewDetailContent() {
                 ? `${tmdb.startDate.year}-${String(tmdb.startDate.month || 1).padStart(2, "0")}-${String(tmdb.startDate.day || 1).padStart(2, "0")}`
                 : "";
 
-              const date = tmdb.release_date || tmdb.first_air_date || animeReleaseDate || "";
+              const gameReleaseDate =
+                typeof tmdb.first_release_date === "number"
+                  ? new Date(tmdb.first_release_date * 1000).toISOString().split("T")[0]
+                  : "";
+
+              const date =
+                tmdb.release_date || tmdb.first_air_date || animeReleaseDate || gameReleaseDate || "";
 
               const genres = Array.isArray(tmdb.genres)
                 ? tmdb.genres
@@ -371,18 +483,24 @@ function ReviewDetailContent() {
                 : null;
 
               const animePoster = tmdb.coverImage ? getAnimePosterUrl(tmdb) : null;
+              const gamePoster =
+                record.media_type === "game" ? getIgdbImageUrl(tmdb.cover?.image_id, "1080p") : null;
               const seasonPoster =
                 tmdb.initialSeason?.poster_path ||
                 seasonSummary?.poster_path ||
                 tmdb.poster_path ||
-                animePoster;
+                animePoster ||
+                gamePoster;
 
               const animeBackdrop =
                 tmdb.bannerImage || tmdb.coverImage ? getAnimeBackdropUrl(tmdb) : null;
               const backdropPath = tmdb.backdrop_path || animeBackdrop;
 
               const overviewText =
-                tmdb.overview || (tmdb.description ? stripHtml(tmdb.description) : "");
+                tmdb.overview ||
+                (tmdb.description ? stripHtml(tmdb.description) : "") ||
+                tmdb.summary ||
+                "";
 
               setTmdbMeta({
                 title: titleStr,
@@ -464,15 +582,13 @@ function ReviewDetailContent() {
 
     try {
       setIsSaving(true);
-      const table =
-        review.media_type === "movie"
-          ? "user_movies"
-          : review.media_type === "anime"
-          ? "user_animes"
-          : "user_series";
+      const table = REVIEW_TABLES[review.media_type];
 
       const payload: Record<string, any> = {
-        status: reviewData.status,
+        status:
+          review.media_type === "game"
+            ? sharedStatusToGame(reviewData.status)
+            : reviewData.status,
         is_favorite: reviewData.isFavorite,
         rating: reviewData.rating > 0 ? reviewData.rating : null,
         review: reviewData.review.trim() || null,
@@ -530,12 +646,7 @@ function ReviewDetailContent() {
 
     try {
       setIsSaving(true);
-      const table =
-        review.media_type === "movie"
-          ? "user_movies"
-          : review.media_type === "anime"
-          ? "user_animes"
-          : "user_series";
+      const table = REVIEW_TABLES[review.media_type];
 
       const { error } = await supabase.from(table).delete().eq("id", review.id);
 
@@ -604,6 +715,8 @@ function ReviewDetailContent() {
       ? `/anime/${review.media_id}`
       : review.media_type === "movie"
       ? `/movie/${review.media_id}`
+      : review.media_type === "game"
+      ? `/game/${review.media_id}`
       : `/tv/${review.media_id}${
           review.season_number ? `?season=${review.season_number}` : ""
         }`;
@@ -616,12 +729,8 @@ function ReviewDetailContent() {
     typeof rawTitle === "object" && rawTitle !== null
       ? getAnimeTitle(rawTitle)
       : String(rawTitle || "Untitled");
-  const resolvedTypeLabel =
-    review.media_type === "movie"
-      ? "Movie"
-      : review.media_type === "anime"
-      ? "Anime"
-      : "Series";
+  const resolvedTypeLabel = REVIEW_TYPE_LABELS[review.media_type];
+  const statusLabels = review.media_type === "game" ? GAME_STATUS_LABELS : STATUS_LABELS;
 
   const posterColumnNode = (
     <div className="relative w-56 sm:w-full">
@@ -726,7 +835,7 @@ function ReviewDetailContent() {
               </div>
 
               <div
-                title={review.status ? review.status.charAt(0).toUpperCase() + review.status.slice(1) : ""}
+                title={review.status ? statusLabels[review.status] : ""}
                 className="border-l border-zinc-700/60 px-3 flex items-center justify-center text-zinc-300 shrink-0"
               >
                 {review.status === "watched" && (
@@ -820,13 +929,7 @@ function ReviewDetailContent() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           title={resolvedTitle}
-          typeLabel={
-            review.media_type === "movie"
-              ? "Movie"
-              : review.media_type === "anime"
-              ? "Anime"
-              : "Series"
-          }
+          typeLabel={resolvedTypeLabel}
           year={tmdbMeta?.release_date ? tmdbMeta.release_date.split("-")[0] : undefined}
           posterUrl={posterUrl}
           backdropUrl={backdropUrl}

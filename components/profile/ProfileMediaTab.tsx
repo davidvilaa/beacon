@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Film, Star, StarHalf, AlignJustify } from "lucide-react";
 import Select, { Option } from "@/components/ui/Select";
@@ -29,6 +30,28 @@ interface ProfileMediaTabProps {
   isLoading?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
+}
+
+const GRID_CLASS =
+  "grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3";
+
+function SkeletonCards({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} className="flex flex-col min-w-0">
+          <div className="aspect-[2/3] w-full rounded-sm bg-zinc-900/40 border border-zinc-800/40 animate-pulse" />
+          <div className="flex items-center justify-between mt-1.5 px-0.5 animate-pulse min-h-[18px]">
+            <div className="h-3 w-16 bg-zinc-800/50 rounded-sm" />
+            <div className="h-3.5 w-3.5 bg-zinc-800/50 rounded-sm" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
 }
 
 export default function ProfileMediaTab({
@@ -42,7 +65,25 @@ export default function ProfileMediaTab({
   isLoading = false,
   emptyTitle = "No media found",
   emptyDescription = "There are no entries matching your current filters.",
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: ProfileMediaTabProps) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore || !onLoadMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMore();
+      },
+      { rootMargin: "600px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore, items.length]);
+
   return (
     <div>
       <div className="mb-6 flex items-center gap-2.5 flex-wrap">
@@ -64,16 +105,8 @@ export default function ProfileMediaTab({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
-          {Array.from({ length: 20 }).map((_, index) => (
-            <div key={index} className="flex flex-col min-w-0">
-              <div className="aspect-[2/3] w-full rounded-sm bg-zinc-900/40 border border-zinc-800/40 animate-pulse" />
-              <div className="flex items-center justify-between mt-1.5 px-0.5 animate-pulse min-h-[18px]">
-                <div className="h-3 w-16 bg-zinc-800/50 rounded-sm" />
-                <div className="h-3.5 w-3.5 bg-zinc-800/50 rounded-sm" />
-              </div>
-            </div>
-          ))}
+        <div className={GRID_CLASS}>
+          <SkeletonCards count={20} />
         </div>
       ) : items.length === 0 ? (
         <div className="py-20 rounded-sm border border-zinc-800/40 bg-zinc-900/10 flex flex-col items-center justify-center text-center p-6 min-h-[260px]">
@@ -84,7 +117,8 @@ export default function ProfileMediaTab({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
+        <>
+        <div className={GRID_CLASS}>
           {items.map((item) => (
             <div key={`${item.mediaType}-${item.id}`} className="flex flex-col min-w-0">
               <MediaCard
@@ -134,7 +168,10 @@ export default function ProfileMediaTab({
               </div>
             </div>
           ))}
+          {isLoadingMore && <SkeletonCards count={10} />}
         </div>
+        {hasMore && <div ref={sentinelRef} className="h-px w-full" />}
+        </>
       )}
     </div>
   );

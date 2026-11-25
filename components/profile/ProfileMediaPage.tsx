@@ -197,6 +197,9 @@ function ProfileMediaContent({ mediaType }: { mediaType: LogMediaType }) {
       items={state.items.map((item) => ({
         id: item.key,
         entryLogId: item.entryLogId,
+        reviewHref: profileUser
+          ? `/profile/${encodeURIComponent(profileUser.username)}/reviews/${mediaType}/${item.entryLogId}`
+          : undefined,
         title: item.title,
         posterPath: item.posterPath,
         href: item.href,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -121,10 +121,10 @@ interface TmdbMeta {
 }
 
 function ReviewDetailContent() {
-  const params = useParams<{ id: string }>();
-  const searchParams = useSearchParams();
+  const params = useParams<{ username: string; type: string; id: string }>();
   const id = params?.id || "";
-  const typeHint = searchParams.get("type");
+  const typeHint = params?.type || null;
+  const username = params?.username ? decodeURIComponent(params.username) : "";
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
@@ -157,9 +157,7 @@ function ReviewDetailContent() {
         }
 
         let record: ReviewRecord | null = null;
-        const typesToTry: ReviewMediaType[] = isReviewMediaType(typeHint)
-          ? [typeHint]
-          : REVIEW_MEDIA_TYPES;
+        const typesToTry: ReviewMediaType[] = isReviewMediaType(typeHint) ? [typeHint] : [];
 
         if (typesToTry.includes("movie")) {
           const { data: movieData } = await supabase
@@ -425,6 +423,10 @@ function ReviewDetailContent() {
           }
         }
 
+        if (record && record.users?.username?.toLowerCase() !== username.toLowerCase()) {
+          record = null;
+        }
+
         if (!ignore) {
           setReview(record);
         }
@@ -535,7 +537,7 @@ function ReviewDetailContent() {
     return () => {
       ignore = true;
     };
-  }, [id, typeHint, supabase]);
+  }, [id, typeHint, username, supabase]);
 
   const isOwner = Boolean(
     currentUserId && review && currentUserId === review.user_id

@@ -9,6 +9,7 @@ import MediaCard from "@/components/ui/MediaCard";
 export interface ProfileMediaItem {
   id: number | string;
   entryLogId?: string;
+  reviewHref?: string;
   title: string;
   posterPath: string | null;
   href?: string;
@@ -156,9 +157,9 @@ export default function ProfileMediaTab({
                   </div>
                 )}
 
-                {item.entryLogId && item.review && item.review.trim() ? (
+                {item.reviewHref && item.review && item.review.trim() ? (
                   <Link
-                    href={`/review/${item.entryLogId}?type=${item.mediaType}`}
+                    href={item.reviewHref}
                     title="Read review"
                     className="p-0.5 transition-colors cursor-pointer shrink-0 ml-auto text-zinc-400 hover:text-accent"
                   >

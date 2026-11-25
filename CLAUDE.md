@@ -27,7 +27,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 - **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; server clients in `lib/supabase/server.ts` → `createAnonClient()` and `createServerSupabase()` (reads the session cookies, use `auth.getClaims()`); session check in `proxy.ts` via `getUser()`). Public without an account: `/`, auth pages, media/person/company detail pages and GET `/api/{movie,tv,anime,game}/...`; every action that needs an account goes through `useMediaLog().requireAccount()` (toast + redirect to `/login`). Auth via `supabase.auth`. Storage bucket `avatars`.
 - Icons: `lucide-react`, `react-icons`.
 - Path alias: `@/*` → project root.
-- Commands: `npm run build`, `npm run lint` (eslint 9 flat config).
+- Commands: `npm run build`, `npm run lint` (eslint 9 flat config). Before `npm run build`, stop the dev server (`preview_stop`) and delete `.next/dev/types`: the build type-checks the dev-generated route types and fails on stale or half-written ones. Restart the dev server afterwards.
 
 ## External data sources
 | Module | Source | Lib | Env vars |

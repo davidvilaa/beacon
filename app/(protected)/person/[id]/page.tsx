@@ -12,7 +12,7 @@ import {
 import { PersonDetails, PersonCredit, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import Select from "@/components/ui/Select";
-import MediaCard from "@/components/ui/MediaCard";
+import MediaCard from "@/components/media/MediaCard";
 
 const MEDIA_OPTIONS = [
   { id: "all", label: "All Formats" },

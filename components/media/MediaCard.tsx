@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
-import CardGradientBorder from "./CardGradientBorder";
+import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 export interface MediaCardProps {
   id?: number | string;

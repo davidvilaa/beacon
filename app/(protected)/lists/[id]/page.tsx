@@ -14,13 +14,13 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Loading from "@/components/ui/Loading";
-import MediaCard from "@/components/ui/MediaCard";
-import MediaLayout from "@/components/modules/MediaLayout";
+import MediaCard from "@/components/media/MediaCard";
+import MediaLayout from "@/components/media/MediaLayout";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import { useToast } from "@/components/ui/Toast";
 import CreateListModal, {
   CreatedOrUpdatedList,
-} from "@/components/modules/modals/CreateListModal";
+} from "@/components/lists/CreateListModal";
 import { fetchCachedMediaMap } from "@/lib/lists";
 import { getBackdropUrl } from "@/lib/tmdb";
 import { formatFullDate } from "@/lib/media-utils";

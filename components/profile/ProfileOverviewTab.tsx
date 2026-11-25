@@ -1,6 +1,6 @@
 "use client";
 
-import MediaCard from "@/components/ui/MediaCard";
+import MediaCard from "@/components/media/MediaCard";
 
 export interface FavoriteMediaItem {
   id: number | string;

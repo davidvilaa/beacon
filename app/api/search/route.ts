@@ -25,7 +25,7 @@ import {
   type SearchUserRow,
   type SearchListRow,
   type SearchCompanyRow,
-} from "./mappers";
+} from "@/app/api/search/mappers";
 
 function normalizeModule(val: string): string {
   const v = val.toLowerCase().trim();

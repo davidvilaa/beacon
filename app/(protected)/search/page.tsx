@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { Movie, getPosterUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
-import MediaCard from "@/components/ui/MediaCard";
-import ListCard from "@/components/ui/ListCard";
+import MediaCard from "@/components/media/MediaCard";
+import ListCard from "@/components/lists/ListCard";
 import Select, { Option } from "@/components/ui/Select";
 
 interface SearchMovieItem extends Omit<Movie, "id"> {

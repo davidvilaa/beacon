@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Film, Star, StarHalf, AlignJustify } from "lucide-react";
 import Select, { Option } from "@/components/ui/Select";
-import MediaCard from "@/components/ui/MediaCard";
+import MediaCard from "@/components/media/MediaCard";
 
 export interface ProfileMediaItem {
   id: number | string;

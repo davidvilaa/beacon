@@ -14,13 +14,13 @@ import {
   XCircle,
   Star,
 } from "lucide-react";
-import { MediaStatus } from "../columns/MediaActionColumn";
+import { MediaStatus } from "@/components/media/columns/MediaActionColumn";
 import { formatRuntime, formatFullDate } from "@/lib/media-utils";
 import DatePicker from "@/components/ui/DatePicker";
 import Checkbox from "@/components/ui/Checkbox";
 import { useToast } from "@/components/ui/Toast";
-import ArtworkPickerModal from "./ArtworkPickerModal";
-import BackdropPickerModal from "./BackdropPickerModal";
+import ArtworkPickerModal from "@/components/media/modals/ArtworkPickerModal";
+import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import { favoriteLimitToast, type LogStatus } from "@/lib/media/log";
 import type { MediaReviewInput } from "@/hooks/useMediaLog";

@@ -21,12 +21,12 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import Loading from "@/components/ui/Loading";
-import MediaLayout from "@/components/modules/MediaLayout";
+import MediaLayout from "@/components/media/MediaLayout";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
-import SeasonRevolver from "@/components/ui/SeasonRevolver";
+import SeasonRevolver from "@/components/media/SeasonRevolver";
 import MediaReviewModal, {
   MediaReviewData,
-} from "@/components/modules/modals/MediaReviewModal";
+} from "@/components/media/modals/MediaReviewModal";
 import { getPosterUrl, getBackdropUrl, TvSeasonSummary } from "@/lib/tmdb";
 import { formatFullDate, gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
 import { getIgdbImageUrl } from "@/lib/igdb";

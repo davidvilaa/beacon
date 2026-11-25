@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import ListCard from "@/components/ui/ListCard";
+import ListCard from "@/components/lists/ListCard";
 
 export interface ProfileListPreviewItem {
   id: string;

@@ -28,6 +28,7 @@ import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import EpisodesTab from "@/components/modules/tabs/EpisodesTab";
 import { getTvCrewSections, isMediaReleased } from "@/lib/media-utils";
+import { upsertMediaCache, tvCacheInput } from "@/lib/media/cache";
 
 function TvDetailContent() {
   const params = useParams();
@@ -259,15 +260,7 @@ function TvDetailContent() {
         }
       }
 
-      await supabase.from("series").upsert({
-        id: tv.id,
-        name: tv.name,
-        overview: tv.overview,
-        poster_path: tv.poster_path,
-        backdrop_path: tv.backdrop_path,
-        number_of_seasons: tv.number_of_seasons,
-        number_of_episodes: tv.number_of_episodes,
-      });
+      await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
 
       const nextEpisode =
         newStatus === "watched" && currentSeasonEpisodeCount > 0
@@ -343,15 +336,7 @@ function TvDetailContent() {
         setSeriesStatus(nextStatus);
       }
 
-      await supabase.from("series").upsert({
-        id: tv.id,
-        name: tv.name,
-        overview: tv.overview,
-        poster_path: tv.poster_path,
-        backdrop_path: tv.backdrop_path,
-        number_of_seasons: tv.number_of_seasons,
-        number_of_episodes: tv.number_of_episodes,
-      });
+      await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
 
       const { error } = await supabase.from("user_series").upsert(
         {
@@ -464,15 +449,7 @@ function TvDetailContent() {
         }
       }
 
-      const { error: seriesError } = await supabase.from("series").upsert({
-        id: tv.id,
-        name: tv.name,
-        overview: tv.overview,
-        poster_path: tv.poster_path,
-        backdrop_path: tv.backdrop_path,
-        number_of_seasons: tv.number_of_seasons,
-        number_of_episodes: tv.number_of_episodes,
-      });
+      const seriesError = await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
 
       if (seriesError) {
         addToast("Error saving series data", "error");

@@ -30,20 +30,7 @@ import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider";
 import { isMediaReleased } from "@/lib/media-utils";
-
-async function syncAnimeRecord(supabaseClient: any, currentAnime: AnimeMedia) {
-  const { error } = await supabaseClient.from("animes").upsert({
-    id: currentAnime.id,
-    title: getAnimeTitle(currentAnime.title),
-    overview: stripHtml(currentAnime.description) || null,
-    poster_path: getAnimePosterUrl(currentAnime),
-    backdrop_path: getAnimeBackdropUrl(currentAnime),
-    format: currentAnime.format || null,
-    episodes: currentAnime.episodes || 0,
-    status: currentAnime.status || null,
-  });
-  if (error) throw error;
-}
+import { upsertMediaCacheOrThrow, animeCacheInput } from "@/lib/media/cache";
 
 function AnimeDetailContent() {
   const params = useParams();
@@ -462,7 +449,7 @@ function AnimeDetailContent() {
       setAnimeStatus(newStatus);
       setIsFavorite(newFavorite);
 
-      await syncAnimeRecord(supabase, anime);
+      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
 
       if (!newStatus) {
         const { error: deleteError } = await supabase
@@ -548,7 +535,7 @@ function AnimeDetailContent() {
         setAnimeStatus(nextStatus);
       }
 
-      await syncAnimeRecord(supabase, anime);
+      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
 
       const { error } = await supabase.from("user_animes").upsert(
         {
@@ -595,7 +582,7 @@ function AnimeDetailContent() {
         return;
       }
 
-      await syncAnimeRecord(supabase, anime);
+      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
 
       const chosenPoster =
         data.customPosterPath !== undefined ? data.customPosterPath : customPoster;

@@ -11,6 +11,9 @@ import BackdropPickerModal from "./BackdropPickerModal";
 import ListCard from "@/components/ui/ListCard";
 import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { upsertMediaCache } from "@/lib/media/cache";
+
+const CACHE_ERROR_LABELS = { movie: "movie", tv: "series", anime: "anime", game: "game" } as const;
 
 export interface ListMediaPayload {
   mediaType: "movie" | "tv" | "anime" | "game";
@@ -326,57 +329,21 @@ export default function ListModal({
           : null;
 
       if (toAdd.length > 0) {
-        if (media.mediaType === "movie") {
-          const { error: cacheError } = await supabase.from("movies").upsert({
-            id: media.mediaId,
-            title: media.title,
-            overview: media.overview ?? null,
-            poster_path: media.posterPath ?? null,
-            backdrop_path: media.backdropPath ?? null,
-          });
-          if (cacheError) {
-            addToast("Error saving movie metadata", "error");
-            return;
-          }
-        } else if (media.mediaType === "anime") {
-          const { error: cacheError } = await supabase.from("animes").upsert({
-            id: media.mediaId,
-            title: media.title,
-            overview: media.overview ?? null,
-            poster_path: media.posterPath ?? null,
-            backdrop_path: media.backdropPath ?? null,
-            episodes: media.numberOfEpisodes ?? 0,
-          });
-          if (cacheError) {
-            addToast("Error saving anime metadata", "error");
-            return;
-          }
-        } else if (media.mediaType === "game") {
-          const { error: cacheError } = await supabase.from("games").upsert({
-            id: media.mediaId,
-            name: media.title,
-            summary: media.overview ?? null,
-            cover_url: media.posterPath ?? null,
-            backdrop_url: media.backdropPath ?? null,
-          });
-          if (cacheError) {
-            addToast("Error saving game metadata", "error");
-            return;
-          }
-        } else {
-          const { error: cacheError } = await supabase.from("series").upsert({
-            id: media.mediaId,
-            name: media.title,
-            overview: media.overview ?? null,
-            poster_path: media.posterPath ?? null,
-            backdrop_path: media.backdropPath ?? null,
-            number_of_seasons: media.numberOfSeasons ?? 0,
-            number_of_episodes: media.numberOfEpisodes ?? 0,
-          });
-          if (cacheError) {
-            addToast("Error saving series metadata", "error");
-            return;
-          }
+        const cacheError = await upsertMediaCache(supabase, media.mediaType, {
+          id: media.mediaId,
+          title: media.title,
+          overview: media.overview ?? null,
+          posterPath: media.posterPath ?? null,
+          backdropPath: media.backdropPath ?? null,
+          numberOfSeasons: media.mediaType === "tv" ? media.numberOfSeasons ?? 0 : undefined,
+          numberOfEpisodes:
+            media.mediaType === "tv" || media.mediaType === "anime"
+              ? media.numberOfEpisodes ?? 0
+              : undefined,
+        });
+        if (cacheError) {
+          addToast(`Error saving ${CACHE_ERROR_LABELS[media.mediaType]} metadata`, "error");
+          return;
         }
 
         const rowsToInsert = toAdd.map((listId) => {

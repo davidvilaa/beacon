@@ -20,6 +20,7 @@ import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import ReleasesTab from "@/components/modules/tabs/ReleasesTab";
 import { getMovieCrewSections, getReleaseDateGroups, isMediaReleased } from "@/lib/media-utils";
+import { upsertMediaCache, movieCacheInput } from "@/lib/media/cache";
 
 function MovieDetailContent() {
   const params = useParams();
@@ -180,13 +181,7 @@ function MovieDetailContent() {
         }
       }
 
-      await supabase.from("movies").upsert({
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-      });
+      await upsertMediaCache(supabase, "movie", movieCacheInput(movie));
 
       const { error } = await supabase.from("user_movies").upsert(
         {
@@ -292,13 +287,7 @@ function MovieDetailContent() {
         }
       }
 
-      const { error: movieError } = await supabase.from("movies").upsert({
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-      });
+      const movieError = await upsertMediaCache(supabase, "movie", movieCacheInput(movie));
 
       if (movieError) {
         addToast("Error saving movie data", "error");

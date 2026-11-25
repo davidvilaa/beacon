@@ -22,27 +22,7 @@ import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider";
 import { isMediaReleased, gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
-
-async function syncGameRecord(supabaseClient: any, currentGame: IGDBGameDetail) {
-  const coverUrl = getIgdbImageUrl(currentGame.cover?.image_id, "1080p");
-  const backdropUrl = getIgdbImageUrl(
-    currentGame.artworks?.[0]?.image_id || currentGame.screenshots?.[0]?.image_id,
-    "1080p"
-  );
-  const releaseDateIso = currentGame.first_release_date
-    ? new Date(currentGame.first_release_date * 1000).toISOString()
-    : null;
-
-  const { error } = await supabaseClient.from("games").upsert({
-    id: currentGame.id,
-    name: currentGame.name,
-    summary: currentGame.summary || null,
-    cover_url: coverUrl,
-    backdrop_url: backdropUrl,
-    first_release_date: releaseDateIso,
-  });
-  if (error) throw error;
-}
+import { upsertMediaCacheOrThrow, gameCacheInput } from "@/lib/media/cache";
 
 function GameDetailContent() {
   const params = useParams();
@@ -381,7 +361,7 @@ function GameDetailContent() {
         return;
       }
 
-      await syncGameRecord(supabase, game);
+      await upsertMediaCacheOrThrow(supabase, "game", gameCacheInput(game));
 
       const effectiveStatus =
         newStatus || (isReleased ? "watched" : "watchlist");
@@ -442,7 +422,7 @@ function GameDetailContent() {
         return;
       }
 
-      await syncGameRecord(supabase, game);
+      await upsertMediaCacheOrThrow(supabase, "game", gameCacheInput(game));
 
       const payload: any = {
         user_id: session.user.id,

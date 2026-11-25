@@ -24,7 +24,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 ## Stack
 - **Next.js 16** (App Router, Turbopack, `cacheComponents`, `partialPrefetching`). This is NOT the Next.js from training data — read `node_modules/next/dist/docs/` before using unfamiliar APIs. Note: middleware is `proxy.ts` (exports `proxy`), not `middleware.ts`.
 - **React 19.3**, **TypeScript** strict, **Tailwind CSS v4** (CSS-first config in `app/globals.css`, no tailwind.config).
-- **Supabase** (`@supabase/ssr`, browser client only: `lib/supabase/client.ts` → `createClient()`). Auth via `supabase.auth`. Storage bucket `avatars`.
+- **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; anon server client `lib/supabase/server.ts` → `createAnonClient()`; session check in `proxy.ts` via `getUser()`). Auth via `supabase.auth`. Storage bucket `avatars`.
 - Icons: `lucide-react`, `react-icons`.
 - Path alias: `@/*` → project root.
 - Commands: `npm run build`, `npm run lint` (eslint 9 flat config).
@@ -123,6 +123,6 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
   - RLS follows the parent list.
 - **`public.follows`** — unique `(follower_id, following_id)`, check `follower_id <> following_id`; `id`, `follower_id`, `following_id`, `created_at`. RLS: select public; insert/delete only by follower.
 
-- **Favorites limit**: max **5 favorites per user per media type**, enforced by triggers `check_user_{movies,series,animes,games}_favorites_limit` + client-side checks with toasts.
+- **Favorites limit**: max **5 favorites per user per media type**, enforced by triggers `check_user_{movies,series,animes,games}_favorites_limit` + client-side checks with toasts. The triggers take a per-user advisory lock so concurrent requests cannot exceed the limit.
 - `handle_updated_at()` trigger keeps `updated_at` fresh on every table that has it.
-- **Storage**: bucket `avatars` (profile pictures, uploaded from `settings`).
+- **Storage**: bucket `avatars` (public, profile pictures uploaded from `settings` as `<user_id>-<random>.<ext>`). Authenticated users may only insert files prefixed with their own id and update files they own.

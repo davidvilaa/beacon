@@ -45,12 +45,12 @@ values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
 create policy "Permitir subir avatares"
-  on storage.objects for insert
-  with check (bucket_id = 'avatars');
+  on storage.objects for insert to authenticated
+  with check (bucket_id = 'avatars' and name like auth.uid()::text || '-%');
 
 create policy "Permitir actualizar avatares"
-  on storage.objects for update
-  using (bucket_id = 'avatars');
+  on storage.objects for update to authenticated
+  using (bucket_id = 'avatars' and owner_id = auth.uid()::text);
 
 create table public.movies (
   id bigint not null primary key,
@@ -204,6 +204,8 @@ declare
   fav_count integer;
 begin
   if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    perform pg_advisory_xact_lock(hashtext('favorites_movies_' || new.user_id::text));
+
     select count(*) into fav_count
     from public.user_movies
     where user_id = new.user_id
@@ -272,6 +274,8 @@ declare
   fav_count integer;
 begin
   if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    perform pg_advisory_xact_lock(hashtext('favorites_series_' || new.user_id::text));
+
     select count(*) into fav_count
     from public.user_series
     where user_id = new.user_id
@@ -338,6 +342,8 @@ declare
   fav_count integer;
 begin
   if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    perform pg_advisory_xact_lock(hashtext('favorites_animes_' || new.user_id::text));
+
     select count(*) into fav_count
     from public.user_animes
     where user_id = new.user_id
@@ -405,6 +411,8 @@ declare
   fav_count integer;
 begin
   if new.is_favorite = true and (old is null or old.is_favorite = false) then
+    perform pg_advisory_xact_lock(hashtext('favorites_games_' || new.user_id::text));
+
     select count(*) into fav_count
     from public.user_games
     where user_id = new.user_id

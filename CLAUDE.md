@@ -73,7 +73,7 @@ supabase/schema.sql                  DDL (see warnings below)
 
 ### Patterns
 - Media detail pages are `"use client"` and share the same composition: `MediaLayout` + action/info columns + tabs + review/list/artwork modals. When adding or changing a feature for one module, check whether the other 3 modules need the same change to stay consistent.
-- Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) via `upsert` when a user logs it or adds it to a list. Lists resolve titles/artwork from this cache (`lib/lists.ts → fetchCachedMediaMap`).
+- Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, always through `lib/media/cache.ts` (`upsertMediaCache` + `movieCacheInput`/`tvCacheInput`/`animeCacheInput`/`gameCacheInput`), never with a hand-written `upsert`. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists.ts → fetchCachedMediaMap`).
 - `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`.
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
 

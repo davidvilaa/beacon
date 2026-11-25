@@ -17,7 +17,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 
 ### Code
 - **Zero comments**: never add comments (`//` or `/* */`) in code. Applies to every modification.
-- **Dev server**: never run `npm run dev`. David runs and controls the dev server manually.
+- **Dev server**: start it only through the browser pane's `preview_start` with the `beacon` config in `.claude/launch.json` (port 3000), never with `npm run dev` in a shell. Before starting, check `preview_list` and port 3000: if it is already running (started by Claude or by David), reuse it. Restart (`preview_stop` + `preview_start`) only when needed: changes to `next.config.ts`, `.env.local`, `proxy.ts` config, installed dependencies, or a crashed/stuck server. Never stop a server David started himself; ask him instead.
 - **Git**: commit all changes after completing each task, feature or cleanup (only when a shell on David's machine is available; otherwise tell him what to commit).
 - User-facing feedback goes through toasts (`useToast().addToast(message, "error" | ...)`), not `alert()`.
 

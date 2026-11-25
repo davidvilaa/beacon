@@ -163,21 +163,31 @@ function anilistArtwork(path: string, kind: "poster" | "backdrop"): MovieImage {
     : { file_path: path, aspect_ratio: 1.77, height: 1080, width: 1920, iso_639_1: null, vote_average: 10, vote_count: 9999 };
 }
 
-export async function getAnimePosters(animeId: number): Promise<MovieImage[] | null> {
+export interface AnimeArtworkCandidates {
+  posters: MovieImage[];
+  backdrops: MovieImage[];
+  posterKeep: string | null;
+  backdropKeep: string | null;
+}
+
+export async function getAnimeArtworkCandidates(animeId: number): Promise<AnimeArtworkCandidates | null> {
   "use cache";
   cacheLife("days");
   const anime = await getAnimeById(animeId);
   if (!anime) return null;
 
   const anilistCover = anime.coverImage?.extraLarge || anime.coverImage?.large || null;
-  const initial = anilistCover ? [anilistArtwork(anilistCover, "poster")] : [];
+  const initialPosters = anilistCover ? [anilistArtwork(anilistCover, "poster")] : [];
+  const initialBackdrops = anime.bannerImage ? [anilistArtwork(anime.bannerImage, "backdrop")] : [];
 
   let tmdbPosters: MovieImage[] = [];
+  let tmdbBackdrops: MovieImage[] = [];
   const entry = await findTmdbEntry(getAnimeQueries(anime), anime.format === "MOVIE");
 
   if (entry) {
     const images = await tryTmdb<TmdbImagesResponse>(`/${entry.mediaType}/${entry.id}/images`);
     tmdbPosters = filterByAspect(images?.posters || [], "poster");
+    tmdbBackdrops = filterByAspect(images?.backdrops || [], "backdrop");
 
     if (entry.mediaType === "tv") {
       const show = await tryTmdb<{ seasons?: TmdbSeasonSummary[] }>(`/tv/${entry.id}`);
@@ -196,25 +206,26 @@ export async function getAnimePosters(animeId: number): Promise<MovieImage[] | n
     }
   }
 
-  const sorted = sortByVotes([...initial, ...tmdbPosters]);
-  return dedupeImages(sorted, "poster", { keepPath: anilistCover });
+  return {
+    posters: sortByVotes([...initialPosters, ...tmdbPosters]),
+    backdrops: sortByVotes([...initialBackdrops, ...tmdbBackdrops]),
+    posterKeep: anilistCover,
+    backdropKeep: anime.bannerImage || null,
+  };
+}
+
+export async function getAnimePosters(animeId: number): Promise<MovieImage[] | null> {
+  "use cache";
+  cacheLife("days");
+  const candidates = await getAnimeArtworkCandidates(animeId);
+  if (!candidates) return null;
+  return dedupeImages(candidates.posters, "poster", { keepPath: candidates.posterKeep });
 }
 
 export async function getAnimeBackdrops(animeId: number): Promise<MovieImage[] | null> {
   "use cache";
   cacheLife("days");
-  const anime = await getAnimeById(animeId);
-  if (!anime) return null;
-
-  const initial = anime.bannerImage ? [anilistArtwork(anime.bannerImage, "backdrop")] : [];
-
-  let tmdbBackdrops: MovieImage[] = [];
-  const entry = await findTmdbEntry(getAnimeQueries(anime), anime.format === "MOVIE");
-  if (entry) {
-    const images = await tryTmdb<TmdbImagesResponse>(`/${entry.mediaType}/${entry.id}/images`);
-    tmdbBackdrops = filterByAspect(images?.backdrops || [], "backdrop");
-  }
-
-  const sorted = sortByVotes([...initial, ...tmdbBackdrops]);
-  return dedupeImages(sorted, "backdrop", { keepPath: anime.bannerImage });
+  const candidates = await getAnimeArtworkCandidates(animeId);
+  if (!candidates) return null;
+  return dedupeImages(candidates.backdrops, "backdrop", { keepPath: candidates.backdropKeep });
 }

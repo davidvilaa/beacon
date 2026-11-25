@@ -1,392 +1,75 @@
-"use client";
-
-import { useEffect, useState, useMemo, Suspense } from "react";
-import { useParams } from "next/navigation";
-import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
-import type { IGDBGameDetail, IGDBRelatedGame } from "@/lib/providers/igdb/types";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import Loading from "@/components/ui/Loading";
-import MediaLayout from "@/components/media/MediaLayout";
-import MediaActionColumn from "@/components/media/columns/MediaActionColumn";
-import MediaInfoColumn from "@/components/media/columns/MediaInfoColumn";
-import MediaReviewModal from "@/components/media/modals/MediaReviewModal";
-import ListModal from "@/components/lists/ListModal";
-import ArtworkPickerModal from "@/components/media/modals/ArtworkPickerModal";
-import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
-import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
-import DetailsTab from "@/components/media/tabs/DetailsTab";
-import FranchiseSlider, { FranchiseItem } from "@/components/media/FranchiseSlider";
-import { isMediaReleased } from "@/lib/media/release";
-import { gameCacheInput } from "@/lib/media/cache";
-import { useMediaLog } from "@/hooks/useMediaLog";
-import { useArtworkOptions } from "@/hooks/useArtworkOptions";
+import GameView from "./GameView";
+import { getGameArtworkLists, getGameDetail } from "@/lib/details/game";
+import { buildMediaMetadata, notFoundMetadata } from "@/lib/details/metadata";
+import { withTimeout } from "@/lib/details/timeout";
+import { getInitialMediaLog } from "@/lib/media/log-server";
+import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
 
-type OpenModal = "poster" | "backdrop" | "log" | "list" | null;
+const ARTWORK_TIMEOUT_MS = 1500;
+const RANDOM_POOL = 10;
 
-function GameDetailContent() {
-  const params = useParams();
-  const id = params?.id as string;
+function pickRandom(list: string[]): string | null {
+  const pool = list.slice(0, RANDOM_POOL);
+  return pool[Math.floor(Math.random() * pool.length)] || null;
+}
 
-  const [game, setGame] = useState<IGDBGameDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadedBackdrop, setLoadedBackdrop] = useState<string | null>(null);
-  const [openModal, setOpenModal] = useState<OpenModal>(null);
-  const [activeTab, setActiveTab] = useState<string>("details");
+interface GamePageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const releaseDateStr = useMemo(() => {
-    if (!game?.first_release_date) return null;
-    return new Date(game.first_release_date * 1000).toISOString().split("T")[0];
-  }, [game]);
-
-  const releaseYear = useMemo(() => {
-    if (!game?.first_release_date) return null;
-    return new Date(game.first_release_date * 1000).getFullYear();
-  }, [game]);
-
-  const isReleased = useMemo(() => {
-    if (!game) return true;
-    return isMediaReleased("game", null, releaseDateStr);
-  }, [game, releaseDateStr]);
-
-  const developersList = useMemo(() => {
-    return (game?.involved_companies || [])
-      .filter((c) => c.developer)
-      .map((c) => c.company.name);
-  }, [game?.involved_companies]);
-
-  const publishersList = useMemo(() => {
-    return (game?.involved_companies || [])
-      .filter((c) => c.publisher)
-      .map((c) => c.company.name);
-  }, [game?.involved_companies]);
-
-  const platformsList = useMemo(() => {
-    return (game?.platforms || []).map((p) => p.name);
-  }, [game?.platforms]);
-
-  const trailerVideo = useMemo(() => {
-    if (!game?.videos || game.videos.length === 0) return null;
-    const trailer = game.videos.find((v) =>
-      v.name?.toLowerCase().includes("trailer")
-    );
-    return trailer || game.videos[0];
-  }, [game?.videos]);
-
-  const dlcItems = useMemo<FranchiseItem[]>(() => {
-    if (!game) return [];
-    const allDlcs = [
-      ...(game.dlcs || []),
-      ...(game.expansions || []),
-      ...(game.remakes || []),
-      ...(game.remasters || []),
-    ];
-    const seen = new Set<number>();
-    const items: FranchiseItem[] = [];
-    for (const d of allDlcs) {
-      if (!seen.has(d.id)) {
-        seen.add(d.id);
-        const year = d.first_release_date
-          ? new Date(d.first_release_date * 1000).getFullYear()
-          : null;
-        items.push({
-          id: d.id,
-          title: d.name,
-          posterPath: getIgdbImageUrl(d.cover?.image_id, "1080p"),
-          mediaType: "game",
-          year,
-        });
-      }
-    }
-    return items;
-  }, [game]);
-
-  const franchiseItems = useMemo<FranchiseItem[]>(() => {
-    if (!game) return [];
-    const gamesInFranchise: IGDBRelatedGame[] = [];
-    for (const f of game.franchises || []) {
-      if (f.games) gamesInFranchise.push(...f.games);
-    }
-    for (const c of game.collections || []) {
-      if (c.games) gamesInFranchise.push(...c.games);
-    }
-    const seen = new Set<number>();
-    const items: FranchiseItem[] = [];
-    for (const g of gamesInFranchise) {
-      if (!seen.has(g.id)) {
-        seen.add(g.id);
-        const year = g.first_release_date
-          ? new Date(g.first_release_date * 1000).getFullYear()
-          : null;
-        items.push({
-          id: g.id,
-          title: g.name,
-          posterPath: getIgdbImageUrl(g.cover?.image_id, "1080p"),
-          mediaType: "game",
-          year,
-        });
-      }
-    }
-    return items.sort((a, b) => (Number(a.year) || 0) - (Number(b.year) || 0));
-  }, [game]);
-
-  const tabs = useMemo(() => {
-    const list: { key: string; label: string }[] = [
-      { key: "details", label: "Details" },
-    ];
-    if (trailerVideo) {
-      list.push({ key: "trailer", label: "Trailer" });
-    }
-    if (dlcItems.length > 0) {
-      list.push({ key: "dlcs", label: "DLCs & Expansions" });
-    }
-    if (franchiseItems.length > 1) {
-      list.push({ key: "franchise", label: "Franchise" });
-    }
-    return list;
-  }, [trailerVideo, dlcItems.length, franchiseItems.length]);
-
-  const artwork = useArtworkOptions({
-    postersUrl: id ? `/api/game/${id}/posters` : null,
-    backdropsUrl: id ? `/api/game/${id}/backdrops` : null,
-    eagerPosters: true,
-    eagerBackdrops: true,
+export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
+  const { id } = await params;
+  const game = await getGameDetail(Number(id) || 0);
+  if (!game) return notFoundMetadata;
+  return buildMediaMetadata({
+    title: game.name,
+    year: game.first_release_date ? new Date(game.first_release_date * 1000).getUTCFullYear() : null,
+    description: game.summary,
+    image:
+      getIgdbImageUrl(game.artworks?.[0]?.image_id || game.screenshots?.[0]?.image_id, "1080p") ??
+      getIgdbImageUrl(game.cover?.image_id, "1080p"),
   });
+}
 
-  const cacheInput = useMemo(() => (game ? gameCacheInput(game) : null), [game]);
+async function GameContent({ params }: GamePageProps) {
+  const { id } = await params;
+  const gameId = Number(id) || 0;
+  const [game, initialLog, artwork] = await Promise.all([
+    getGameDetail(gameId),
+    getInitialMediaLog("game", gameId),
+    withTimeout(getGameArtworkLists(gameId), ARTWORK_TIMEOUT_MS, null),
+  ]);
+  if (!game) notFound();
 
-  const defaultPoster = getIgdbImageUrl(game?.cover?.image_id, "1080p");
-  const defaultBackdrop = getIgdbImageUrl(
-    game?.artworks?.[0]?.image_id || game?.screenshots?.[0]?.image_id,
-    "1080p"
-  );
-
-  const log = useMediaLog({
-    mediaType: "game",
-    mediaId: Number(id) || null,
-    cacheInput,
-    isReleased,
-    defaultPoster: artwork.randomPoster || defaultPoster || null,
-    defaultBackdrop: artwork.randomBackdrop || defaultBackdrop || null,
-  });
-
-  const openWithArtwork = (modal: Exclude<OpenModal, null>) => {
-    artwork.load();
-    setOpenModal(modal);
-  };
-
-  const posterUrl = log.poster;
-  const backdropUrl = log.backdrop;
-
-  useEffect(() => {
-    let ignore = false;
-    async function fetchGame() {
-      if (!id) return;
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/game/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch game");
-        const data: IGDBGameDetail = await res.json();
-        if (!ignore) {
-          setGame(data);
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchGame();
-    return () => {
-      ignore = true;
-    };
-  }, [id]);
-
-  if (loading) return <Loading />;
-  if (!game) return null;
-
-  const hasMultiplePosters = artwork.posters.length > 1;
-  const hasMultipleBackdrops = artwork.backdrops.length > 1;
+  await connection();
 
   return (
-    <>
-      <MediaLayout
-        backdropUrl={backdropUrl}
-        backdropAlt={game.name}
-        isBackdropLoaded={loadedBackdrop === backdropUrl}
-        onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
-        hasMultipleBackdrops={hasMultipleBackdrops}
-        onOpenBackdropPicker={() => openWithArtwork("backdrop")}
-        posterColumn={
-          <MediaActionColumn
-            posterUrl={posterUrl}
-            title={game.name}
-            hasMultiplePosters={hasMultiplePosters}
-            onOpenPosterPicker={() => openWithArtwork("poster")}
-            mediaType="game"
-            status={log.status}
-            isFavorite={log.isFavorite}
-            hasLog={log.hasLog}
-            isReleased={isReleased}
-            onOpenLogModal={() => openWithArtwork("log")}
-            onOpenListModal={() => openWithArtwork("list")}
-            onQuickStatusChange={log.setStatus}
-            onToggleFavorite={log.toggleFavorite}
-          />
-        }
-      >
-        <MediaInfoColumn
-          typeLabel="Game"
-          title={game.name}
-          originalTitle={game.name}
-          releaseDate={releaseDateStr}
-          tagline={null}
-          overview={game.summary || game.storyline || null}
-        >
-          <MediaTabsNav
-            tabs={tabs}
-            activeTab={activeTab}
-            onChange={(key) => setActiveTab(key)}
-          />
-
-          {activeTab === "details" && (
-            <DetailsTab
-              developers={developersList}
-              publishers={publishersList}
-              platforms={platformsList}
-              genres={game.genres?.map((g) => g.name) || []}
-              gameModes={game.game_modes?.map((m) => m.name) || []}
-              themes={game.themes?.map((t) => t.name) || []}
-              storyline={
-                game.storyline && game.storyline !== game.summary
-                  ? game.storyline
-                  : null
-              }
-            />
-          )}
-
-          {activeTab === "trailer" && trailerVideo && (
-            <div className="aspect-video w-full max-w-4xl rounded-sm overflow-hidden border border-zinc-800 bg-black">
-              <iframe
-                src={`https://www.youtube.com/embed/${trailerVideo.video_id}`}
-                title="Game Trailer"
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          )}
-
-          {activeTab === "dlcs" && dlcItems.length > 0 && (
-            <div className="mt-4">
-              <FranchiseSlider
-                parts={dlcItems}
-                currentMovieId={game.id}
-                mediaType="game"
-              />
-            </div>
-          )}
-
-          {activeTab === "franchise" && franchiseItems.length > 0 && (
-            <div className="mt-4">
-              <FranchiseSlider
-                parts={franchiseItems}
-                currentMovieId={game.id}
-                mediaType="game"
-              />
-            </div>
-          )}
-        </MediaInfoColumn>
-      </MediaLayout>
-
-      <ArtworkPickerModal
-        isOpen={openModal === "poster"}
-        onClose={() => setOpenModal(null)}
-        title="CHANGE COVER"
-        type="poster"
-        images={artwork.posters}
-        selectedImage={log.poster}
-        onSelectImage={log.setPoster}
-        isLoading={artwork.loadingPosters}
-      />
-
-      <BackdropPickerModal
-        isOpen={openModal === "backdrop"}
-        onClose={() => setOpenModal(null)}
-        title="CHANGE BANNER"
-        images={artwork.backdrops}
-        selectedImage={log.backdrop}
-        onSelectImage={log.setBackdrop}
-        isLoading={artwork.loadingBackdrops}
-      />
-
-      <MediaReviewModal
-        isOpen={openModal === "log"}
-        onClose={() => setOpenModal(null)}
-        title={game.name}
-        typeLabel="Game"
-        year={releaseYear}
-        releaseDate={releaseDateStr}
-        posterUrl={posterUrl}
-        backdropUrl={backdropUrl}
-        mediaType="game"
-        status={log.status}
-        hasLog={log.hasLog}
-        isFavorite={log.isFavorite}
-        canAddFavorite={log.canAddFavorite}
-        rating={log.rating}
-        review={log.review}
-        hasSpoilers={log.hasSpoilers}
-        startDate={log.startDate}
-        endDate={log.endDate}
-        hoursPlayed={log.hoursPlayed}
-        isSaving={log.isSaving}
-        onSave={async (data) => {
-          if (await log.saveReview(data)) setOpenModal(null);
-        }}
-        onDelete={async () => {
-          if (await log.deleteLog()) setOpenModal(null);
-        }}
-        availablePosters={artwork.posters}
-        availableBackdrops={artwork.backdrops}
-        selectedPoster={log.poster}
-        selectedBackdrop={log.backdrop}
-        loadingPosters={artwork.loadingPosters}
-        loadingBackdrops={artwork.loadingBackdrops}
-        isReleased={isReleased}
-      />
-
-      <ListModal
-        isOpen={openModal === "list"}
-        onClose={() => setOpenModal(null)}
-        media={{
-          mediaType: "game",
-          mediaId: game.id,
-          title: game.name,
-          overview: game.summary || null,
-          posterPath: defaultPoster,
-          backdropPath: defaultBackdrop,
-          customPosterPath: log.poster,
-          customBackdropPath: log.backdrop,
-        }}
-        availablePosters={artwork.posters}
-        availableBackdrops={artwork.backdrops}
-        selectedPoster={log.poster}
-        selectedBackdrop={log.backdrop}
-        loadingPosters={artwork.loadingPosters}
-        loadingBackdrops={artwork.loadingBackdrops}
-      />
-    </>
+    <GameView
+      game={game}
+      initialLog={initialLog}
+      randomPoster={artwork ? pickRandom(artwork.posters) : null}
+      randomBackdrop={artwork ? pickRandom(artwork.backdrops) : null}
+      posterCount={artwork?.posters.length ?? 0}
+      backdropCount={artwork?.backdrops.length ?? 0}
+    />
   );
 }
 
-export default function GameDetailPage() {
+export default function GamePage({ params }: GamePageProps) {
   return (
-    <Suspense fallback={<Loading />}>
-      <GameDetailContent />
+    <Suspense
+      fallback={
+        <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-16 flex items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      }
+    >
+      <GameContent params={params} />
     </Suspense>
   );
 }

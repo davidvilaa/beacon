@@ -6,19 +6,16 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   TvDetails,
   TvSeasonDetails,
-  MovieImage,
   getPosterUrl,
   getBackdropUrl,
   getBestTmdbTrailer,
 } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import SeasonRevolver from "@/components/ui/SeasonRevolver";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
+import MediaActionColumn from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
-import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
+import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
 import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
@@ -28,7 +25,13 @@ import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import EpisodesTab from "@/components/modules/tabs/EpisodesTab";
 import { getTvCrewSections, isMediaReleased } from "@/lib/media-utils";
-import { upsertMediaCache, tvCacheInput } from "@/lib/media/cache";
+import { tvCacheInput } from "@/lib/media/cache";
+import { pickRandomBackdrop } from "@/lib/artwork/pick";
+import { useMediaLog } from "@/hooks/useMediaLog";
+import { useArtworkOptions } from "@/hooks/useArtworkOptions";
+
+type TvTab = "cast" | "crew" | "details" | "episodes" | "trailer";
+type OpenModal = "poster" | "backdrop" | "log" | "list" | null;
 
 function TvDetailContent() {
   const params = useParams();
@@ -45,37 +48,10 @@ function TvDetailContent() {
   const [seasonCache, setSeasonCache] = useState<Record<number, TvSeasonDetails>>({});
   const [isSeasonLoading, setIsSeasonLoading] = useState(false);
 
-  const [customPosters, setCustomPosters] = useState<Record<number, string>>({});
-  const [customBackdrops, setCustomBackdrops] = useState<Record<number, string>>({});
-  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
-  const [fallbackPosters, setFallbackPosters] = useState<Record<number, string>>({});
-  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
-  const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
-  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
-  const [availablePosters, setAvailablePosters] = useState<Record<number, MovieImage[]>>({});
-  const [loadingPosters, setLoadingPosters] = useState(false);
-  const [dedupedBackdrops, setDedupedBackdrops] = useState<MovieImage[] | null>(null);
-  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
-
-  const [seriesStatus, setSeriesStatus] = useState<MediaStatus>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [canAddFavorite, setCanAddFavorite] = useState(true);
-  const [rating, setRating] = useState<number>(0);
-  const [review, setReview] = useState<string>("");
-  const [hasSpoilers, setHasSpoilers] = useState(false);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [lastWatchedEpisode, setLastWatchedEpisode] = useState<number>(0);
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [activeTab, setActiveTab] = useState<
-    "cast" | "crew" | "details" | "episodes" | "trailer"
-  >("cast");
-
-  const supabase = createClient();
-  const { addToast } = useToast();
+  const [randomBackdrop, setRandomBackdrop] = useState<string | null>(null);
+  const [loadedBackdrop, setLoadedBackdrop] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState<OpenModal>(null);
+  const [activeTab, setActiveTab] = useState<TvTab>("cast");
 
   const regularSeasons = useMemo(() => {
     if (!tv?.seasons) return [];
@@ -90,13 +66,8 @@ function TvDetailContent() {
 
   const currentSeasonDetails = seasonCache[activeSeason] || null;
 
-  const currentSeasonEpisodeCount = useMemo(() => {
-    return (
-      currentSeasonDetails?.episodes?.length ||
-      currentSeasonSummary?.episode_count ||
-      0
-    );
-  }, [currentSeasonDetails, currentSeasonSummary]);
+  const currentSeasonEpisodeCount =
+    currentSeasonDetails?.episodes?.length || currentSeasonSummary?.episode_count || 0;
 
   const trailer = useMemo(() => {
     return (
@@ -123,408 +94,34 @@ function TvDetailContent() {
     return isMediaReleased("tv", tv.status, rawDate);
   }, [tv, rawDate]);
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchUserSeasonLog() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session || !id) return;
+  const artwork = useArtworkOptions({
+    postersUrl: id ? `/api/tv/${id}/posters?season=${activeSeason}` : null,
+    backdropsUrl: id ? `/api/tv/${id}/backdrops` : null,
+    eagerPosters: true,
+    randomPool: 5,
+  });
 
-        const { data } = await supabase
-          .from("user_series")
-          .select("*")
-          .eq("series_id", id)
-          .eq("season_number", activeSeason)
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+  const cacheInput = useMemo(() => (tv ? tvCacheInput(tv) : null), [tv]);
 
-        if (ignore) return;
+  const log = useMediaLog({
+    mediaType: "tv",
+    mediaId: Number(id) || null,
+    seasonNumber: activeSeason,
+    cacheInput,
+    isReleased,
+    episodeCount: currentSeasonEpisodeCount,
+    defaultPoster:
+      artwork.randomPoster ||
+      currentSeasonDetails?.poster_path ||
+      currentSeasonSummary?.poster_path ||
+      tv?.poster_path ||
+      null,
+    defaultBackdrop: randomBackdrop ?? tv?.backdrop_path ?? null,
+  });
 
-        if (data) {
-          setSeriesStatus(data.status);
-          setIsFavorite(Boolean(data.is_favorite));
-          setRating(data.rating ? Number(data.rating) : 0);
-          setReview(data.review || "");
-          setHasSpoilers(Boolean(data.has_spoilers));
-          setStartDate(data.start_date || "");
-          setEndDate(data.end_date || "");
-          setLastWatchedEpisode(data.last_watched_episode || 0);
-          if (data.custom_poster_path) {
-            setCustomPosters((prev) => ({
-              ...prev,
-              [activeSeason]: data.custom_poster_path,
-            }));
-          }
-          if (data.custom_backdrop_path) {
-            setCustomBackdrops((prev) => ({
-              ...prev,
-              [activeSeason]: data.custom_backdrop_path,
-            }));
-          }
-        } else {
-          setSeriesStatus(null);
-          setIsFavorite(false);
-          setRating(0);
-          setReview("");
-          setHasSpoilers(false);
-          setStartDate("");
-          setEndDate("");
-          setLastWatchedEpisode(0);
-        }
-
-        const { data: favData } = await supabase
-          .from("user_series")
-          .select("series_id, season_number")
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true);
-
-        const currentIsFav = Boolean(data?.is_favorite);
-        const otherFavCount = (favData || []).filter(
-          (f) => !(f.series_id === id && f.season_number === activeSeason)
-        ).length;
-        setCanAddFavorite(otherFavCount < 5);
-      } catch (err) {
-      }
-    }
-    fetchUserSeasonLog();
-    return () => {
-      ignore = true;
-    };
-  }, [id, activeSeason, supabase]);
-
-  const handleQuickAction = async (newStatus: MediaStatus, newFavorite: boolean) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to track series", "error");
-        return;
-      }
-      if (!tv) return;
-
-      if (!isReleased && newStatus && newStatus !== "watchlist") {
-        addToast("This season has not been released yet", "error");
-        return;
-      }
-
-      if (!newStatus) {
-        const { error } = await supabase
-          .from("user_series")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("series_id", tv.id)
-          .eq("season_number", activeSeason);
-
-        if (error) {
-          addToast("Error removing log", "error");
-          return;
-        }
-
-        setSeriesStatus(null);
-        setIsFavorite(false);
-        setRating(0);
-        setReview("");
-        setHasSpoilers(false);
-        setStartDate("");
-        setEndDate("");
-        setLastWatchedEpisode(0);
-        setCanAddFavorite(true);
-        setCustomPosters((prev) => {
-          const next = { ...prev };
-          delete next[activeSeason];
-          return next;
-        });
-        setCustomBackdrops((prev) => {
-          const next = { ...prev };
-          delete next[activeSeason];
-          return next;
-        });
-        addToast("Removed from your library", "info");
-        return;
-      }
-
-      if (newFavorite && !isFavorite) {
-        const { data: favData } = await supabase
-          .from("user_series")
-          .select("series_id, season_number")
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true);
-
-        const otherFavCount = (favData || []).filter(
-          (f) => !(f.series_id === tv.id && f.season_number === activeSeason)
-        ).length;
-
-        if (otherFavCount >= 5) {
-          addToast("You can only have up to 5 favorite series", "error");
-          setCanAddFavorite(false);
-          return;
-        }
-      }
-
-      await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
-
-      const nextEpisode =
-        newStatus === "watched" && currentSeasonEpisodeCount > 0
-          ? currentSeasonEpisodeCount
-          : lastWatchedEpisode;
-
-      const { error } = await supabase.from("user_series").upsert(
-        {
-          user_id: session.user.id,
-          series_id: tv.id,
-          season_number: activeSeason,
-          status: newStatus,
-          is_favorite: newFavorite,
-          rating: rating > 0 ? rating : null,
-          review: review.trim() || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: nextEpisode,
-          custom_poster_path: customPosters[activeSeason] || null,
-          custom_backdrop_path: customBackdrops[activeSeason] || null,
-        },
-        { onConflict: "user_id,series_id,season_number" }
-      );
-
-      if (error) {
-        addToast("Error saving action", "error");
-        return;
-      }
-
-      setSeriesStatus(newStatus);
-      setIsFavorite(newFavorite);
-      if (newStatus === "watched" && currentSeasonEpisodeCount > 0) {
-        setLastWatchedEpisode(currentSeasonEpisodeCount);
-      }
-
-      if (newStatus !== seriesStatus) {
-        if (newStatus === "watching") addToast("Marked as Watching", "success");
-        else if (newStatus === "watched") addToast("Marked as Watched", "success");
-        else if (newStatus === "paused") addToast("Marked as Paused", "info");
-        else if (newStatus === "dropped") addToast("Marked as Dropped", "info");
-        else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
-      } else if (newFavorite !== isFavorite) {
-        if (newFavorite) addToast("Added to favourites", "success");
-        else addToast("Removed from favourites", "info");
-      }
-    } catch (err) {
-      addToast("Error saving action", "error");
-    }
-  };
-
-  const handleEpisodeChange = async (delta: number) => {
-    if (!tv) return;
-    const maxEpisodes = currentSeasonEpisodeCount || 9999;
-    const nextEpisode = Math.max(0, Math.min(maxEpisodes, lastWatchedEpisode + delta));
-    if (nextEpisode === lastWatchedEpisode) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to update progress", "error");
-        return;
-      }
-
-      setLastWatchedEpisode(nextEpisode);
-
-      const nextStatus =
-        currentSeasonEpisodeCount > 0 && nextEpisode >= currentSeasonEpisodeCount
-          ? "watched"
-          : "watching";
-
-      if (nextStatus !== seriesStatus) {
-        setSeriesStatus(nextStatus);
-      }
-
-      await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
-
-      const { error } = await supabase.from("user_series").upsert(
-        {
-          user_id: session.user.id,
-          series_id: tv.id,
-          season_number: activeSeason,
-          status: nextStatus,
-          is_favorite: isFavorite,
-          rating: rating > 0 ? rating : null,
-          review: review.trim() || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: nextEpisode,
-          custom_poster_path: customPosters[activeSeason] || null,
-          custom_backdrop_path: customBackdrops[activeSeason] || null,
-        },
-        { onConflict: "user_id,series_id,season_number" }
-      );
-
-      if (error) throw error;
-      if (nextStatus === "watched" && seriesStatus !== "watched") {
-        addToast("Completed season!", "success");
-      }
-    } catch (err: any) {
-      console.error(err);
-      addToast("Failed to update episode count", "error");
-    }
-  };
-
-  const handleDeleteReview = async () => {
-    try {
-      setIsSaving(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to manage reviews", "error");
-        setIsSaving(false);
-        return;
-      }
-      if (!tv) return;
-
-      const { error } = await supabase
-        .from("user_series")
-        .delete()
-        .eq("user_id", session.user.id)
-        .eq("series_id", tv.id)
-        .eq("season_number", activeSeason);
-
-      if (error) {
-        addToast("Error deleting review", "error");
-        return;
-      }
-
-      setSeriesStatus(null);
-      setIsFavorite(false);
-      setRating(0);
-      setReview("");
-      setHasSpoilers(false);
-      setStartDate("");
-      setEndDate("");
-      setLastWatchedEpisode(0);
-      setCustomPosters((prev) => {
-        const next = { ...prev };
-        delete next[activeSeason];
-        return next;
-      });
-      setCustomBackdrops((prev) => {
-        const next = { ...prev };
-        delete next[activeSeason];
-        return next;
-      });
-
-      addToast("Season log deleted successfully", "info");
-      setIsLogModalOpen(false);
-    } catch (err) {
-      addToast("Something went wrong", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveReview = async (reviewData: MediaReviewData) => {
-    try {
-      setIsSaving(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to save your review", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      if (!tv) return;
-
-      if (reviewData.isFavorite && !isFavorite) {
-        const { data: favData } = await supabase
-          .from("user_series")
-          .select("series_id, season_number")
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true);
-
-        const otherFavCount = (favData || []).filter(
-          (f) => !(f.series_id === tv.id && f.season_number === activeSeason)
-        ).length;
-
-        if (otherFavCount >= 5) {
-          addToast("You can only have up to 5 favorite series", "error");
-          setIsSaving(false);
-          setCanAddFavorite(false);
-          return;
-        }
-      }
-
-      const seriesError = await upsertMediaCache(supabase, "tv", tvCacheInput(tv));
-
-      if (seriesError) {
-        addToast("Error saving series data", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      const nextEpisode =
-        reviewData.status === "watched" && currentSeasonEpisodeCount > 0
-          ? currentSeasonEpisodeCount
-          : lastWatchedEpisode;
-
-      const { error: logError } = await supabase.from("user_series").upsert(
-        {
-          user_id: session.user.id,
-          series_id: tv.id,
-          season_number: activeSeason,
-          status: reviewData.status,
-          is_favorite: reviewData.isFavorite,
-          rating: reviewData.rating > 0 ? reviewData.rating : null,
-          review: reviewData.review.trim() || null,
-          has_spoilers: reviewData.hasSpoilers,
-          start_date: reviewData.startDate || null,
-          end_date: reviewData.endDate || null,
-          last_watched_episode: nextEpisode,
-          custom_poster_path:
-            reviewData.customPosterPath !== undefined
-              ? reviewData.customPosterPath
-              : (customPosters[activeSeason] || null),
-          custom_backdrop_path:
-            reviewData.customBackdropPath !== undefined
-              ? reviewData.customBackdropPath
-              : (customBackdrops[activeSeason] || fallbackBackdrop || tv.backdrop_path),
-        },
-        { onConflict: "user_id,series_id,season_number" }
-      );
-
-      if (logError) {
-        addToast("Error saving review", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      if (reviewData.status === "watched" && currentSeasonEpisodeCount > 0) {
-        setLastWatchedEpisode(currentSeasonEpisodeCount);
-      }
-
-      if (reviewData.customPosterPath) {
-        setCustomPosters((prev) => ({
-          ...prev,
-          [activeSeason]: reviewData.customPosterPath!,
-        }));
-      }
-      if (reviewData.customBackdropPath) {
-        setCustomBackdrops((prev) => ({
-          ...prev,
-          [activeSeason]: reviewData.customBackdropPath!,
-        }));
-      }
-
-      setSeriesStatus(reviewData.status);
-      setIsFavorite(reviewData.isFavorite);
-      setRating(reviewData.rating);
-      setReview(reviewData.review);
-      setHasSpoilers(reviewData.hasSpoilers);
-      setStartDate(reviewData.startDate || "");
-      setEndDate(reviewData.endDate || "");
-
-      addToast("Season review saved successfully", "success");
-      setIsLogModalOpen(false);
-    } catch (err) {
-      addToast("Something went wrong", "error");
-    } finally {
-      setIsSaving(false);
-    }
+  const openWithArtwork = (modal: Exclude<OpenModal, null>) => {
+    artwork.load();
+    setOpenModal(modal);
   };
 
   useEffect(() => {
@@ -539,57 +136,14 @@ function TvDetailContent() {
 
         if (ignore) return;
         setTv(data);
+        setRandomBackdrop(pickRandomBackdrop(data.images?.backdrops, data.backdrop_path));
 
         const regular = (data.seasons || []).filter((s) => s.season_number > 0);
-        const hasActive = regular.some((s) => s.season_number === activeSeason);
-        const validSeason = hasActive ? activeSeason : (regular[0]?.season_number ?? 1);
-        if (validSeason !== activeSeason) {
-          setActiveSeason(validSeason);
-        }
-
-        const rawBackdrops = data.images?.backdrops || [];
-        const validBackdrops = rawBackdrops.filter(
-          (b) =>
-            Boolean(b.file_path) &&
-            (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
+        setActiveSeason((current) =>
+          regular.some((s) => s.season_number === current)
+            ? current
+            : regular[0]?.season_number ?? 1
         );
-
-        const defaultBackdrop = data.backdrop_path;
-        let candidates: string[] = [];
-
-        const highQualityScenic = validBackdrops
-          .filter(
-            (b) =>
-              b.file_path !== defaultBackdrop &&
-              (b.width ?? 0) >= 1920 &&
-              (b.iso_639_1 === null || b.iso_639_1 === "en")
-          )
-          .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
-
-        if (highQualityScenic.length > 0) {
-          candidates = highQualityScenic.slice(0, 10).map((b) => b.file_path);
-        } else {
-          const withoutDefault = validBackdrops
-            .filter((b) => b.file_path !== defaultBackdrop)
-            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
-          candidates = withoutDefault.slice(0, 10).map((b) => b.file_path);
-        }
-
-        if (candidates.length === 0) {
-          candidates = validBackdrops
-            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0))
-            .slice(0, 10)
-            .map((b) => b.file_path);
-          if (data.backdrop_path && !candidates.includes(data.backdrop_path)) {
-            candidates.unshift(data.backdrop_path);
-          }
-        }
-
-        let chosenBackdrop = data.backdrop_path;
-        if (candidates.length > 0) {
-          chosenBackdrop = candidates[Math.floor(Math.random() * candidates.length)];
-        }
-        setFallbackBackdrop(chosenBackdrop);
       } catch (err) {
         if (!ignore) {
           console.error(err);
@@ -622,9 +176,7 @@ function TvDetailContent() {
       if (seasonNum === activeSeason) return;
 
       setActiveSeason(seasonNum);
-
-      const newUrl = `/tv/${id}?season=${seasonNum}`;
-      window.history.replaceState(null, "", newUrl);
+      window.history.replaceState(null, "", `/tv/${id}?season=${seasonNum}`);
 
       if (seasonCache[seasonNum]) {
         return;
@@ -645,102 +197,6 @@ function TvDetailContent() {
     },
     [activeSeason, id, seasonCache]
   );
-
-  useEffect(() => {
-    if (!id || availablePosters[activeSeason]) return;
-
-    let ignore = false;
-
-    async function fetchPosters() {
-      try {
-        setLoadingPosters(true);
-        const res = await fetch(`/api/tv/${id}/posters?season=${activeSeason}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.posters?.length) {
-            setAvailablePosters((prev) => ({
-              ...prev,
-              [activeSeason]: data.posters,
-            }));
-            const topCandidates = data.posters.slice(0, Math.min(5, data.posters.length));
-            const picked =
-              topCandidates[Math.floor(Math.random() * topCandidates.length)]?.file_path;
-            if (picked) {
-              setFallbackPosters((prev) => ({
-                ...prev,
-                [activeSeason]: picked,
-              }));
-            }
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingPosters(false);
-        }
-      }
-    }
-
-    fetchPosters();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id, activeSeason, availablePosters]);
-
-  useEffect(() => {
-    setDedupedBackdrops(null);
-  }, [id]);
-
-  useEffect(() => {
-    if (!id || dedupedBackdrops) return;
-
-    let ignore = false;
-
-    async function fetchBackdrops() {
-      try {
-        setLoadingBackdrops(true);
-        const res = await fetch(`/api/tv/${id}/backdrops`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.backdrops?.length) {
-            setDedupedBackdrops(data.backdrops);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingBackdrops(false);
-        }
-      }
-    }
-
-    fetchBackdrops();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id, dedupedBackdrops]);
-
-  const handleSelectPoster = (path: string) => {
-    setCustomPosters((prev) => ({
-      ...prev,
-      [activeSeason]: path,
-    }));
-  };
-
-  const handleSelectBackdrop = (path: string) => {
-    setCustomBackdrops((prev) => ({
-      ...prev,
-      [activeSeason]: path,
-    }));
-  };
 
   useEffect(() => {
     if (!id || seasonCache[activeSeason]) return;
@@ -777,50 +233,23 @@ function TvDetailContent() {
 
   const totalRuntimeMinutes = useMemo(() => {
     if (!currentSeasonDetails?.episodes) return 0;
-    return currentSeasonDetails.episodes.reduce(
-      (acc, ep) => acc + (ep.runtime || 0),
-      0
-    );
+    return currentSeasonDetails.episodes.reduce((acc, ep) => acc + (ep.runtime || 0), 0);
   }, [currentSeasonDetails]);
 
   const castList = useMemo(() => {
-    return (
-      currentSeasonDetails?.credits?.cast ||
-      tv?.credits?.cast ||
-      []
-    );
+    return currentSeasonDetails?.credits?.cast || tv?.credits?.cast || [];
   }, [currentSeasonDetails, tv]);
 
   const crewList = useMemo(() => {
-    return (
-      currentSeasonDetails?.credits?.crew ||
-      tv?.credits?.crew ||
-      []
-    );
+    return currentSeasonDetails?.credits?.crew || tv?.credits?.crew || [];
   }, [currentSeasonDetails, tv]);
 
   const crewSections = useMemo(() => {
     return getTvCrewSections(crewList, tv?.created_by);
   }, [crewList, tv?.created_by]);
 
-  const posterPath =
-    customPosters[activeSeason] ||
-    fallbackPosters[activeSeason] ||
-    currentSeasonDetails?.poster_path ||
-    currentSeasonSummary?.poster_path ||
-    tv?.poster_path ||
-    null;
-  const posterUrl = getPosterUrl(posterPath, "w500");
-  const backdropPath =
-    customBackdrops[activeSeason] ||
-    fallbackBackdrop ||
-    tv?.backdrop_path ||
-    null;
-  const backdropUrl = getBackdropUrl(backdropPath, "original");
-
-  useEffect(() => {
-    setIsBackdropLoaded(false);
-  }, [backdropPath]);
+  const posterUrl = getPosterUrl(log.poster, "w500");
+  const backdropUrl = getBackdropUrl(log.backdrop, "original");
 
   if (loading) {
     return (
@@ -842,15 +271,10 @@ function TvDetailContent() {
   }
 
   const overviewText =
-    currentSeasonDetails?.overview ||
-    currentSeasonSummary?.overview ||
-    tv.overview ||
-    "";
+    currentSeasonDetails?.overview || currentSeasonSummary?.overview || tv.overview || "";
 
   const episodesCount =
-    currentSeasonDetails?.episodes?.length ??
-    currentSeasonSummary?.episode_count ??
-    0;
+    currentSeasonDetails?.episodes?.length ?? currentSeasonSummary?.episode_count ?? 0;
 
   const seasonYear = currentSeasonSummary?.air_date
     ? new Date(currentSeasonSummary.air_date).getFullYear()
@@ -858,43 +282,37 @@ function TvDetailContent() {
     ? new Date(tv.first_air_date).getFullYear()
     : "—";
 
+  const backdropOptions = artwork.backdropsLoaded
+    ? artwork.backdrops
+    : (tv.images?.backdrops || []).slice(0, 80);
+
   return (
     <>
       <MediaLayout
         backdropUrl={backdropUrl}
         backdropAlt={tv.name}
-        isBackdropLoaded={isBackdropLoaded}
-        onBackdropLoaded={() => setIsBackdropLoaded(true)}
-        hasMultipleBackdrops={(dedupedBackdrops?.length || tv.images?.backdrops?.length || 0) > 1}
-        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
+        isBackdropLoaded={loadedBackdrop === backdropUrl}
+        onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
+        hasMultipleBackdrops={(tv.images?.backdrops?.length || 0) > 1}
+        onOpenBackdropPicker={() => openWithArtwork("backdrop")}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
             title={tv.name}
             hasMultiplePosters={true}
-            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            onOpenPosterPicker={() => openWithArtwork("poster")}
             mediaType="tv"
-            status={seriesStatus}
-            isFavorite={isFavorite}
-            hasLog={Boolean(seriesStatus)}
+            status={log.status}
+            isFavorite={log.isFavorite}
+            hasLog={log.hasLog}
             isReleased={isReleased}
-            onOpenLogModal={() => setIsLogModalOpen(true)}
-            onOpenListModal={() => setIsListModalOpen(true)}
-            currentEpisode={lastWatchedEpisode}
+            onOpenLogModal={() => openWithArtwork("log")}
+            onOpenListModal={() => openWithArtwork("list")}
+            currentEpisode={log.lastWatchedEpisode}
             totalEpisodes={currentSeasonEpisodeCount}
-            onEpisodeChange={handleEpisodeChange}
-            onQuickStatusChange={(newStatus) => {
-              handleQuickAction(newStatus, isFavorite);
-            }}
-            onToggleFavorite={() => {
-              const nextFav = !isFavorite;
-              if (nextFav && !canAddFavorite) {
-                addToast("You can only have up to 5 favorite series", "error");
-                return;
-              }
-              const nextStatus = seriesStatus || (isReleased ? "watched" : "watchlist");
-              handleQuickAction(nextStatus, nextFav);
-            }}
+            onEpisodeChange={log.changeEpisode}
+            onQuickStatusChange={log.setStatus}
+            onToggleFavorite={log.toggleFavorite}
           >
             {regularSeasons.length > 0 && (
               <>
@@ -936,7 +354,7 @@ function TvDetailContent() {
               ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
             ]}
             activeTab={activeTab}
-            onChange={(key) => setActiveTab(key as any)}
+            onChange={(key) => setActiveTab(key as TvTab)}
           />
 
           {activeTab === "cast" && (
@@ -958,10 +376,7 @@ function TvDetailContent() {
             />
           )}
           {activeTab === "episodes" && (
-            <EpisodesTab
-              episodes={currentSeasonDetails?.episodes}
-              isLoading={isSeasonLoading}
-            />
+            <EpisodesTab episodes={currentSeasonDetails?.episodes} isLoading={isSeasonLoading} />
           )}
           {activeTab === "trailer" && trailer?.key && (
             <div className="aspect-video w-full max-w-4xl rounded-sm overflow-hidden border border-zinc-800 bg-black">
@@ -978,29 +393,29 @@ function TvDetailContent() {
       </MediaLayout>
 
       <ArtworkPickerModal
-        isOpen={isPosterPickerOpen}
-        onClose={() => setIsPosterPickerOpen(false)}
+        isOpen={openModal === "poster"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE ARTWORK"
         type="poster"
-        images={availablePosters[activeSeason] || []}
-        selectedImage={posterPath}
-        onSelectImage={handleSelectPoster}
-        isLoading={loadingPosters}
+        images={artwork.posters}
+        selectedImage={log.poster}
+        onSelectImage={log.setPoster}
+        isLoading={artwork.loadingPosters}
       />
 
       <BackdropPickerModal
-        isOpen={isBackdropPickerOpen}
-        onClose={() => setIsBackdropPickerOpen(false)}
+        isOpen={openModal === "backdrop"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE BANNER"
-        images={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
-        selectedImage={backdropPath}
-        onSelectImage={handleSelectBackdrop}
-        isLoading={loadingBackdrops}
+        images={backdropOptions}
+        selectedImage={log.backdrop}
+        onSelectImage={log.setBackdrop}
+        isLoading={artwork.loadingBackdrops}
       />
 
       <MediaReviewModal
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
+        isOpen={openModal === "log"}
+        onClose={() => setOpenModal(null)}
         typeLabel="Series"
         title={tv.name}
         releaseDate={rawDate}
@@ -1010,29 +425,34 @@ function TvDetailContent() {
         posterUrl={posterUrl}
         backdropUrl={backdropUrl}
         mediaType="tv"
-        status={seriesStatus}
+        status={log.status}
+        hasLog={log.hasLog}
         isReleased={isReleased}
-        isFavorite={isFavorite}
-        canAddFavorite={canAddFavorite}
-        rating={rating}
-        review={review}
-        hasSpoilers={hasSpoilers}
-        startDate={startDate}
-        endDate={endDate}
-        isSaving={isSaving}
-        onSave={handleSaveReview}
-        onDelete={handleDeleteReview}
-        availablePosters={availablePosters[activeSeason] || []}
-        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
-        selectedPoster={posterPath}
-        selectedBackdrop={backdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
+        isFavorite={log.isFavorite}
+        canAddFavorite={log.canAddFavorite}
+        rating={log.rating}
+        review={log.review}
+        hasSpoilers={log.hasSpoilers}
+        startDate={log.startDate}
+        endDate={log.endDate}
+        isSaving={log.isSaving}
+        onSave={async (data) => {
+          if (await log.saveReview(data)) setOpenModal(null);
+        }}
+        onDelete={async () => {
+          if (await log.deleteLog()) setOpenModal(null);
+        }}
+        availablePosters={artwork.posters}
+        availableBackdrops={backdropOptions}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
       />
 
       <ListModal
-        isOpen={isListModalOpen}
-        onClose={() => setIsListModalOpen(false)}
+        isOpen={openModal === "list"}
+        onClose={() => setOpenModal(null)}
         media={{
           mediaType: "tv",
           mediaId: tv.id,
@@ -1040,19 +460,20 @@ function TvDetailContent() {
           seasonTitle: currentSeasonSummary?.name || `Season ${activeSeason}`,
           title: tv.name,
           overview: currentSeasonDetails?.overview || currentSeasonSummary?.overview || tv.overview,
-          posterPath: currentSeasonDetails?.poster_path || currentSeasonSummary?.poster_path || tv.poster_path,
+          posterPath:
+            currentSeasonDetails?.poster_path || currentSeasonSummary?.poster_path || tv.poster_path,
           backdropPath: tv.backdrop_path,
-          customPosterPath: posterPath,
-          customBackdropPath: backdropPath,
+          customPosterPath: log.poster,
+          customBackdropPath: log.backdrop,
           numberOfSeasons: tv.number_of_seasons,
           numberOfEpisodes: tv.number_of_episodes,
         }}
-        availablePosters={availablePosters[activeSeason] || []}
-        availableBackdrops={dedupedBackdrops || (tv.images?.backdrops || []).slice(0, 80)}
-        selectedPoster={posterPath}
-        selectedBackdrop={backdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
+        availablePosters={artwork.posters}
+        availableBackdrops={backdropOptions}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
       />
     </>
   );

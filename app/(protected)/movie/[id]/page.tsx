@@ -2,15 +2,13 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MovieDetails, MovieImage, getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/tmdb";
+import { MovieDetails, getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
 import FranchiseSlider from "@/components/ui/FranchiseSlider";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaActionColumn, { MediaStatus } from "@/components/modules/columns/MediaActionColumn";
+import MediaActionColumn from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
-import MediaReviewModal, { MediaReviewData } from "@/components/modules/modals/MediaReviewModal";
+import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
 import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
@@ -20,7 +18,13 @@ import CrewTab from "@/components/modules/tabs/CrewTab";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import ReleasesTab from "@/components/modules/tabs/ReleasesTab";
 import { getMovieCrewSections, getReleaseDateGroups, isMediaReleased } from "@/lib/media-utils";
-import { upsertMediaCache, movieCacheInput } from "@/lib/media/cache";
+import { movieCacheInput } from "@/lib/media/cache";
+import { pickRandomBackdrop, pickRandomPoster } from "@/lib/artwork/pick";
+import { useMediaLog } from "@/hooks/useMediaLog";
+import { useArtworkOptions } from "@/hooks/useArtworkOptions";
+
+type MovieTab = "cast" | "staff" | "details" | "releases" | "trailer";
+type OpenModal = "poster" | "backdrop" | "log" | "list" | null;
 
 function MovieDetailContent() {
   const params = useParams();
@@ -29,31 +33,11 @@ function MovieDetailContent() {
 
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [customPoster, setCustomPoster] = useState<string | null>(null);
-  const [customBackdrop, setCustomBackdrop] = useState<string | null>(null);
-  const [fallbackPoster, setFallbackPoster] = useState<string | null>(null);
-  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
-  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
-  const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
-  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
-
-  const supabase = createClient();
-  const { addToast } = useToast();
-
-  const [movieStatus, setMovieStatus] = useState<MediaStatus>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [canAddFavorite, setCanAddFavorite] = useState(true);
-  const [rating, setRating] = useState<number>(0);
-  const [review, setReview] = useState<string>("");
-  const [hasSpoilers, setHasSpoilers] = useState(false);
-  const [watchedDate, setWatchedDate] = useState<string>("");
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [activeTab, setActiveTab] = useState<
-    "cast" | "staff" | "details" | "releases" | "trailer"
-  >("cast");
+  const [randomPoster, setRandomPoster] = useState<string | null>(null);
+  const [randomBackdrop, setRandomBackdrop] = useState<string | null>(null);
+  const [loadedBackdrop, setLoadedBackdrop] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState<OpenModal>(null);
+  const [activeTab, setActiveTab] = useState<MovieTab>("cast");
 
   const trailer = useMemo(() => {
     if (!movie?.videos) return null;
@@ -73,277 +57,25 @@ function MovieDetailContent() {
     return isMediaReleased("movie", movie.status, movie.release_date);
   }, [movie]);
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchUserLog() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session || !id) return;
+  const cacheInput = useMemo(() => (movie ? movieCacheInput(movie) : null), [movie]);
 
-        const { data } = await supabase
-          .from("user_movies")
-          .select("*")
-          .eq("movie_id", id)
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+  const log = useMediaLog({
+    mediaType: "movie",
+    mediaId: Number(id) || null,
+    cacheInput,
+    isReleased,
+    defaultPoster: randomPoster ?? movie?.poster_path ?? null,
+    defaultBackdrop: randomBackdrop ?? movie?.backdrop_path ?? null,
+  });
 
-        if (ignore) return;
+  const artwork = useArtworkOptions({
+    postersUrl: id ? `/api/movies/${id}/posters` : null,
+    backdropsUrl: id ? `/api/movies/${id}/backdrops` : null,
+  });
 
-        if (data) {
-          setMovieStatus(data.status);
-          setIsFavorite(Boolean(data.is_favorite));
-          setRating(data.rating ? Number(data.rating) : 0);
-          setReview(data.review || "");
-          setHasSpoilers(Boolean(data.has_spoilers));
-          setWatchedDate(data.watched_date || "");
-          if (data.custom_poster_path) setCustomPoster(data.custom_poster_path);
-          if (data.custom_backdrop_path) setCustomBackdrop(data.custom_backdrop_path);
-        } else {
-          setMovieStatus(null);
-          setIsFavorite(false);
-          setRating(0);
-          setReview("");
-          setHasSpoilers(false);
-          setWatchedDate("");
-        }
-
-        const { count: favCount } = await supabase
-          .from("user_movies")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true);
-
-        const currentIsFav = Boolean(data?.is_favorite);
-        const otherFavCount = currentIsFav
-          ? Math.max(0, (favCount || 1) - 1)
-          : (favCount || 0);
-        setCanAddFavorite(otherFavCount < 5);
-      } catch (err) {
-      }
-    }
-    fetchUserLog();
-    return () => {
-      ignore = true;
-    };
-  }, [id, supabase]);
-
-  const handleQuickAction = async (newStatus: MediaStatus, newFavorite: boolean) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to track movies", "error");
-        return;
-      }
-      if (!movie) return;
-
-      if (!isReleased && newStatus && newStatus !== "watchlist") {
-        addToast("This movie has not been released yet", "error");
-        return;
-      }
-
-      if (!newStatus) {
-        const { error } = await supabase
-          .from("user_movies")
-          .delete()
-          .eq("user_id", session.user.id)
-          .eq("movie_id", movie.id);
-
-        if (error) {
-          addToast("Error removing log", "error");
-          return;
-        }
-
-        setMovieStatus(null);
-        setIsFavorite(false);
-        setRating(0);
-        setReview("");
-        setHasSpoilers(false);
-        setWatchedDate("");
-        setCanAddFavorite(true);
-        setCustomPoster(null);
-        setCustomBackdrop(null);
-        addToast("Removed from your library", "info");
-        return;
-      }
-
-      if (newFavorite && !isFavorite) {
-        const { count } = await supabase
-          .from("user_movies")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true)
-          .neq("movie_id", movie.id);
-
-        if ((count || 0) >= 5) {
-          addToast("You can only have up to 5 favorite movies", "error");
-          setCanAddFavorite(false);
-          return;
-        }
-      }
-
-      await upsertMediaCache(supabase, "movie", movieCacheInput(movie));
-
-      const { error } = await supabase.from("user_movies").upsert(
-        {
-          user_id: session.user.id,
-          movie_id: movie.id,
-          status: newStatus,
-          is_favorite: newFavorite,
-          rating: rating > 0 ? rating : null,
-          review: review.trim() || null,
-          has_spoilers: hasSpoilers,
-          watched_date: watchedDate || null,
-          custom_poster_path: customPoster || null,
-          custom_backdrop_path: customBackdrop || null,
-        },
-        { onConflict: "user_id,movie_id" }
-      );
-
-      if (error) {
-        addToast("Error saving action", "error");
-        return;
-      }
-
-      setMovieStatus(newStatus);
-      setIsFavorite(newFavorite);
-
-      if (newStatus !== movieStatus) {
-        if (newStatus === "watched") addToast("Marked as Watched", "success");
-        else if (newStatus === "watchlist") addToast("Added to Watchlist", "success");
-      } else if (newFavorite !== isFavorite) {
-        if (newFavorite) addToast("Added to favourites", "success");
-        else addToast("Removed from favourites", "info");
-      }
-    } catch (err) {
-      addToast("Error saving action", "error");
-    }
-  };
-
-  const handleDeleteReview = async () => {
-    try {
-      setIsSaving(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to manage reviews", "error");
-        setIsSaving(false);
-        return;
-      }
-      if (!movie) return;
-
-      const { error } = await supabase
-        .from("user_movies")
-        .delete()
-        .eq("user_id", session.user.id)
-        .eq("movie_id", movie.id);
-
-      if (error) {
-        addToast("Error deleting review", "error");
-        return;
-      }
-
-      setMovieStatus(null);
-      setIsFavorite(false);
-      setRating(0);
-      setReview("");
-      setHasSpoilers(false);
-      setWatchedDate("");
-      setCustomPoster(null);
-      setCustomBackdrop(null);
-
-      addToast("Log deleted successfully", "info");
-      setIsLogModalOpen(false);
-    } catch (err) {
-      addToast("Something went wrong", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveReview = async (reviewData: MediaReviewData) => {
-    try {
-      setIsSaving(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to save your review", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      if (!movie) return;
-
-      if (reviewData.isFavorite && !isFavorite) {
-        const { count } = await supabase
-          .from("user_movies")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true)
-          .neq("movie_id", movie.id);
-
-        if ((count || 0) >= 5) {
-          addToast("You can only have up to 5 favorite movies", "error");
-          setIsSaving(false);
-          setCanAddFavorite(false);
-          return;
-        }
-      }
-
-      const movieError = await upsertMediaCache(supabase, "movie", movieCacheInput(movie));
-
-      if (movieError) {
-        addToast("Error saving movie data", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      const { error: logError } = await supabase.from("user_movies").upsert(
-        {
-          user_id: session.user.id,
-          movie_id: movie.id,
-          status: reviewData.status,
-          is_favorite: reviewData.isFavorite,
-          rating: reviewData.rating > 0 ? reviewData.rating : null,
-          review: reviewData.review.trim() || null,
-          has_spoilers: reviewData.hasSpoilers,
-          watched_date: reviewData.watchedDate || null,
-          custom_poster_path:
-            reviewData.customPosterPath !== undefined
-              ? reviewData.customPosterPath
-              : (customPoster || fallbackPoster || movie.poster_path),
-          custom_backdrop_path:
-            reviewData.customBackdropPath !== undefined
-              ? reviewData.customBackdropPath
-              : (customBackdrop || fallbackBackdrop || movie.backdrop_path),
-        },
-        { onConflict: "user_id,movie_id" }
-      );
-
-      if (logError) {
-        addToast("Error saving review", "error");
-        setIsSaving(false);
-        return;
-      }
-
-      if (reviewData.customPosterPath) {
-        setCustomPoster(reviewData.customPosterPath);
-      }
-      if (reviewData.customBackdropPath) {
-        setCustomBackdrop(reviewData.customBackdropPath);
-      }
-
-      setMovieStatus(reviewData.status);
-      setIsFavorite(reviewData.isFavorite);
-      setRating(reviewData.rating);
-      setReview(reviewData.review);
-      setHasSpoilers(reviewData.hasSpoilers);
-      setWatchedDate(reviewData.watchedDate || "");
-
-      addToast("Review saved successfully", "success");
-      setIsLogModalOpen(false);
-    } catch (err) {
-      addToast("Something went wrong", "error");
-    } finally {
-      setIsSaving(false);
-    }
+  const openWithArtwork = (modal: Exclude<OpenModal, null>) => {
+    artwork.load();
+    setOpenModal(modal);
   };
 
   useEffect(() => {
@@ -357,66 +89,8 @@ function MovieDetailContent() {
         const data: MovieDetails = await res.json();
 
         if (!ignore) {
-          const rawBackdrops = data.images?.backdrops || [];
-          const validBackdrops = rawBackdrops.filter(
-            (b) =>
-              Boolean(b.file_path) &&
-              (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
-          );
-
-          const defaultBackdrop = data.backdrop_path;
-          const highQualityScenic = validBackdrops
-            .filter(
-              (b) =>
-                b.file_path !== defaultBackdrop &&
-                (b.width ?? 0) >= 1920 &&
-                (b.iso_639_1 === null || b.iso_639_1 === "en")
-            )
-            .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
-
-          let chosenBackdrop = defaultBackdrop;
-
-          if (highQualityScenic.length > 0) {
-            const topCandidates = highQualityScenic.slice(0, 10);
-            chosenBackdrop =
-              topCandidates[Math.floor(Math.random() * topCandidates.length)].file_path;
-          } else {
-            const withoutDefault = validBackdrops
-              .filter((b) => b.file_path !== defaultBackdrop)
-              .sort((a, b) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
-
-            if (withoutDefault.length > 0) {
-              const topCandidates = withoutDefault.slice(0, 10);
-              chosenBackdrop =
-                topCandidates[Math.floor(Math.random() * topCandidates.length)].file_path;
-            } else if (validBackdrops.length > 0) {
-              chosenBackdrop = validBackdrops[0].file_path;
-            }
-          }
-
-          const rawPosters = data.images?.posters || [];
-          const validPosters = rawPosters.filter(
-            (p) =>
-              Boolean(p.file_path) &&
-              (!p.aspect_ratio || (p.aspect_ratio >= 0.6 && p.aspect_ratio <= 0.75))
-          );
-
-          const sortedPosters = [...validPosters].sort((a, b) => {
-            const langA = a.iso_639_1 === "en" ? 2 : a.iso_639_1 === null ? 1 : 0;
-            const langB = b.iso_639_1 === "en" ? 2 : b.iso_639_1 === null ? 1 : 0;
-            if (langA !== langB) return langB - langA;
-            return (b.vote_count ?? 0) - (a.vote_count ?? 0);
-          });
-
-          let chosenPoster = data.poster_path;
-          if (sortedPosters.length > 0) {
-            const topPosters = sortedPosters.slice(0, Math.min(5, sortedPosters.length));
-            chosenPoster =
-              topPosters[Math.floor(Math.random() * topPosters.length)].file_path;
-          }
-
-          setFallbackBackdrop(chosenBackdrop);
-          setFallbackPoster(chosenPoster);
+          setRandomBackdrop(pickRandomBackdrop(data.images?.backdrops, data.backdrop_path));
+          setRandomPoster(pickRandomPoster(data.images?.posters, data.poster_path));
           setMovie(data);
         }
       } catch (err) {
@@ -439,90 +113,6 @@ function MovieDetailContent() {
     };
   }, [id]);
 
-  const [dedupedPosters, setDedupedPosters] = useState<MovieImage[] | null>(null);
-  const [loadingPosters, setLoadingPosters] = useState(false);
-  const [dedupedBackdrops, setDedupedBackdrops] = useState<MovieImage[] | null>(null);
-  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
-
-  useEffect(() => {
-    setDedupedPosters(null);
-    setDedupedBackdrops(null);
-  }, [id]);
-
-  useEffect(() => {
-    if (!id || dedupedPosters) return;
-
-    let ignore = false;
-
-    async function fetchPosters() {
-      try {
-        setLoadingPosters(true);
-        const res = await fetch(`/api/movies/${id}/posters`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.posters?.length) {
-            setDedupedPosters(data.posters);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingPosters(false);
-        }
-      }
-    }
-
-    fetchPosters();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id, dedupedPosters]);
-
-  useEffect(() => {
-    if (!id || dedupedBackdrops) return;
-
-    let ignore = false;
-
-    async function fetchBackdrops() {
-      try {
-        setLoadingBackdrops(true);
-        const res = await fetch(`/api/movies/${id}/backdrops`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.backdrops?.length) {
-            setDedupedBackdrops(data.backdrops);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingBackdrops(false);
-        }
-      }
-    }
-
-    fetchBackdrops();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id, dedupedBackdrops]);
-
-  const handleSelectPoster = (path: string) => {
-    setCustomPoster(path);
-  };
-
-  const handleSelectBackdrop = (path: string) => {
-    setCustomBackdrop(path);
-  };
-
   const sectionCrew = useMemo(() => {
     return getMovieCrewSections(movie?.credits?.crew);
   }, [movie]);
@@ -531,14 +121,8 @@ function MovieDetailContent() {
     return getReleaseDateGroups(movie?.release_dates?.results);
   }, [movie]);
 
-  const posterPath = customPoster || fallbackPoster || movie?.poster_path || null;
-  const posterUrl = getPosterUrl(posterPath, "w500");
-  const backdropPath = customBackdrop || fallbackBackdrop || movie?.backdrop_path || null;
-  const backdropUrl = getBackdropUrl(backdropPath, "original");
-
-  useEffect(() => {
-    setIsBackdropLoaded(false);
-  }, [backdropPath]);
+  const posterUrl = getPosterUrl(log.poster, "w500");
+  const backdropUrl = getBackdropUrl(log.backdrop, "original");
 
   if (loading) {
     return (
@@ -562,43 +146,39 @@ function MovieDetailContent() {
     );
   }
 
-  const hasMultiplePosters = (dedupedPosters?.length || movie.images?.posters?.length || 0) > 1;
-  const hasMultipleBackdrops = (dedupedBackdrops?.length || movie.images?.backdrops?.length || 0) > 1;
+  const posterOptions = artwork.postersLoaded
+    ? artwork.posters
+    : (movie.images?.posters || []).slice(0, 80);
+  const backdropOptions = artwork.backdropsLoaded
+    ? artwork.backdrops
+    : (movie.images?.backdrops || []).slice(0, 80);
+  const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
+  const hasMultipleBackdrops = (movie.images?.backdrops?.length || 0) > 1;
 
   return (
     <>
       <MediaLayout
         backdropUrl={backdropUrl}
         backdropAlt={movie.title}
-        isBackdropLoaded={isBackdropLoaded}
-        onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        isBackdropLoaded={loadedBackdrop === backdropUrl}
+        onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
         hasMultipleBackdrops={hasMultipleBackdrops}
-        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
+        onOpenBackdropPicker={() => openWithArtwork("backdrop")}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
             title={movie.title}
             hasMultiplePosters={hasMultiplePosters}
-            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            onOpenPosterPicker={() => openWithArtwork("poster")}
             mediaType="movie"
-            status={movieStatus}
-            isFavorite={isFavorite}
-            hasLog={Boolean(movieStatus)}
+            status={log.status}
+            isFavorite={log.isFavorite}
+            hasLog={log.hasLog}
             isReleased={isReleased}
-            onOpenLogModal={() => setIsLogModalOpen(true)}
-            onOpenListModal={() => setIsListModalOpen(true)}
-            onQuickStatusChange={(newStatus) => {
-              handleQuickAction(newStatus, isFavorite);
-            }}
-            onToggleFavorite={() => {
-              const nextFav = !isFavorite;
-              if (nextFav && !canAddFavorite) {
-                addToast("You can only have up to 5 favorite movies", "error");
-                return;
-              }
-              const nextStatus = movieStatus || (isReleased ? "watched" : "watchlist");
-              handleQuickAction(nextStatus, nextFav);
-            }}
+            onOpenLogModal={() => openWithArtwork("log")}
+            onOpenListModal={() => openWithArtwork("list")}
+            onQuickStatusChange={log.setStatus}
+            onToggleFavorite={log.toggleFavorite}
           />
         }
       >
@@ -620,7 +200,7 @@ function MovieDetailContent() {
               ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
             ]}
             activeTab={activeTab}
-            onChange={(key) => setActiveTab(key as any)}
+            onChange={(key) => setActiveTab(key as MovieTab)}
           />
 
           {activeTab === "cast" && <CastTab cast={movie.credits?.cast || []} />}
@@ -668,29 +248,29 @@ function MovieDetailContent() {
       </MediaLayout>
 
       <ArtworkPickerModal
-        isOpen={isPosterPickerOpen}
-        onClose={() => setIsPosterPickerOpen(false)}
+        isOpen={openModal === "poster"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE ARTWORK"
         type="poster"
-        images={dedupedPosters || []}
-        selectedImage={posterPath}
-        onSelectImage={handleSelectPoster}
-        isLoading={loadingPosters}
+        images={artwork.posters}
+        selectedImage={log.poster}
+        onSelectImage={log.setPoster}
+        isLoading={artwork.loadingPosters}
       />
 
       <BackdropPickerModal
-        isOpen={isBackdropPickerOpen}
-        onClose={() => setIsBackdropPickerOpen(false)}
+        isOpen={openModal === "backdrop"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE BANNER"
-        images={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
-        selectedImage={backdropPath}
-        onSelectImage={handleSelectBackdrop}
-        isLoading={loadingBackdrops}
+        images={backdropOptions}
+        selectedImage={log.backdrop}
+        onSelectImage={log.setBackdrop}
+        isLoading={artwork.loadingBackdrops}
       />
 
       <MediaReviewModal
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
+        isOpen={openModal === "log"}
+        onClose={() => setOpenModal(null)}
         typeLabel="Movie"
         title={movie.title}
         releaseDate={movie.release_date}
@@ -699,28 +279,33 @@ function MovieDetailContent() {
         posterUrl={posterUrl}
         backdropUrl={backdropUrl}
         mediaType="movie"
-        status={movieStatus}
+        status={log.status}
+        hasLog={log.hasLog}
         isReleased={isReleased}
-        isFavorite={isFavorite}
-        canAddFavorite={canAddFavorite}
-        rating={rating}
-        review={review}
-        hasSpoilers={hasSpoilers}
-        watchedDate={watchedDate}
-        isSaving={isSaving}
-        onSave={handleSaveReview}
-        onDelete={handleDeleteReview}
-        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 80)}
-        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
-        selectedPoster={posterPath}
-        selectedBackdrop={backdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
+        isFavorite={log.isFavorite}
+        canAddFavorite={log.canAddFavorite}
+        rating={log.rating}
+        review={log.review}
+        hasSpoilers={log.hasSpoilers}
+        watchedDate={log.watchedDate}
+        isSaving={log.isSaving}
+        onSave={async (data) => {
+          if (await log.saveReview(data)) setOpenModal(null);
+        }}
+        onDelete={async () => {
+          if (await log.deleteLog()) setOpenModal(null);
+        }}
+        availablePosters={posterOptions}
+        availableBackdrops={backdropOptions}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
       />
 
       <ListModal
-        isOpen={isListModalOpen}
-        onClose={() => setIsListModalOpen(false)}
+        isOpen={openModal === "list"}
+        onClose={() => setOpenModal(null)}
         media={{
           mediaType: "movie",
           mediaId: movie.id,
@@ -728,15 +313,15 @@ function MovieDetailContent() {
           overview: movie.overview,
           posterPath: movie.poster_path,
           backdropPath: movie.backdrop_path,
-          customPosterPath: posterPath,
-          customBackdropPath: backdropPath,
+          customPosterPath: log.poster,
+          customBackdropPath: log.backdrop,
         }}
-        availablePosters={dedupedPosters || (movie.images?.posters || []).slice(0, 80)}
-        availableBackdrops={dedupedBackdrops || (movie.images?.backdrops || []).slice(0, 80)}
-        selectedPoster={posterPath}
-        selectedBackdrop={backdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
+        availablePosters={posterOptions}
+        availableBackdrops={backdropOptions}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
       />
     </>
   );

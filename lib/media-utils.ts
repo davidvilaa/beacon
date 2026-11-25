@@ -303,11 +303,11 @@ export function getReleaseDateGroups(results?: any[]) {
 }
 
 export function isMediaReleased(
-  mediaType: "movie" | "tv" | "anime",
+  mediaType: "movie" | "tv" | "anime" | "game",
   status?: string | null,
   releaseOrAirDate?: string | null
 ): boolean {
-  if (mediaType === "movie") {
+  if (mediaType === "movie" || mediaType === "game") {
     if (!status) {
       if (releaseOrAirDate) {
         const parsed = new Date(releaseOrAirDate);

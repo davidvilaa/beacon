@@ -110,11 +110,7 @@ export default function ListModal({
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!session) {
-          addToast("Please log in to manage lists", "error");
-          onClose();
-          return;
-        }
+        if (!session) return;
 
         let membershipQuery = supabase
           .from("list_items")
@@ -318,10 +314,7 @@ export default function ListModal({
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        addToast("Please log in to manage lists", "error");
-        return;
-      }
+      if (!session) return;
 
       const seasonNum =
         media.mediaType === "tv" && typeof media.seasonNumber === "number"

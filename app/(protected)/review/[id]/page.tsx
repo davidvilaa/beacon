@@ -92,7 +92,7 @@ interface ReviewRecord {
   backdrop_path: string | null;
   custom_poster_path: string | null;
   custom_backdrop_path: string | null;
-  status: "watched" | "watching" | "paused" | "dropped" | "watchlist";
+  status: "watched" | "watching" | "paused" | "dropped" | "watchlist" | null;
   is_favorite: boolean;
   rating: number | null;
   review: string | null;
@@ -410,7 +410,7 @@ function ReviewDetailContent() {
               backdrop_path: g.games?.backdrop_url || null,
               custom_poster_path: g.custom_poster_path || null,
               custom_backdrop_path: g.custom_backdrop_path || null,
-              status: gameStatusToShared(g.status) ?? "watched",
+              status: gameStatusToShared(g.status),
               is_favorite: Boolean(g.is_favorite),
               rating: g.rating ? Number(g.rating) : null,
               review: g.review || null,
@@ -587,7 +587,7 @@ function ReviewDetailContent() {
       const payload: Record<string, any> = {
         status:
           review.media_type === "game"
-            ? sharedStatusToGame(reviewData.status)
+            ? reviewData.status && sharedStatusToGame(reviewData.status)
             : reviewData.status,
         is_favorite: reviewData.isFavorite,
         rating: reviewData.rating > 0 ? reviewData.rating : null,
@@ -935,6 +935,7 @@ function ReviewDetailContent() {
           backdropUrl={backdropUrl}
           mediaType={review.media_type}
           status={review.status}
+          hasLog
           isFavorite={review.is_favorite}
           rating={ratingVal}
           review={review.review || ""}

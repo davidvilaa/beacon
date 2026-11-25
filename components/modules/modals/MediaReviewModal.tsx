@@ -22,6 +22,8 @@ import { useToast } from "@/components/ui/Toast";
 import ArtworkPickerModal from "./ArtworkPickerModal";
 import BackdropPickerModal from "./BackdropPickerModal";
 import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
+import { favoriteLimitToast, type LogStatus } from "@/lib/media/log";
+import type { MediaReviewInput } from "@/hooks/useMediaLog";
 
 function StarRating({
   value,
@@ -76,18 +78,7 @@ function StarRating({
   );
 }
 
-export interface MediaReviewData {
-  status: Exclude<MediaStatus, null>;
-  isFavorite: boolean;
-  rating: number;
-  review: string;
-  hasSpoilers: boolean;
-  watchedDate?: string;
-  startDate?: string;
-  endDate?: string;
-  customPosterPath?: string | null;
-  customBackdropPath?: string | null;
-}
+export type MediaReviewData = MediaReviewInput;
 
 interface MediaReviewModalProps {
   isOpen: boolean;
@@ -103,6 +94,7 @@ interface MediaReviewModalProps {
   backdropUrl: string | null;
   mediaType: "movie" | "tv" | "anime" | "game";
   status: MediaStatus;
+  hasLog?: boolean;
   isFavorite: boolean;
   canAddFavorite?: boolean;
   rating: number;
@@ -111,6 +103,7 @@ interface MediaReviewModalProps {
   watchedDate?: string;
   startDate?: string;
   endDate?: string;
+  hoursPlayed?: number;
   isSaving?: boolean;
   onSave: (data: MediaReviewData) => void;
   onDelete?: () => void;
@@ -136,6 +129,7 @@ export default function MediaReviewModal({
   backdropUrl,
   mediaType,
   status,
+  hasLog = Boolean(status),
   isFavorite,
   canAddFavorite = true,
   rating,
@@ -144,6 +138,7 @@ export default function MediaReviewModal({
   watchedDate,
   startDate,
   endDate,
+  hoursPlayed = 0,
   isSaving = false,
   onSave,
   onDelete,
@@ -156,14 +151,14 @@ export default function MediaReviewModal({
   isReleased = true,
 }: MediaReviewModalProps) {
   const { addToast } = useToast();
-  const fallbackStatus: Exclude<MediaStatus, null> =
-    isReleased ? "watched" : "watchlist";
+  const fallbackStatus: LogStatus = isReleased ? "watched" : "watchlist";
 
-  const [draftStatus, setDraftStatus] = useState<Exclude<MediaStatus, null>>(
-    !isReleased && status !== "watchlist"
-      ? "watchlist"
-      : (status as Exclude<MediaStatus, null>) || fallbackStatus
-  );
+  const getInitialStatus = (): LogStatus | null => {
+    const base = status ?? (hasLog ? null : fallbackStatus);
+    return !isReleased && base && base !== "watchlist" ? "watchlist" : base;
+  };
+
+  const [draftStatus, setDraftStatus] = useState<LogStatus | null>(getInitialStatus);
   const [draftFavorite, setDraftFavorite] = useState<boolean>(isFavorite);
   const [draftRating, setDraftRating] = useState<number>(rating);
   const [draftReview, setDraftReview] = useState<string>(review);
@@ -171,6 +166,7 @@ export default function MediaReviewModal({
   const [draftWatchedDate, setDraftWatchedDate] = useState<string>(watchedDate || "");
   const [draftStartDate, setDraftStartDate] = useState<string>(startDate || "");
   const [draftEndDate, setDraftEndDate] = useState<string>(endDate || "");
+  const [draftHours, setDraftHours] = useState<string>(hoursPlayed ? String(hoursPlayed) : "");
   const [draftPoster, setDraftPoster] = useState<string | null>(selectedPoster ?? null);
   const [draftBackdrop, setDraftBackdrop] = useState<string | null>(selectedBackdrop ?? null);
   const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
@@ -178,11 +174,7 @@ export default function MediaReviewModal({
 
   useEffect(() => {
     if (isOpen) {
-      const initialStatus =
-        !isReleased && status !== "watchlist"
-          ? "watchlist"
-          : (status as Exclude<MediaStatus, null>) || fallbackStatus;
-      setDraftStatus(initialStatus);
+      setDraftStatus(getInitialStatus());
       setDraftFavorite(isFavorite);
       setDraftRating(rating);
       setDraftReview(review);
@@ -190,6 +182,7 @@ export default function MediaReviewModal({
       setDraftWatchedDate(watchedDate || "");
       setDraftStartDate(startDate || "");
       setDraftEndDate(endDate || "");
+      setDraftHours(hoursPlayed ? String(hoursPlayed) : "");
       setDraftPoster(selectedPoster ?? null);
       setDraftBackdrop(selectedBackdrop ?? null);
     }
@@ -285,20 +278,25 @@ export default function MediaReviewModal({
   );
 
   const handleSaveClick = () => {
-    let finalStatus: Exclude<MediaStatus, null> =
-      draftStatus || fallbackStatus;
-    if (!isReleased && finalStatus !== "watchlist") {
-      finalStatus = "watchlist";
-    }
+    const finalStatus: LogStatus | null =
+      !isReleased && draftStatus && draftStatus !== "watchlist" ? "watchlist" : draftStatus;
+    const isWatchlist = finalStatus === "watchlist";
+    const parsedHours = parseFloat(draftHours.replace(",", "."));
     onSave({
       status: finalStatus,
       isFavorite: draftFavorite,
-      rating: finalStatus === "watchlist" ? 0 : draftRating,
+      rating: isWatchlist ? 0 : draftRating,
       review: draftReview,
       hasSpoilers: draftSpoilers,
-      watchedDate: finalStatus === "watchlist" ? "" : draftWatchedDate,
-      startDate: finalStatus === "watchlist" ? "" : draftStartDate,
-      endDate: finalStatus === "watchlist" ? "" : draftEndDate,
+      watchedDate: isWatchlist ? "" : draftWatchedDate,
+      startDate: isWatchlist ? "" : draftStartDate,
+      endDate: isWatchlist ? "" : draftEndDate,
+      hoursPlayed:
+        mediaType === "game" && !isWatchlist && !isNaN(parsedHours)
+          ? Math.min(9999.9, Math.max(0, Math.round(parsedHours * 10) / 10))
+          : mediaType === "game" && !isWatchlist
+          ? 0
+          : undefined,
       customPosterPath: draftPoster,
       customBackdropPath: draftBackdrop,
     });
@@ -420,7 +418,7 @@ export default function MediaReviewModal({
               </div>
 
               {draftStatus !== "watchlist" && (
-                mediaType === "tv" || mediaType === "anime" ? (
+                mediaType === "tv" || mediaType === "anime" || mediaType === "game" ? (
                   <div className="mt-4 flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-zinc-400">Start</span>
@@ -439,6 +437,20 @@ export default function MediaReviewModal({
                         placeholder="dd/mm/yyyy"
                       />
                     </div>
+
+                    {mediaType === "game" && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-zinc-400">Hours</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={draftHours}
+                          onChange={(e) => setDraftHours(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 6))}
+                          placeholder="0"
+                          className="w-20 bg-zinc-900 border border-zinc-800 rounded-sm px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/80 transition-colors"
+                        />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="mt-4">
@@ -465,7 +477,7 @@ export default function MediaReviewModal({
                           disabled={!isAllowed}
                           onClick={() => {
                             if (!isAllowed) return;
-                            setDraftStatus(opt.key);
+                            setDraftStatus(isSelected ? null : opt.key);
                           }}
                           title={!isAllowed ? "Not released yet" : opt.label}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wide transition-all ${
@@ -488,12 +500,7 @@ export default function MediaReviewModal({
                       type="button"
                       onClick={() => {
                         if (!draftFavorite && canAddFavorite === false) {
-                          addToast(
-                            mediaType === "movie"
-                              ? "You can only have up to 5 favorite movies"
-                              : "You can only have up to 5 favorite series",
-                            "error"
-                          );
+                          addToast(favoriteLimitToast(mediaType), "error");
                           return;
                         }
                         setDraftFavorite(!draftFavorite);
@@ -541,7 +548,7 @@ export default function MediaReviewModal({
 
             <div className="flex items-center justify-between gap-2.5">
               <div>
-                {status && onDelete && (
+                {hasLog && onDelete && (
                   <button
                     type="button"
                     onClick={onDelete}

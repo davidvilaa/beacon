@@ -73,6 +73,8 @@ supabase/schema.sql                  DDL (see warnings below)
 
 ### Patterns
 - Media detail pages are `"use client"` and share the same composition: `MediaLayout` + action/info columns + tabs + review/list/artwork modals. When adding or changing a feature for one module, check whether the other 3 modules need the same change to stay consistent.
+- User log logic lives in `hooks/useMediaLog.ts` + per-module config in `lib/media/log.ts` (`LOG_CONFIG`: table, id column, date mode, episodes/hours tracking, status labels and DB status conversion). Pages never query `user_*` tables directly. Rules: removing the status keeps the log while it still has a favorite, rating or review (the row is deleted only when nothing is left); unreleased media only allow the watchlist/backlog status (`isMediaReleased`); toasts come from `statusToast` / `favoriteLimitToast`.
+- Artwork shown on a detail page = page picker choice → logged `custom_*` artwork → random default picked on page entry (`pickRandomPoster`/`pickRandomBackdrop`, or `useArtworkOptions().randomPoster/randomBackdrop` when the source is the artwork route). Review and list modals open with that artwork; saving a review persists it as the log's `custom_*`; list items keep their own artwork. Picker lists come from `hooks/useArtworkOptions.ts`, loaded lazily on picker/modal open unless the random default needs them (`eagerPosters`/`eagerBackdrops`).
 - Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, always through `lib/media/cache.ts` (`upsertMediaCache` + `movieCacheInput`/`tvCacheInput`/`animeCacheInput`/`gameCacheInput`), never with a hand-written `upsert`. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists.ts → fetchCachedMediaMap`).
 - `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`.
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
@@ -97,13 +99,13 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
 
 - **`public.user_movies`** — unique `(user_id, movie_id)`
   - `id` uuid PK, `user_id` → users, `movie_id` → movies
-  - `status` in `('watched','watchlist')`
+  - `status` nullable, in `('watched','watchlist')`
   - `is_favorite` bool, `rating` numeric(2,1) 0.5–5.0, `review`, `has_spoilers` bool
   - `custom_poster_path`, `custom_backdrop_path`, `watched_date` date, `created_at`, `updated_at`
 
 - **`public.user_series`** — unique `(user_id, series_id, season_number)` (logged **per season**)
   - `id`, `user_id`, `series_id` → series, `season_number` int not null default 1
-  - `status` in `('watching','watched','paused','dropped','watchlist')`
+  - `status` nullable, in `('watching','watched','paused','dropped','watchlist')`
   - `is_favorite`, `rating`, `review`, `has_spoilers`, `custom_poster_path`, `custom_backdrop_path`
   - `last_watched_episode` int default 0, `start_date`, `end_date`, `created_at`, `updated_at`
 
@@ -111,7 +113,7 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
   - same as user_series without `season_number`; `anime_id` → animes
 
 - **`public.user_games`** — unique `(user_id, game_id)`
-  - `status` in `('playing','completed','paused','dropped','backlog')`. The shared UI components work with watch-style keys; `lib/media-utils.ts` (`gameStatusToShared` / `sharedStatusToGame`) converts at the game page's read/write boundary.
+  - `status` nullable, in `('playing','completed','paused','dropped','backlog')`. The shared UI components work with watch-style keys; `LOG_CONFIG.game` converts through `gameStatusToShared` / `sharedStatusToGame` (`lib/media-utils.ts`). `hours_played` is edited from the review modal.
   - `is_favorite`, `rating`, `review`, `has_spoilers`, `custom_poster_path`, `custom_backdrop_path`
   - `hours_played` numeric(5,1) default 0, `platform` text, `start_date`, `end_date`, `created_at`, `updated_at`
 

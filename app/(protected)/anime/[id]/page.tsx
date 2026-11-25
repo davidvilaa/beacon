@@ -9,18 +9,12 @@ import {
   getAnimeBackdropUrl,
   stripHtml,
 } from "@/lib/anilist";
-import { getPosterUrl, getBackdropUrl, MovieImage } from "@/lib/tmdb";
+import { getPosterUrl, getBackdropUrl } from "@/lib/tmdb";
 import Loading from "@/components/ui/Loading";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/modules/MediaLayout";
-import MediaActionColumn, {
-  MediaStatus,
-} from "@/components/modules/columns/MediaActionColumn";
+import MediaActionColumn from "@/components/modules/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/modules/columns/MediaInfoColumn";
-import MediaReviewModal, {
-  MediaReviewData,
-} from "@/components/modules/modals/MediaReviewModal";
+import MediaReviewModal from "@/components/modules/modals/MediaReviewModal";
 import ListModal from "@/components/modules/modals/ListModal";
 import ArtworkPickerModal from "@/components/modules/modals/ArtworkPickerModal";
 import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal";
@@ -30,7 +24,12 @@ import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import EpisodesTab, { Episode } from "@/components/modules/tabs/EpisodesTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider";
 import { isMediaReleased } from "@/lib/media-utils";
-import { upsertMediaCacheOrThrow, animeCacheInput } from "@/lib/media/cache";
+import { animeCacheInput } from "@/lib/media/cache";
+import { useMediaLog } from "@/hooks/useMediaLog";
+import { useArtworkOptions } from "@/hooks/useArtworkOptions";
+
+type AnimeTab = "cast" | "details" | "episodes" | "trailer";
+type OpenModal = "poster" | "backdrop" | "log" | "list" | null;
 
 function AnimeDetailContent() {
   const params = useParams();
@@ -39,40 +38,18 @@ function AnimeDetailContent() {
 
   const [anime, setAnime] = useState<AnimeMedia | null>(null);
   const [loading, setLoading] = useState(true);
-  const [customPoster, setCustomPoster] = useState<string | null>(null);
-  const [customBackdrop, setCustomBackdrop] = useState<string | null>(null);
-  const [fallbackPoster, setFallbackPoster] = useState<string | null>(null);
-  const [fallbackBackdrop, setFallbackBackdrop] = useState<string | null>(null);
-  const [availablePosters, setAvailablePosters] = useState<MovieImage[]>([]);
-  const [availableBackdrops, setAvailableBackdrops] = useState<MovieImage[]>([]);
-  const [loadingPosters, setLoadingPosters] = useState(false);
-  const [loadingBackdrops, setLoadingBackdrops] = useState(false);
-  const [isPosterPickerOpen, setIsPosterPickerOpen] = useState(false);
-  const [isBackdropPickerOpen, setIsBackdropPickerOpen] = useState(false);
-  const [isBackdropLoaded, setIsBackdropLoaded] = useState(false);
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
-
-  const supabase = createClient();
-  const { addToast } = useToast();
-
-  const [animeStatus, setAnimeStatus] = useState<MediaStatus>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [canAddFavorite, setCanAddFavorite] = useState(true);
-  const [rating, setRating] = useState<number>(0);
-  const [review, setReview] = useState<string>("");
-  const [hasSpoilers, setHasSpoilers] = useState(false);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [lastWatchedEpisode, setLastWatchedEpisode] = useState<number>(0);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [activeTab, setActiveTab] = useState<
-    "cast" | "details" | "episodes" | "trailer"
-  >("cast");
+  const [loadedBackdrop, setLoadedBackdrop] = useState<string | null>(null);
+  const [openModal, setOpenModal] = useState<OpenModal>(null);
+  const [activeTab, setActiveTab] = useState<AnimeTab>("cast");
   const [selectedFranchiseCategory, setSelectedFranchiseCategory] = useState<string>("main");
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [loadedId, setLoadedId] = useState(id);
+
+  if (loadedId !== id) {
+    setLoadedId(id);
+    setSelectedFranchiseCategory("main");
+  }
 
   const releaseDateStr = useMemo(() => {
     if (!anime?.startDate?.year) return null;
@@ -223,66 +200,29 @@ function AnimeDetailContent() {
     return franchiseItems.filter((item) => item.category === "main");
   }, [franchiseItems, selectedFranchiseCategory]);
 
-  useEffect(() => {
-    let ignore = false;
-    async function fetchUserLog() {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session || !id) return;
+  const artwork = useArtworkOptions({
+    postersUrl: id ? `/api/anime/${id}/posters` : null,
+    backdropsUrl: id ? `/api/anime/${id}/backdrops` : null,
+    eagerPosters: true,
+    eagerBackdrops: true,
+  });
 
-        const { data } = await supabase
-          .from("user_animes")
-          .select("*")
-          .eq("anime_id", id)
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+  const cacheInput = useMemo(() => (anime ? animeCacheInput(anime) : null), [anime]);
 
-        if (ignore) return;
+  const log = useMediaLog({
+    mediaType: "anime",
+    mediaId: Number(id) || null,
+    cacheInput,
+    isReleased,
+    episodeCount: anime?.episodes || 0,
+    defaultPoster: artwork.randomPoster || (anime ? getAnimePosterUrl(anime) : null),
+    defaultBackdrop: artwork.randomBackdrop || (anime ? getAnimeBackdropUrl(anime) : null),
+  });
 
-        if (data) {
-          setAnimeStatus(data.status);
-          setIsFavorite(Boolean(data.is_favorite));
-          setRating(data.rating ? Number(data.rating) : 0);
-          setReview(data.review || "");
-          setHasSpoilers(Boolean(data.has_spoilers));
-          setStartDate(data.start_date || "");
-          setEndDate(data.end_date || "");
-          setLastWatchedEpisode(data.last_watched_episode || 0);
-          if (data.custom_poster_path) setCustomPoster(data.custom_poster_path);
-          if (data.custom_backdrop_path) setCustomBackdrop(data.custom_backdrop_path);
-        } else {
-          setAnimeStatus(null);
-          setIsFavorite(false);
-          setRating(0);
-          setReview("");
-          setHasSpoilers(false);
-          setStartDate("");
-          setEndDate("");
-          setLastWatchedEpisode(0);
-        }
-
-        const { count: favCount } = await supabase
-          .from("user_animes")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", session.user.id)
-          .eq("is_favorite", true);
-
-        const currentIsFav = Boolean(data?.is_favorite);
-        setCanAddFavorite(currentIsFav || (favCount || 0) < 5);
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      }
-    }
-
-    fetchUserLog();
-    return () => {
-      ignore = true;
-    };
-  }, [id, supabase]);
+  const openWithArtwork = (modal: Exclude<OpenModal, null>) => {
+    artwork.load();
+    setOpenModal(modal);
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -308,69 +248,6 @@ function AnimeDetailContent() {
     }
 
     fetchAnime();
-    return () => {
-      ignore = true;
-    };
-  }, [id]);
-
-  useEffect(() => {
-    setFallbackPoster(null);
-    setFallbackBackdrop(null);
-    setSelectedFranchiseCategory("main");
-  }, [id]);
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function fetchPosters() {
-      if (!id) return;
-      try {
-        setLoadingPosters(true);
-        const res = await fetch(`/api/anime/${id}/posters`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.posters?.length) {
-            setAvailablePosters(data.posters);
-            const candidates = data.posters.slice(0, 10);
-            const picked =
-              candidates[Math.floor(Math.random() * candidates.length)]?.file_path;
-            if (picked) {
-              setFallbackPoster(picked);
-            }
-          }
-        }
-      } catch {
-      } finally {
-        if (!ignore) setLoadingPosters(false);
-      }
-    }
-
-    async function fetchBackdrops() {
-      if (!id) return;
-      try {
-        setLoadingBackdrops(true);
-        const res = await fetch(`/api/anime/${id}/backdrops`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!ignore && data.backdrops?.length) {
-            setAvailableBackdrops(data.backdrops);
-            const candidates = data.backdrops.slice(0, 10);
-            const picked =
-              candidates[Math.floor(Math.random() * candidates.length)]?.file_path;
-            if (picked) {
-              setFallbackBackdrop(picked);
-            }
-          }
-        }
-      } catch {
-      } finally {
-        if (!ignore) setLoadingBackdrops(false);
-      }
-    }
-
-    fetchPosters();
-    fetchBackdrops();
-
     return () => {
       ignore = true;
     };
@@ -409,271 +286,6 @@ function AnimeDetailContent() {
     };
   }, [id, anime]);
 
-  const handleSelectPoster = (filePath: string) => {
-    setCustomPoster(filePath);
-    setIsPosterPickerOpen(false);
-  };
-
-  const handleSelectBackdrop = (filePath: string) => {
-    setCustomBackdrop(filePath);
-    setIsBackdropPickerOpen(false);
-  };
-
-  const handleQuickAction = async (
-    newStatus: MediaStatus,
-    newFavorite: boolean
-  ) => {
-    if (!anime) return;
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to track anime", "error");
-        return;
-      }
-
-      if (newFavorite && !canAddFavorite && !isFavorite) {
-        addToast("You can only have up to 5 favorite anime", "error");
-        return;
-      }
-
-      if (!isReleased && newStatus && newStatus !== "watchlist") {
-        addToast("This anime has not aired yet", "error");
-        return;
-      }
-
-      const prevStatus = animeStatus;
-      const prevFav = isFavorite;
-
-      setAnimeStatus(newStatus);
-      setIsFavorite(newFavorite);
-
-      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
-
-      if (!newStatus) {
-        const { error: deleteError } = await supabase
-          .from("user_animes")
-          .delete()
-          .eq("anime_id", anime.id)
-          .eq("user_id", session.user.id);
-
-        if (deleteError) throw deleteError;
-        setRating(0);
-        setReview("");
-        setHasSpoilers(false);
-        setStartDate("");
-        setEndDate("");
-        setLastWatchedEpisode(0);
-        addToast("Removed from your library", "success");
-        return;
-      }
-
-      const nextEpisode =
-        newStatus === "watched" && anime.episodes
-          ? anime.episodes
-          : lastWatchedEpisode;
-
-      const { error: userError } = await supabase.from("user_animes").upsert(
-        {
-          user_id: session.user.id,
-          anime_id: anime.id,
-          status: newStatus,
-          is_favorite: newFavorite,
-          rating: rating || null,
-          review: review || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: nextEpisode,
-          custom_poster_path: customPoster,
-          custom_backdrop_path: customBackdrop,
-        },
-        { onConflict: "user_id,anime_id" }
-      );
-
-      if (userError) {
-        setAnimeStatus(prevStatus);
-        setIsFavorite(prevFav);
-        throw userError;
-      }
-
-      if (newStatus === "watched" && anime.episodes) {
-        setLastWatchedEpisode(anime.episodes);
-      }
-
-      addToast("Updated library", "success");
-    } catch (err: any) {
-      console.error(err);
-      addToast(err?.message || "Error updating anime", "error");
-    }
-  };
-
-  const handleEpisodeChange = async (delta: number) => {
-    if (!anime) return;
-    const maxEpisodes = anime.episodes || 9999;
-    const nextEpisode = Math.max(0, Math.min(maxEpisodes, lastWatchedEpisode + delta));
-    if (nextEpisode === lastWatchedEpisode) return;
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to update progress", "error");
-        return;
-      }
-
-      setLastWatchedEpisode(nextEpisode);
-
-      const nextStatus =
-        anime.episodes && nextEpisode >= anime.episodes
-          ? "watched"
-          : "watching";
-
-      if (nextStatus !== animeStatus) {
-        setAnimeStatus(nextStatus);
-      }
-
-      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
-
-      const { error } = await supabase.from("user_animes").upsert(
-        {
-          user_id: session.user.id,
-          anime_id: anime.id,
-          status: nextStatus,
-          is_favorite: isFavorite,
-          rating: rating || null,
-          review: review || null,
-          has_spoilers: hasSpoilers,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          last_watched_episode: nextEpisode,
-          custom_poster_path: customPoster,
-          custom_backdrop_path: customBackdrop,
-        },
-        { onConflict: "user_id,anime_id" }
-      );
-
-      if (error) throw error;
-      if (nextStatus === "watched" && animeStatus !== "watched") {
-        addToast("Completed anime!", "success");
-      }
-    } catch (err: any) {
-      console.error(err);
-      addToast("Failed to update episode count", "error");
-    }
-  };
-
-  const handleSaveModal = async (data: MediaReviewData) => {
-    if (!anime) return;
-    try {
-      setIsSaving(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        addToast("Please log in to save review", "error");
-        return;
-      }
-
-      if (data.isFavorite && !canAddFavorite && !isFavorite) {
-        addToast("You can only have up to 5 favorite anime", "error");
-        return;
-      }
-
-      await upsertMediaCacheOrThrow(supabase, "anime", animeCacheInput(anime));
-
-      const chosenPoster =
-        data.customPosterPath !== undefined ? data.customPosterPath : customPoster;
-      const chosenBackdrop =
-        data.customBackdropPath !== undefined ? data.customBackdropPath : customBackdrop;
-
-      const { error: userError } = await supabase.from("user_animes").upsert(
-        {
-          user_id: session.user.id,
-          anime_id: anime.id,
-          status: data.status,
-          is_favorite: data.isFavorite,
-          rating: data.rating > 0 ? data.rating : null,
-          review: data.review ? data.review.trim() : null,
-          has_spoilers: data.hasSpoilers,
-          start_date: data.startDate || null,
-          end_date: data.endDate || null,
-          last_watched_episode:
-            data.status === "watched" && anime.episodes
-              ? anime.episodes
-              : lastWatchedEpisode,
-          custom_poster_path: chosenPoster,
-          custom_backdrop_path: chosenBackdrop,
-        },
-        { onConflict: "user_id,anime_id" }
-      );
-
-      if (userError) throw userError;
-
-      if (chosenPoster !== undefined) setCustomPoster(chosenPoster);
-      if (chosenBackdrop !== undefined) setCustomBackdrop(chosenBackdrop);
-
-      setAnimeStatus(data.status);
-      setIsFavorite(data.isFavorite);
-      setRating(data.rating);
-      setReview(data.review);
-      setHasSpoilers(data.hasSpoilers);
-      setStartDate(data.startDate || "");
-      setEndDate(data.endDate || "");
-      if (data.status === "watched" && anime.episodes) {
-        setLastWatchedEpisode(anime.episodes);
-      }
-
-      setIsLogModalOpen(false);
-      addToast("Saved successfully", "success");
-    } catch (err: any) {
-      console.error(err);
-      addToast(err?.message || "Failed to save review", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteModal = async () => {
-    if (!anime) return;
-    try {
-      setIsSaving(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { error } = await supabase
-        .from("user_animes")
-        .delete()
-        .eq("anime_id", anime.id)
-        .eq("user_id", session.user.id);
-
-      if (error) throw error;
-
-      setAnimeStatus(null);
-      setIsFavorite(false);
-      setRating(0);
-      setReview("");
-      setHasSpoilers(false);
-      setStartDate("");
-      setEndDate("");
-      setLastWatchedEpisode(0);
-      setCustomPoster(null);
-      setCustomBackdrop(null);
-
-      setIsLogModalOpen(false);
-      addToast("Removed from library", "success");
-    } catch (err: any) {
-      console.error(err);
-      addToast("Failed to remove anime", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (loading) {
     return <Loading />;
   }
@@ -693,22 +305,8 @@ function AnimeDetailContent() {
   }
 
   const title = getAnimeTitle(anime.title);
-  const defaultPoster = getAnimePosterUrl(anime);
-  const defaultBackdrop = getAnimeBackdropUrl(anime);
-
-  const activePosterPath = customPoster || fallbackPoster || defaultPoster || null;
-  const posterUrl = activePosterPath
-    ? activePosterPath.startsWith("http")
-      ? activePosterPath
-      : getPosterUrl(activePosterPath, "w500")
-    : null;
-
-  const activeBackdropPath = customBackdrop || fallbackBackdrop || defaultBackdrop || null;
-  const backdropUrl = activeBackdropPath
-    ? activeBackdropPath.startsWith("http")
-      ? activeBackdropPath
-      : getBackdropUrl(activeBackdropPath, "original")
-    : null;
+  const posterUrl = getPosterUrl(log.poster, "w500");
+  const backdropUrl = getBackdropUrl(log.backdrop, "original");
 
   const hasTrailer = Boolean(
     anime.trailer?.id && anime.trailer?.site?.toLowerCase() === "youtube"
@@ -723,47 +321,36 @@ function AnimeDetailContent() {
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
   ];
 
-  const hasMultiplePosters = availablePosters.length > 1;
-  const hasMultipleBackdrops = availableBackdrops.length > 1;
+  const hasMultiplePosters = artwork.posters.length > 1;
+  const hasMultipleBackdrops = artwork.backdrops.length > 1;
 
   return (
     <>
       <MediaLayout
         backdropUrl={backdropUrl}
         backdropAlt={title}
-        isBackdropLoaded={isBackdropLoaded}
-        onBackdropLoaded={() => setIsBackdropLoaded(true)}
+        isBackdropLoaded={loadedBackdrop === backdropUrl}
+        onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
         hasMultipleBackdrops={hasMultipleBackdrops}
-        onOpenBackdropPicker={() => setIsBackdropPickerOpen(true)}
+        onOpenBackdropPicker={() => openWithArtwork("backdrop")}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
             title={title}
             hasMultiplePosters={hasMultiplePosters}
-            onOpenPosterPicker={() => setIsPosterPickerOpen(true)}
+            onOpenPosterPicker={() => openWithArtwork("poster")}
             mediaType="anime"
-            status={animeStatus}
-            isFavorite={isFavorite}
-            hasLog={Boolean(animeStatus)}
+            status={log.status}
+            isFavorite={log.isFavorite}
+            hasLog={log.hasLog}
             isReleased={isReleased}
-            onOpenLogModal={() => setIsLogModalOpen(true)}
-            onOpenListModal={() => setIsListModalOpen(true)}
-            currentEpisode={lastWatchedEpisode}
+            onOpenLogModal={() => openWithArtwork("log")}
+            onOpenListModal={() => openWithArtwork("list")}
+            currentEpisode={log.lastWatchedEpisode}
             totalEpisodes={anime.episodes}
-            onEpisodeChange={handleEpisodeChange}
-            onQuickStatusChange={(newStatus) => {
-              handleQuickAction(newStatus, isFavorite);
-            }}
-            onToggleFavorite={() => {
-              const nextFav = !isFavorite;
-              if (nextFav && !canAddFavorite) {
-                addToast("You can only have up to 5 favorite anime", "error");
-                return;
-              }
-              const nextStatus =
-                animeStatus || (isReleased ? "watched" : "watchlist");
-              handleQuickAction(nextStatus, nextFav);
-            }}
+            onEpisodeChange={log.changeEpisode}
+            onQuickStatusChange={log.setStatus}
+            onToggleFavorite={log.toggleFavorite}
           />
         }
       >
@@ -780,7 +367,7 @@ function AnimeDetailContent() {
           <MediaTabsNav
             tabs={tabs}
             activeTab={activeTab}
-            onChange={(key) => setActiveTab(key as any)}
+            onChange={(key) => setActiveTab(key as AnimeTab)}
           />
 
           {activeTab === "cast" && <CastTab cast={castList} />}
@@ -860,29 +447,29 @@ function AnimeDetailContent() {
       </MediaLayout>
 
       <ArtworkPickerModal
-        isOpen={isPosterPickerOpen}
-        onClose={() => setIsPosterPickerOpen(false)}
+        isOpen={openModal === "poster"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE ARTWORK"
         type="poster"
-        images={availablePosters}
-        selectedImage={activePosterPath}
-        onSelectImage={handleSelectPoster}
-        isLoading={loadingPosters}
+        images={artwork.posters}
+        selectedImage={log.poster}
+        onSelectImage={log.setPoster}
+        isLoading={artwork.loadingPosters}
       />
 
       <BackdropPickerModal
-        isOpen={isBackdropPickerOpen}
-        onClose={() => setIsBackdropPickerOpen(false)}
+        isOpen={openModal === "backdrop"}
+        onClose={() => setOpenModal(null)}
         title="CHANGE BANNER"
-        images={availableBackdrops}
-        selectedImage={activeBackdropPath}
-        onSelectImage={handleSelectBackdrop}
-        isLoading={loadingBackdrops}
+        images={artwork.backdrops}
+        selectedImage={log.backdrop}
+        onSelectImage={log.setBackdrop}
+        isLoading={artwork.loadingBackdrops}
       />
 
       <MediaReviewModal
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
+        isOpen={openModal === "log"}
+        onClose={() => setOpenModal(null)}
         title={title}
         typeLabel="Anime"
         year={anime.startDate?.year}
@@ -892,46 +479,51 @@ function AnimeDetailContent() {
         posterUrl={posterUrl}
         backdropUrl={backdropUrl}
         mediaType="anime"
-        status={animeStatus}
-        isFavorite={isFavorite}
-        canAddFavorite={canAddFavorite}
-        rating={rating}
-        review={review}
-        hasSpoilers={hasSpoilers}
-        startDate={startDate}
-        endDate={endDate}
-        availablePosters={availablePosters}
-        availableBackdrops={availableBackdrops}
-        selectedPoster={activePosterPath}
-        selectedBackdrop={activeBackdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
-        isSaving={isSaving}
+        status={log.status}
+        hasLog={log.hasLog}
+        isFavorite={log.isFavorite}
+        canAddFavorite={log.canAddFavorite}
+        rating={log.rating}
+        review={log.review}
+        hasSpoilers={log.hasSpoilers}
+        startDate={log.startDate}
+        endDate={log.endDate}
+        availablePosters={artwork.posters}
+        availableBackdrops={artwork.backdrops}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
+        isSaving={log.isSaving}
         isReleased={isReleased}
-        onSave={handleSaveModal}
-        onDelete={handleDeleteModal}
+        onSave={async (data) => {
+          if (await log.saveReview(data)) setOpenModal(null);
+        }}
+        onDelete={async () => {
+          if (await log.deleteLog()) setOpenModal(null);
+        }}
       />
 
       <ListModal
-        isOpen={isListModalOpen}
-        onClose={() => setIsListModalOpen(false)}
+        isOpen={openModal === "list"}
+        onClose={() => setOpenModal(null)}
         media={{
           mediaType: "anime",
           mediaId: anime.id,
           title,
           overview: stripHtml(anime.description) || null,
-          posterPath: activePosterPath,
-          backdropPath: activeBackdropPath,
-          customPosterPath: activePosterPath,
-          customBackdropPath: activeBackdropPath,
+          posterPath: getAnimePosterUrl(anime),
+          backdropPath: getAnimeBackdropUrl(anime),
+          customPosterPath: log.poster,
+          customBackdropPath: log.backdrop,
           numberOfEpisodes: anime.episodes || 0,
         }}
-        availablePosters={availablePosters}
-        availableBackdrops={availableBackdrops}
-        selectedPoster={activePosterPath}
-        selectedBackdrop={activeBackdropPath}
-        loadingPosters={loadingPosters}
-        loadingBackdrops={loadingBackdrops}
+        availablePosters={artwork.posters}
+        availableBackdrops={artwork.backdrops}
+        selectedPoster={log.poster}
+        selectedBackdrop={log.backdrop}
+        loadingPosters={artwork.loadingPosters}
+        loadingBackdrops={artwork.loadingBackdrops}
       />
     </>
   );

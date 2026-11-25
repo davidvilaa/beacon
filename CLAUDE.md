@@ -125,4 +125,5 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
 
 - **Favorites limit**: max **5 favorites per user per media type**, enforced by triggers `check_user_{movies,series,animes,games}_favorites_limit` + client-side checks with toasts. The triggers take a per-user advisory lock so concurrent requests cannot exceed the limit.
 - `handle_updated_at()` trigger keeps `updated_at` fresh on every table that has it.
+- **DB conventions**: every function sets `search_path`; trigger-only and security definer functions have `execute` revoked from `anon`/`authenticated`; RLS policies wrap auth calls as `(select auth.uid())` / `(select auth.role())`. Event trigger `ensure_rls` → `rls_auto_enable()` enables RLS automatically on every new `public` table.
 - **Storage**: bucket `avatars` (public, profile pictures uploaded from `settings` as `<user_id>-<random>.<ext>`). Authenticated users may only insert files prefixed with their own id and update files they own.

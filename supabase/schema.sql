@@ -4,7 +4,7 @@ begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 create table public.users (
   id uuid not null primary key references auth.users(id) on delete cascade,
@@ -20,7 +20,7 @@ create policy "Perfiles visibles para todos"
   on public.users for select using (true);
 
 create policy "Puedes actualizar tu propio perfil"
-  on public.users for update using (auth.uid() = id);
+  on public.users for update using ((select auth.uid()) = id);
 
 create or replace function public.handle_new_user()
 returns trigger as $$
@@ -33,7 +33,9 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -46,11 +48,11 @@ on conflict (id) do nothing;
 
 create policy "Permitir subir avatares"
   on storage.objects for insert to authenticated
-  with check (bucket_id = 'avatars' and name like auth.uid()::text || '-%');
+  with check (bucket_id = 'avatars' and name like (select auth.uid())::text || '-%');
 
 create policy "Permitir actualizar avatares"
   on storage.objects for update to authenticated
-  using (bucket_id = 'avatars' and owner_id = auth.uid()::text);
+  using (bucket_id = 'avatars' and owner_id = (select auth.uid())::text);
 
 create table public.movies (
   id bigint not null primary key,
@@ -68,10 +70,10 @@ create policy "movies_read_policy"
   on public.movies for select using (true);
 
 create policy "movies_insert_policy"
-  on public.movies for insert with check (auth.role() = 'authenticated');
+  on public.movies for insert with check ((select auth.role()) = 'authenticated');
 
 create policy "movies_update_policy"
-  on public.movies for update using (auth.role() = 'authenticated');
+  on public.movies for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_movies_updated_at
   before update on public.movies
@@ -95,10 +97,10 @@ create policy "series_read_policy"
   on public.series for select using (true);
 
 create policy "series_insert_policy"
-  on public.series for insert with check (auth.role() = 'authenticated');
+  on public.series for insert with check ((select auth.role()) = 'authenticated');
 
 create policy "series_update_policy"
-  on public.series for update using (auth.role() = 'authenticated');
+  on public.series for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_series_updated_at
   before update on public.series
@@ -123,10 +125,10 @@ create policy "animes_read_policy"
   on public.animes for select using (true);
 
 create policy "animes_insert_policy"
-  on public.animes for insert with check (auth.role() = 'authenticated');
+  on public.animes for insert with check ((select auth.role()) = 'authenticated');
 
 create policy "animes_update_policy"
-  on public.animes for update using (auth.role() = 'authenticated');
+  on public.animes for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_animes_updated_at
   before update on public.animes
@@ -149,10 +151,10 @@ create policy "games_read_policy"
   on public.games for select using (true);
 
 create policy "games_insert_policy"
-  on public.games for insert with check (auth.role() = 'authenticated');
+  on public.games for insert with check ((select auth.role()) = 'authenticated');
 
 create policy "games_update_policy"
-  on public.games for update using (auth.role() = 'authenticated');
+  on public.games for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_games_updated_at
   before update on public.games
@@ -175,7 +177,6 @@ create table public.user_movies (
   constraint user_movies_user_movie_unique unique (user_id, movie_id)
 );
 
-create index idx_user_movies_user_id on public.user_movies (user_id);
 create index idx_user_movies_movie_id on public.user_movies (movie_id);
 create index idx_user_movies_status on public.user_movies (user_id, status);
 create index idx_user_movies_favorite on public.user_movies (user_id, is_favorite);
@@ -186,13 +187,13 @@ create policy "user_movies_select_policy"
   on public.user_movies for select using (true);
 
 create policy "user_movies_insert_policy"
-  on public.user_movies for insert with check (auth.uid() = user_id);
+  on public.user_movies for insert with check ((select auth.uid()) = user_id);
 
 create policy "user_movies_update_policy"
-  on public.user_movies for update using (auth.uid() = user_id);
+  on public.user_movies for update using ((select auth.uid()) = user_id);
 
 create policy "user_movies_delete_policy"
-  on public.user_movies for delete using (auth.uid() = user_id);
+  on public.user_movies for delete using ((select auth.uid()) = user_id);
 
 create trigger trigger_user_movies_updated_at
   before update on public.user_movies
@@ -218,7 +219,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 create trigger trigger_user_movies_favorites_limit
   before insert or update on public.user_movies
@@ -244,7 +245,6 @@ create table public.user_series (
   constraint user_series_user_season_unique unique (user_id, series_id, season_number)
 );
 
-create index idx_user_series_user_id on public.user_series (user_id);
 create index idx_user_series_series_id on public.user_series (series_id);
 create index idx_user_series_season on public.user_series (series_id, season_number);
 create index idx_user_series_status on public.user_series (user_id, status);
@@ -256,13 +256,13 @@ create policy "user_series_select_policy"
   on public.user_series for select using (true);
 
 create policy "user_series_insert_policy"
-  on public.user_series for insert with check (auth.uid() = user_id);
+  on public.user_series for insert with check ((select auth.uid()) = user_id);
 
 create policy "user_series_update_policy"
-  on public.user_series for update using (auth.uid() = user_id);
+  on public.user_series for update using ((select auth.uid()) = user_id);
 
 create policy "user_series_delete_policy"
-  on public.user_series for delete using (auth.uid() = user_id);
+  on public.user_series for delete using ((select auth.uid()) = user_id);
 
 create trigger trigger_user_series_updated_at
   before update on public.user_series
@@ -288,7 +288,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 create trigger trigger_user_series_favorites_limit
   before insert or update on public.user_series
@@ -313,7 +313,6 @@ create table public.user_animes (
   constraint user_animes_user_anime_unique unique (user_id, anime_id)
 );
 
-create index idx_user_animes_user_id on public.user_animes (user_id);
 create index idx_user_animes_anime_id on public.user_animes (anime_id);
 create index idx_user_animes_status on public.user_animes (user_id, status);
 create index idx_user_animes_favorite on public.user_animes (user_id, is_favorite);
@@ -324,13 +323,13 @@ create policy "user_animes_select_policy"
   on public.user_animes for select using (true);
 
 create policy "user_animes_insert_policy"
-  on public.user_animes for insert with check (auth.uid() = user_id);
+  on public.user_animes for insert with check ((select auth.uid()) = user_id);
 
 create policy "user_animes_update_policy"
-  on public.user_animes for update using (auth.uid() = user_id);
+  on public.user_animes for update using ((select auth.uid()) = user_id);
 
 create policy "user_animes_delete_policy"
-  on public.user_animes for delete using (auth.uid() = user_id);
+  on public.user_animes for delete using ((select auth.uid()) = user_id);
 
 create trigger trigger_user_animes_updated_at
   before update on public.user_animes
@@ -356,7 +355,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 create trigger trigger_user_animes_favorites_limit
   before insert or update on public.user_animes
@@ -382,7 +381,6 @@ create table public.user_games (
   constraint user_games_user_game_unique unique (user_id, game_id)
 );
 
-create index idx_user_games_user_id on public.user_games (user_id);
 create index idx_user_games_game_id on public.user_games (game_id);
 create index idx_user_games_status on public.user_games (user_id, status);
 create index idx_user_games_favorite on public.user_games (user_id, is_favorite);
@@ -393,13 +391,13 @@ create policy "user_games_select_policy"
   on public.user_games for select using (true);
 
 create policy "user_games_insert_policy"
-  on public.user_games for insert with check (auth.uid() = user_id);
+  on public.user_games for insert with check ((select auth.uid()) = user_id);
 
 create policy "user_games_update_policy"
-  on public.user_games for update using (auth.uid() = user_id);
+  on public.user_games for update using ((select auth.uid()) = user_id);
 
 create policy "user_games_delete_policy"
-  on public.user_games for delete using (auth.uid() = user_id);
+  on public.user_games for delete using ((select auth.uid()) = user_id);
 
 create trigger trigger_user_games_updated_at
   before update on public.user_games
@@ -425,7 +423,7 @@ begin
   end if;
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 create trigger trigger_user_games_favorites_limit
   before insert or update on public.user_games
@@ -449,16 +447,16 @@ create index idx_lists_updated_at on public.lists (updated_at desc);
 alter table public.lists enable row level security;
 
 create policy "lists_select_policy"
-  on public.lists for select using (is_private = false or auth.uid() = user_id);
+  on public.lists for select using (is_private = false or (select auth.uid()) = user_id);
 
 create policy "lists_insert_policy"
-  on public.lists for insert with check (auth.uid() = user_id);
+  on public.lists for insert with check ((select auth.uid()) = user_id);
 
 create policy "lists_update_policy"
-  on public.lists for update using (auth.uid() = user_id);
+  on public.lists for update using ((select auth.uid()) = user_id);
 
 create policy "lists_delete_policy"
-  on public.lists for delete using (auth.uid() = user_id);
+  on public.lists for delete using ((select auth.uid()) = user_id);
 
 create trigger trigger_lists_updated_at
   before update on public.lists
@@ -490,7 +488,7 @@ create policy "list_items_select_policy"
     exists (
       select 1 from public.lists
       where lists.id = list_items.list_id
-        and (lists.is_private = false or lists.user_id = auth.uid())
+        and (lists.is_private = false or lists.user_id = (select auth.uid()))
     )
   );
 
@@ -499,7 +497,7 @@ create policy "list_items_insert_policy"
     exists (
       select 1 from public.lists
       where lists.id = list_items.list_id
-        and lists.user_id = auth.uid()
+        and lists.user_id = (select auth.uid())
     )
   );
 
@@ -508,7 +506,7 @@ create policy "list_items_update_policy"
     exists (
       select 1 from public.lists
       where lists.id = list_items.list_id
-        and lists.user_id = auth.uid()
+        and lists.user_id = (select auth.uid())
     )
   );
 
@@ -517,7 +515,7 @@ create policy "list_items_delete_policy"
     exists (
       select 1 from public.lists
       where lists.id = list_items.list_id
-        and lists.user_id = auth.uid()
+        and lists.user_id = (select auth.uid())
     )
   );
 
@@ -540,7 +538,43 @@ create policy "follows_select_policy"
   on public.follows for select using (true);
 
 create policy "follows_insert_policy"
-  on public.follows for insert with check (auth.uid() = follower_id);
+  on public.follows for insert with check ((select auth.uid()) = follower_id);
 
 create policy "follows_delete_policy"
-  on public.follows for delete using (auth.uid() = follower_id);
+  on public.follows for delete using ((select auth.uid()) = follower_id);
+
+create or replace function public.rls_auto_enable()
+returns event_trigger as $$
+declare
+  cmd record;
+  tbl name;
+begin
+  for cmd in
+    select *
+    from pg_event_trigger_ddl_commands()
+    where command_tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      and object_type in ('table', 'partitioned table')
+  loop
+    if cmd.schema_name = 'public' then
+      begin
+        select c.relname into tbl from pg_catalog.pg_class c where c.oid = cmd.objid;
+        execute format('alter table if exists %I.%I enable row level security', cmd.schema_name, tbl);
+        raise log 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      exception
+        when others then
+          raise log 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      end;
+    else
+      raise log 'rls_auto_enable: skip % (not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+    end if;
+  end loop;
+end;
+$$ language plpgsql security definer set search_path = pg_catalog;
+
+revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+
+drop event trigger if exists ensure_rls;
+create event trigger ensure_rls
+  on ddl_command_end
+  when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+  execute function public.rls_auto_enable();

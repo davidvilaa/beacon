@@ -144,8 +144,8 @@ function GameDetailContent() {
   }, [trailerVideo, dlcItems.length, franchiseItems.length]);
 
   const artwork = useArtworkOptions({
-    postersUrl: id ? `/api/games/${id}/posters` : null,
-    backdropsUrl: id ? `/api/games/${id}/backdrops` : null,
+    postersUrl: id ? `/api/game/${id}/posters` : null,
+    backdropsUrl: id ? `/api/game/${id}/backdrops` : null,
     eagerPosters: true,
     eagerBackdrops: true,
   });
@@ -181,7 +181,7 @@ function GameDetailContent() {
       if (!id) return;
       try {
         setLoading(true);
-        const res = await fetch(`/api/games/${id}`);
+        const res = await fetch(`/api/game/${id}`);
         if (!res.ok) throw new Error("Failed to fetch game");
         const data: IGDBGameDetail = await res.json();
         if (!ignore) {

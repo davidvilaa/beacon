@@ -434,11 +434,11 @@ function ReviewDetailContent() {
         if (record) {
           const endpoint =
             record.media_type === "movie"
-              ? `/api/movies/${record.media_id}`
+              ? `/api/movie/${record.media_id}`
               : record.media_type === "anime"
               ? `/api/anime/${record.media_id}`
               : record.media_type === "game"
-              ? `/api/games/${record.media_id}`
+              ? `/api/game/${record.media_id}`
               : `/api/tv/${record.media_id}?season=${record.season_number || 1}`;
 
           fetch(endpoint)

@@ -69,8 +69,8 @@ function MovieDetailContent() {
   });
 
   const artwork = useArtworkOptions({
-    postersUrl: id ? `/api/movies/${id}/posters` : null,
-    backdropsUrl: id ? `/api/movies/${id}/backdrops` : null,
+    postersUrl: id ? `/api/movie/${id}/posters` : null,
+    backdropsUrl: id ? `/api/movie/${id}/backdrops` : null,
   });
 
   const openWithArtwork = (modal: Exclude<OpenModal, null>) => {
@@ -84,7 +84,7 @@ function MovieDetailContent() {
     async function fetchMovie() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/movies/${id}`);
+        const res = await fetch(`/api/movie/${id}`);
         if (!res.ok) throw new Error("Failed to fetch movie");
         const data: MovieDetails = await res.json();
 

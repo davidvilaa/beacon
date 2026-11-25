@@ -77,14 +77,15 @@ supabase/schema.sql                  DDL (see warnings below)
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
 
 ## Database schema (Supabase)
-Full DDL in `supabase/schema.sql`. **Warning**: that script starts with `drop table ... cascade` for every table — never run it against the live DB without David's explicit OK. When the schema changes, update BOTH `schema.sql` and this section.
+Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/reset.sql` holds the `drop table ... cascade` statements for every table — never run it against the live DB without David's explicit OK. When the schema changes, update BOTH `schema.sql` and this section.
 
-- **`public.users`** *(not created in schema.sql — lives in Supabase directly)*
-  - `id` uuid PK (references `auth.users`)
-  - `username` text unique
+- **`public.users`**
+  - `id` uuid PK (references `auth.users`, on delete cascade)
+  - `username` text unique (nullable in DB; the register form enforces 3–20 chars `[a-zA-Z0-9_]`)
   - `avatar_url` text
   - `bio` text default `''`
   - `social_links` jsonb default `'[]'`
+  - No `created_at`/`updated_at`. RLS: select public; update only `auth.uid() = id`; no insert policy (rows are created by trigger `on_auth_user_created` → `handle_new_user()`, security definer, copying `username` and `avatar_url` from signup metadata).
 
 - **`public.movies`** — `id` bigint PK (TMDB id), `title` text not null, `overview`, `poster_path`, `backdrop_path`, `created_at`, `updated_at`
 - **`public.series`** — `id` bigint PK (TMDB id), `name` text not null, `overview`, `poster_path`, `backdrop_path`, `number_of_seasons` int default 0, `number_of_episodes` int default 0, `created_at`, `updated_at`

@@ -1,15 +1,3 @@
-drop table if exists public.follows cascade;
-drop table if exists public.list_items cascade;
-drop table if exists public.lists cascade;
-drop table if exists public.user_movies cascade;
-drop table if exists public.user_series cascade;
-drop table if exists public.user_animes cascade;
-drop table if exists public.user_games cascade;
-drop table if exists public.movies cascade;
-drop table if exists public.series cascade;
-drop table if exists public.animes cascade;
-drop table if exists public.games cascade;
-
 create or replace function public.handle_updated_at()
 returns trigger as $$
 begin
@@ -17,6 +5,52 @@ begin
   return new;
 end;
 $$ language plpgsql;
+
+create table public.users (
+  id uuid not null primary key references auth.users(id) on delete cascade,
+  username text null unique,
+  avatar_url text null,
+  bio text null default '',
+  social_links jsonb null default '[]'::jsonb
+);
+
+alter table public.users enable row level security;
+
+create policy "Perfiles visibles para todos"
+  on public.users for select using (true);
+
+create policy "Puedes actualizar tu propio perfil"
+  on public.users for update using (auth.uid() = id);
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.users (id, username, avatar_url)
+  values (
+    new.id,
+    new.raw_user_meta_data ->> 'username',
+    new.raw_user_meta_data ->> 'avatar_url'
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "Permitir subir avatares"
+  on storage.objects for insert
+  with check (bucket_id = 'avatars');
+
+create policy "Permitir actualizar avatares"
+  on storage.objects for update
+  using (bucket_id = 'avatars');
 
 create table public.movies (
   id bigint not null primary key,

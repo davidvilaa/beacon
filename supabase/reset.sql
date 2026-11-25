@@ -1,0 +1,12 @@
+drop table if exists public.users cascade;
+drop table if exists public.follows cascade;
+drop table if exists public.list_items cascade;
+drop table if exists public.lists cascade;
+drop table if exists public.user_movies cascade;
+drop table if exists public.user_series cascade;
+drop table if exists public.user_animes cascade;
+drop table if exists public.user_games cascade;
+drop table if exists public.movies cascade;
+drop table if exists public.series cascade;
+drop table if exists public.animes cascade;
+drop table if exists public.games cascade;

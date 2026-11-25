@@ -1,8 +1,54 @@
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
-  return NextResponse.next();
+const PUBLIC_PAGES = ['/', '/login', '/register'];
+const AUTH_PAGES = ['/login', '/register'];
+
+export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith('/api')) {
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    return response;
+  }
+
+  if (!user && !PUBLIC_PAGES.includes(pathname)) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  if (user && AUTH_PAGES.includes(pathname)) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  return response;
 }
 
 export const config = {

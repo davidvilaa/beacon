@@ -17,7 +17,7 @@ import {
 } from "@/lib/anilist";
 import { searchGames, getIgdbImageUrl } from "@/lib/igdb";
 import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists";
-import { createClient } from "@supabase/supabase-js";
+import { createAnonClient } from "@/lib/supabase/server";
 
 function normalizeModule(val: string): string {
   const v = val.toLowerCase().trim();
@@ -92,10 +92,7 @@ export async function GET(request: Request) {
     }
 
     if (moduleType === "users") {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createAnonClient();
       const fromIndex = (uiPage - 1) * 10;
       const toIndex = fromIndex + 9;
 
@@ -130,10 +127,7 @@ export async function GET(request: Request) {
     }
 
     if (moduleType === "lists") {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createAnonClient();
       const fromIndex = (uiPage - 1) * 10;
       const toIndex = fromIndex + 9;
 
@@ -380,10 +374,7 @@ export async function GET(request: Request) {
       rawResults = [];
       totalResults = 0;
     } else {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createAnonClient();
 
       const [multiData, usersRes, listsRes, companyData, animeData, gamesData] = await Promise.all([
         searchMulti(query, tmdbPage),

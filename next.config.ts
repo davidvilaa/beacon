@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
+const isProductionBuild = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
+  typescript: {
+    tsconfigPath: isProductionBuild ? "tsconfig.build.json" : "tsconfig.json",
+  },
   images: {
     qualities: [75, 100],
     remotePatterns: [

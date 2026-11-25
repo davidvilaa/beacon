@@ -1,4 +1,5 @@
 import { isExcludedTmdbMedia } from "@/config/content-filters";
+import { pickBestPoster } from "@/lib/artwork/pick";
 
 export interface Movie {
   id: number;
@@ -42,9 +43,9 @@ export function getBackdropUrl(
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 }
 
-async function fetchFromTmdb<T>(
+export async function fetchFromTmdb<T>(
   endpoint: string,
-  params: Record<string, string | number | undefined> = {}
+  params: Record<string, string | number | null | undefined> = {}
 ): Promise<T> {
   const token = process.env.TMDB_ACCESS_TOKEN?.trim();
   const apiKey = process.env.TMDB_API_KEY?.trim();
@@ -61,7 +62,7 @@ async function fetchFromTmdb<T>(
     }
   });
 
-  if (!url.searchParams.has("language")) {
+  if (!url.searchParams.has("language") && params.language !== null) {
     url.searchParams.set("language", "en-US");
   }
 
@@ -420,18 +421,7 @@ export async function getBestMoviePoster(
       `/movie/${movieId}/images`,
       { include_image_language: "en,null" }
     );
-    const valid = (data.posters || []).filter(
-      (p) =>
-        Boolean(p.file_path) &&
-        (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
-    );
-    const sorted = [...valid].sort((a, b) => {
-      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
-      if (countDiff !== 0) return countDiff;
-      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
-    });
-
-    const best = sorted[0]?.file_path || null;
+    const best = pickBestPoster(data.posters);
     if (numId && best) {
       if (posterCache.size > 2000) {
         posterCache.clear();
@@ -475,19 +465,9 @@ export async function getMovieDetails(
         const enrichedParts = await Promise.all(
           sortedParts.map(async (part) => {
             if (part.id === data.id && data.images?.posters) {
-              const valid = data.images.posters.filter(
-                (p) =>
-                  Boolean(p.file_path) &&
-                  (!p.aspect_ratio || (p.aspect_ratio >= 0.55 && p.aspect_ratio <= 0.8))
-              );
-              const sorted = [...valid].sort((a, b) => {
-                const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
-                if (countDiff !== 0) return countDiff;
-                return (b.vote_average ?? 0) - (a.vote_average ?? 0);
-              });
               return {
                 ...part,
-                poster_path: sorted[0]?.file_path || part.poster_path,
+                poster_path: pickBestPoster(data.images.posters) || part.poster_path,
               };
             }
 

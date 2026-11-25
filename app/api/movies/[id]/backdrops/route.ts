@@ -1,81 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMovieDetails, MovieImage } from "@/lib/tmdb";
-import sharp from "sharp";
-
-const movieBackdropCache = new Map<string, { backdrops: MovieImage[]; timestamp: number }>();
-const CACHE_TTL = 1000 * 60 * 60 * 24;
-
-interface BackdropFingerprint {
-  dHash: string;
-  aHash: string;
-  rgb: [number, number, number];
-}
-
-async function getBackdropFingerprint(filePath: string): Promise<BackdropFingerprint | null> {
-  try {
-    const res = await fetch(`https://image.tmdb.org/t/p/w300${filePath}`, {
-      signal: AbortSignal.timeout(2500),
-    });
-    if (!res.ok) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-
-    const [gray9x8, rgb1x1] = await Promise.all([
-      sharp(buf).grayscale().resize(9, 8, { fit: "fill" }).raw().toBuffer(),
-      sharp(buf).resize(1, 1, { fit: "fill" }).raw().toBuffer(),
-    ]);
-
-    let sum = 0;
-    for (let i = 0; i < 72; i++) sum += gray9x8[i];
-    const avg = sum / 72;
-
-    let dHash = "";
-    let aHash = "";
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        const idx = r * 9 + c;
-        dHash += gray9x8[idx] > gray9x8[idx + 1] ? "1" : "0";
-        aHash += gray9x8[idx] >= avg ? "1" : "0";
-      }
-    }
-
-    return {
-      dHash,
-      aHash,
-      rgb: [rgb1x1[0], rgb1x1[1], rgb1x1[2]],
-    };
-  } catch {
-    return null;
-  }
-}
-
-function hammingDistance(s1: string, s2: string): number {
-  let dist = 0;
-  for (let i = 0; i < s1.length; i++) {
-    if (s1[i] !== s2[i]) dist++;
-  }
-  return dist;
-}
-
-function colorDistance(
-  c1: [number, number, number],
-  c2: [number, number, number]
-): number {
-  return Math.sqrt(
-    Math.pow(c1[0] - c2[0], 2) +
-      Math.pow(c1[1] - c2[1], 2) +
-      Math.pow(c1[2] - c2[2], 2)
-  );
-}
-
-function isBackdropDuplicate(
-  f1: BackdropFingerprint,
-  f2: BackdropFingerprint
-): boolean {
-  const dDist = hammingDistance(f1.dHash, f2.dHash);
-  const aDist = hammingDistance(f1.aHash, f2.aHash);
-  const cDist = colorDistance(f1.rgb, f2.rgb);
-  return dDist <= 12 || (dDist <= 16 && aDist <= 12) || (dDist <= 16 && cDist <= 30);
-}
+import { getMovieBackdrops } from "@/lib/artwork/sources";
 
 export async function GET(
   request: Request,
@@ -87,61 +11,11 @@ export async function GET(
       return NextResponse.json({ error: "Movie ID is required" }, { status: 400 });
     }
 
-    const cached = movieBackdropCache.get(id);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return NextResponse.json({ backdrops: cached.backdrops });
-    }
-
-    const data = await getMovieDetails(id);
-    const rawBackdrops = data?.images?.backdrops || [];
-
-    const valid = rawBackdrops.filter(
-      (b) =>
-        Boolean(b.file_path) &&
-        (!b.aspect_ratio || (b.aspect_ratio >= 1.4 && b.aspect_ratio <= 2.2))
-    );
-
-    const sorted = [...valid].sort((a, b) => {
-      const langA = a.iso_639_1 === "en" ? 2 : a.iso_639_1 === null ? 1 : 0;
-      const langB = b.iso_639_1 === "en" ? 2 : b.iso_639_1 === null ? 1 : 0;
-      if (langA !== langB) return langB - langA;
-      const countDiff = (b.vote_count ?? 0) - (a.vote_count ?? 0);
-      if (countDiff !== 0) return countDiff;
-      return (b.vote_average ?? 0) - (a.vote_average ?? 0);
-    });
-
-    const candidates = sorted.slice(0, 100);
-    const fingerprints = await Promise.all(
-      candidates.map(async (b) => {
-        const fp = await getBackdropFingerprint(b.file_path);
-        return { backdrop: b, fp };
-      })
-    );
-
-    const unique: MovieImage[] = [];
-    const keptFps: BackdropFingerprint[] = [];
-
-    for (const item of fingerprints) {
-      if (!item.fp) {
-        unique.push(item.backdrop);
-        continue;
-      }
-
-      const isDup = keptFps.some((k) => isBackdropDuplicate(k, item.fp!));
-      if (!isDup || item.backdrop.file_path === data.backdrop_path) {
-        keptFps.push(item.fp);
-        unique.push(item.backdrop);
-      }
-
-      if (unique.length >= 80) break;
-    }
-
-    movieBackdropCache.set(id, { backdrops: unique, timestamp: Date.now() });
-
-    return NextResponse.json({ backdrops: unique });
-  } catch (error: any) {
+    const backdrops = await getMovieBackdrops(id);
+    return NextResponse.json({ backdrops });
+  } catch (error) {
     return NextResponse.json(
-      { error: error?.message || "Failed to fetch backdrops" },
+      { error: error instanceof Error ? error.message : "Failed to fetch backdrops" },
       { status: 500 }
     );
   }

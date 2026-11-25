@@ -110,7 +110,7 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
   - same as user_series without `season_number`; `anime_id` → animes
 
 - **`public.user_games`** — unique `(user_id, game_id)`
-  - `status` in `('watching','watched','paused','dropped','watchlist','playing','completed','backlog')` (UI currently uses the watch-style values)
+  - `status` in `('playing','completed','paused','dropped','backlog')`. The shared UI components work with watch-style keys; `lib/media-utils.ts` (`gameStatusToShared` / `sharedStatusToGame`) converts at the game page's read/write boundary.
   - `is_favorite`, `rating`, `review`, `has_spoilers`, `custom_poster_path`, `custom_backdrop_path`
   - `hours_played` numeric(5,1) default 0, `platform` text, `start_date`, `end_date`, `created_at`, `updated_at`
 

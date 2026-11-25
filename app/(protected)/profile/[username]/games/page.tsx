@@ -12,11 +12,12 @@ import ProfileOverviewTab, {
 import ProfileMediaTab, {
   ProfileMediaItem,
 } from "@/components/profile/ProfileMediaTab";
+import type { GameStatus } from "@/lib/media-utils";
 
 interface UserGameEntry {
   id: string;
   game_id: number;
-  status: "watching" | "watched" | "paused" | "dropped" | "watchlist";
+  status: GameStatus;
   is_favorite: boolean;
   rating: number | null;
   review: string | null;
@@ -41,12 +42,12 @@ interface UserGameEntry {
 const STATUS_OPTIONS: Option[] = [
   { id: "all", label: "All status" },
   {
-    id: "watching",
+    id: "playing",
     label: "Playing",
     icon: <PlayCircle className="w-3.5 h-3.5 text-[#a8dadc]" />,
   },
   {
-    id: "watched",
+    id: "completed",
     label: "Completed",
     icon: <Eye className="w-3.5 h-3.5 text-[#a8dadc]" />,
   },
@@ -61,7 +62,7 @@ const STATUS_OPTIONS: Option[] = [
     icon: <XCircle className="w-3.5 h-3.5 text-rose-400" />,
   },
   {
-    id: "watchlist",
+    id: "backlog",
     label: "Backlog",
     icon: <Bookmark className="w-3.5 h-3.5 text-[#a8dadc] fill-[#a8dadc]" />,
   },

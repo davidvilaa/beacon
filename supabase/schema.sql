@@ -366,7 +366,7 @@ create table public.user_games (
   id uuid not null default gen_random_uuid() primary key,
   user_id uuid not null references public.users(id) on delete cascade,
   game_id bigint not null references public.games(id) on delete cascade,
-  status text not null check (status in ('watching', 'watched', 'paused', 'dropped', 'watchlist', 'playing', 'completed', 'backlog')),
+  status text not null check (status in ('playing', 'completed', 'paused', 'dropped', 'backlog')),
   is_favorite boolean not null default false,
   rating numeric(2, 1) null check (rating >= 0.5 and rating <= 5.0),
   review text null,

@@ -21,7 +21,7 @@ import BackdropPickerModal from "@/components/modules/modals/BackdropPickerModal
 import MediaTabsNav from "@/components/modules/tabs/MediaTabsNav";
 import DetailsTab from "@/components/modules/tabs/DetailsTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/ui/FranchiseSlider";
-import { isMediaReleased } from "@/lib/media-utils";
+import { isMediaReleased, gameStatusToShared, sharedStatusToGame } from "@/lib/media-utils";
 
 async function syncGameRecord(supabaseClient: any, currentGame: IGDBGameDetail) {
   const coverUrl = getIgdbImageUrl(currentGame.cover?.image_id, "1080p");
@@ -221,7 +221,7 @@ function GameDetailContent() {
         if (ignore) return;
 
         if (data) {
-          setGameStatus(data.status);
+          setGameStatus(gameStatusToShared(data.status));
           setIsFavorite(Boolean(data.is_favorite));
           setRating(data.rating ? Number(data.rating) : 0);
           setReview(data.review || "");
@@ -389,7 +389,7 @@ function GameDetailContent() {
       const payload: any = {
         user_id: session.user.id,
         game_id: game.id,
-        status: effectiveStatus,
+        status: sharedStatusToGame(effectiveStatus),
         is_favorite: newFavorite,
         rating: rating > 0 ? rating : null,
         review: review.trim() || null,
@@ -447,7 +447,7 @@ function GameDetailContent() {
       const payload: any = {
         user_id: session.user.id,
         game_id: game.id,
-        status: data.status,
+        status: sharedStatusToGame(data.status),
         is_favorite: data.isFavorite,
         rating: data.rating > 0 ? data.rating : null,
         review: data.review.trim() || null,

@@ -4,6 +4,11 @@ import type { NextRequest } from 'next/server';
 
 const PUBLIC_PAGES = ['/', '/login', '/register'];
 const AUTH_PAGES = ['/login', '/register'];
+const PUBLIC_PAGE_PREFIXES = ['/movie/', '/tv/', '/anime/', '/game/', '/person/', '/company/'];
+const PUBLIC_API_PREFIXES = ['/api/movie/', '/api/tv/', '/api/anime/', '/api/game/'];
+
+const startsWithAny = (pathname: string, prefixes: string[]) =>
+  prefixes.some((prefix) => pathname.startsWith(prefix));
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -34,13 +39,14 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api')) {
-    if (!user) {
+    const isPublicApi = request.method === 'GET' && startsWithAny(pathname, PUBLIC_API_PREFIXES);
+    if (!user && !isPublicApi) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     return response;
   }
 
-  if (!user && !PUBLIC_PAGES.includes(pathname)) {
+  if (!user && !PUBLIC_PAGES.includes(pathname) && !startsWithAny(pathname, PUBLIC_PAGE_PREFIXES)) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

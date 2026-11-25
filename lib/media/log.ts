@@ -1,4 +1,5 @@
 import { gameStatusToShared, sharedStatusToGame } from "@/lib/media/status";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MediaType } from "@/lib/media/types";
 
 export type LogMediaType = MediaType;
@@ -205,4 +206,48 @@ export function statusToast(mediaType: LogMediaType, status: LogStatus): string 
 
 export function favoriteLimitToast(mediaType: LogMediaType): string {
   return `You can only have up to 5 favorite ${LOG_CONFIG[mediaType].pluralLabel}`;
+}
+
+export interface InitialMediaLog {
+  userId: string | null;
+  seasonNumber: number | null;
+  log: MediaLogState;
+  canAddFavorite: boolean;
+}
+
+export function logSeason(mediaType: LogMediaType, seasonNumber?: number | null): number | null {
+  return LOG_CONFIG[mediaType].bySeason ? seasonNumber ?? 1 : null;
+}
+
+export async function fetchMediaLog(
+  supabase: SupabaseClient,
+  mediaType: LogMediaType,
+  userId: string,
+  mediaId: number,
+  season: number | null
+): Promise<{ log: MediaLogState; canAddFavorite: boolean }> {
+  const config = LOG_CONFIG[mediaType];
+  const filter: Record<string, string | number> = {
+    user_id: userId,
+    [config.idColumn]: mediaId,
+    ...(season !== null ? { season_number: season } : {}),
+  };
+
+  const [{ data: row }, { data: favorites }] = await Promise.all([
+    supabase.from(config.table).select("*").match(filter).maybeSingle(),
+    supabase
+      .from(config.table)
+      .select(season !== null ? `${config.idColumn}, season_number` : config.idColumn)
+      .eq("user_id", userId)
+      .eq("is_favorite", true),
+  ]);
+
+  const others = ((favorites || []) as unknown as Record<string, unknown>[]).filter(
+    (fav) => !(fav[config.idColumn] === mediaId && (season === null || fav.season_number === season))
+  );
+
+  return {
+    log: rowToLog(mediaType, row as MediaLogRow | null),
+    canAddFavorite: others.length < 5,
+  };
 }

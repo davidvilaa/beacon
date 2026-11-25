@@ -24,7 +24,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 ## Stack
 - **Next.js 16** (App Router, Turbopack, `cacheComponents`, `partialPrefetching`). This is NOT the Next.js from training data — read `node_modules/next/dist/docs/` before using unfamiliar APIs. Note: middleware is `proxy.ts` (exports `proxy`), not `middleware.ts`.
 - **React 19.3**, **TypeScript** strict, **Tailwind CSS v4** (CSS-first config in `app/globals.css`, no tailwind.config).
-- **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; anon server client `lib/supabase/server.ts` → `createAnonClient()`; session check in `proxy.ts` via `getUser()`). Auth via `supabase.auth`. Storage bucket `avatars`.
+- **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; server clients in `lib/supabase/server.ts` → `createAnonClient()` and `createServerSupabase()` (reads the session cookies, use `auth.getClaims()`); session check in `proxy.ts` via `getUser()`). Public without an account: `/`, auth pages, media/person/company detail pages and GET `/api/{movie,tv,anime,game}/...`; every action that needs an account goes through `useMediaLog().requireAccount()` (toast + redirect to `/login`). Auth via `supabase.auth`. Storage bucket `avatars`.
 - Icons: `lucide-react`, `react-icons`.
 - Path alias: `@/*` → project root.
 - Commands: `npm run build`, `npm run lint` (eslint 9 flat config).
@@ -47,19 +47,19 @@ Content filtering (excluded TMDB genres like talk shows/news/reality/soap/kids/m
 app/
   (public)/login, register           auth pages
   (protected)/                       pages with Navbar (layout.tsx)
-    movie/[id] tv/[id] anime/[id] game/[id]    media detail pages (client components)
-    person/[id] company/[id]         TMDB/AniList people & companies
+    movie/[id] tv/[id] anime/[id] game/[id]    media detail pages: server page.tsx + client *View.tsx
+    person/[id] company/[id]         TMDB/AniList people & companies (server page.tsx + client *View.tsx)
     lists/[id]                       list detail
     profile/page.tsx                 redirects to the signed-in user's profile
     profile/[username]/(tabs)/       profile header + tabs layout: page, movies, series, anime, games, lists, network
-    profile/[username]/reviews/[type]/[logId]   full-page review (outside the tabs layout)
+    profile/[username]/reviews/[type]/[logId]   full-page review (outside the tabs layout), server page.tsx + ReviewView.tsx
+    not-found.tsx                    shared 404 for notFound()
     search, settings
   (admin)/                           empty placeholder
-  api/                               server routes proxying external APIs (singular media names)
+  api/                               routes the browser still needs (singular media names); detail data is loaded by server pages
     search (global multi-module search incl. users/lists; result mappers in `mappers.ts`)
     movie/[id]/{posters,backdrops}, tv/[id]/{posters,backdrops,season/[seasonNumber]}
     anime/[id]/{episodes,posters,backdrops}, game/[id]/{posters,backdrops}
-    person/[id], company/[id]
 components/
   ui/                                design-system primitives only (Button, Select, Checkbox, DatePicker, Toast, Loading, Logo, CardGradientBorder)
   layout/Navbar.tsx
@@ -74,14 +74,15 @@ lib/
   providers/{tmdb,anilist,igdb}/     external APIs (see above)
   media/                             types (MediaType, Episode), log, cache, status, release, format, credits
   artwork/                           pick, dedupe, cached sources
+  details/                           cached page loaders ("use cache"): movie, tv, anime, game, person, company, review; metadata helper
   lists/media-map.ts                 cached media lookup for list previews
   profile/media.ts                   per-module profile catalog config
-  supabase/                          client, server
+  supabase/                          client (browser), server (createAnonClient, createServerSupabase with cookies)
 supabase/schema.sql                  DDL (see warnings below)
 ```
 
 ### Patterns
-- Media detail pages are `"use client"` and share the same composition: `MediaLayout` + action/info columns + tabs + review/list/artwork modals. When adding or changing a feature for one module, check whether the other 3 modules need the same change to stay consistent.
+- Detail pages (movie, tv, anime, game, person, company, review) are server components: `page.tsx` awaits `params` inside `<Suspense>` (required by Cache Components), loads data through the cached loaders in `lib/details/` (`"use cache"` + `cacheLife`), calls `notFound()` when missing, exports `generateMetadata` (via `buildMediaMetadata`), and renders a client `*View.tsx`. Media pages also load the user's log on the server (`getInitialMediaLog` in `lib/media/log-server.ts`) and pick the random artwork after `await connection()`. Never add per-media `/api/.../[id]` detail routes again. Media views share the same composition: `MediaLayout` + action/info columns + tabs + review/list/artwork modals. When adding or changing a feature for one module, check whether the other 3 modules need the same change to stay consistent.
 - User log logic lives in `hooks/useMediaLog.ts` + per-module config in `lib/media/log.ts` (`LOG_CONFIG`: table, id column, date mode, episodes/hours tracking, status labels and DB status conversion). Pages never query `user_*` tables directly. Rules: removing the status keeps the log while it still has a favorite, rating or review (the row is deleted only when nothing is left); unreleased media only allow the watchlist/backlog status (`isMediaReleased`); toasts come from `statusToast` / `favoriteLimitToast`.
 - Artwork shown on a detail page = page picker choice → logged `custom_*` artwork → random default picked on page entry (`pickRandomPoster`/`pickRandomBackdrop`, or `useArtworkOptions().randomPoster/randomBackdrop` when the source is the artwork route). Review and list modals open with that artwork; saving a review persists it as the log's `custom_*`; list items keep their own artwork. Picker lists come from `hooks/useArtworkOptions.ts`, loaded lazily on picker/modal open unless the random default needs them (`eagerPosters`/`eagerBackdrops`).
 - Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, always through `lib/media/cache.ts` (`upsertMediaCache` + `movieCacheInput`/`tvCacheInput`/`animeCacheInput`/`gameCacheInput`), never with a hand-written `upsert`. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists/media-map.ts → fetchCachedMediaMap`).

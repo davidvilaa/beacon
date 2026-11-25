@@ -52,7 +52,8 @@ app/
     search, settings, profile
   (admin)/                           empty placeholder
   api/                               server routes proxying external APIs
-    movies/[id], movies/search (global multi-module search incl. users/lists)
+    search (global multi-module search incl. users/lists; result mappers in `mappers.ts`)
+    movies/[id]
     tv/[id], tv/[id]/season/[seasonNumber]
     anime/[id]/{episodes,posters,backdrops}
     games/[id]/{posters,backdrops}

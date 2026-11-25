@@ -115,7 +115,7 @@ function SearchContent() {
     const sortParam = `&sort_by=${encodeURIComponent(sortBy)}`;
 
     fetch(
-      `/api/movies/search?q=${encodeURIComponent(
+      `/api/search?q=${encodeURIComponent(
         query.trim()
       )}&page=${currentPage}${filterParam}${sortParam}`
     )

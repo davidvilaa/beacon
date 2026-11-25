@@ -32,13 +32,15 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 ## External data sources
 | Module | Source | Lib | Env vars |
 |---|---|---|---|
-| Movies, TV, People, Companies | TMDB | `lib/tmdb.ts` | `TMDB_ACCESS_TOKEN`, `TMDB_API_KEY` |
-| Anime | AniList (GraphQL) | `lib/anilist.ts` | — |
-| Games | IGDB (Twitch OAuth) | `lib/igdb.ts` | `IGDB_CLIENT_ID`, `IGDB_CLIENT_SECRET` |
+| Movies, TV, People, Companies | TMDB | `lib/providers/tmdb/` | `TMDB_ACCESS_TOKEN`, `TMDB_API_KEY` |
+| Anime | AniList (GraphQL) | `lib/providers/anilist/` | — |
+| Games | IGDB (Twitch OAuth) | `lib/providers/igdb/` | `IGDB_CLIENT_ID`, `IGDB_CLIENT_SECRET` |
+
+Each provider folder has `client.ts` (fetch helper + URL/image helpers, safe to import from client components), `types.ts` (interfaces only, import with `import type`) and domain modules (`movies`, `tv`, `people`, `companies`, `search`, `anime` / `media`, `staff`, `studios` / `games`). No barrel files: import from the specific module.
 
 Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. All in `.env.local` (never read, print or commit it).
 
-Content filtering (excluded TMDB genres like talk shows/news/reality/soap/kids/music/TV movie, and Asian animation removed from TV so it lives in the anime module) is centralized in `config/content-filters.ts`.
+Content filtering (excluded TMDB genres like talk shows/news/reality/soap/kids/music/TV movie, and Asian animation removed from TV so it lives in the anime module) is centralized in `lib/providers/tmdb/filters.ts`.
 
 ## Project structure
 ```
@@ -46,28 +48,35 @@ app/
   (public)/login, register           auth pages
   (protected)/                       pages with Navbar (layout.tsx)
     movie/[id] tv/[id] anime/[id] game/[id]    media detail pages (client components)
-    person/[id] company/[id]         TMDB people & companies
-    lists/[id] review/[id]           list & review detail
-    profile/[username]/{movies,series,anime,games,lists,network}
-    search, settings, profile
+    person/[id] company/[id]         TMDB/AniList people & companies
+    lists/[id]                       list detail
+    profile/page.tsx                 redirects to the signed-in user's profile
+    profile/[username]/(tabs)/       profile header + tabs layout: page, movies, series, anime, games, lists, network
+    profile/[username]/reviews/[type]/[logId]   full-page review (outside the tabs layout)
+    search, settings
   (admin)/                           empty placeholder
-  api/                               server routes proxying external APIs
+  api/                               server routes proxying external APIs (singular media names)
     search (global multi-module search incl. users/lists; result mappers in `mappers.ts`)
-    movies/[id]
-    tv/[id], tv/[id]/season/[seasonNumber]
-    anime/[id]/{episodes,posters,backdrops}
-    games/[id]/{posters,backdrops}
-    movies|tv/[id]/{posters,backdrops}, person/[id], company/[id]
+    movie/[id]/{posters,backdrops}, tv/[id]/{posters,backdrops,season/[seasonNumber]}
+    anime/[id]/{episodes,posters,backdrops}, game/[id]/{posters,backdrops}
+    person/[id], company/[id]
 components/
+  ui/                                design-system primitives only (Button, Select, Checkbox, DatePicker, Toast, Loading, Logo, CardGradientBorder)
   layout/Navbar.tsx
-  modules/MediaLayout.tsx            shared layout for every media detail page
-  modules/columns/                   MediaActionColumn (status/fav/rating), MediaInfoColumn, MediaSocialColumn
-  modules/modals/                    MediaReviewModal (log/review), ListModal, CreateListModal, Artwork/BackdropPickerModal
-  modules/tabs/                      Cast, Crew, Details, Episodes, Releases, MediaTabsNav
-  profile/                           ProfileContext + profile tabs, FollowButton
-  ui/                                design-system primitives
-lib/                                 tmdb, anilist, igdb, lists (cached media lookup), media-utils
-config/content-filters.ts
+  media/                             MediaLayout, MediaCard, FranchiseSlider, SeasonRevolver
+  media/columns/                     MediaActionColumn (status/fav/rating), MediaInfoColumn
+  media/modals/                      MediaReviewModal (log/review), ArtworkPickerModal, BackdropPickerModal
+  media/tabs/                        Cast, Crew, Details, Episodes, Releases, MediaTabsNav
+  lists/                             ListModal, CreateListModal, ListCard
+  profile/                           ProfileContext, ProfileMediaPage + profile tabs, FollowButton
+hooks/                               useMediaLog, useArtworkOptions
+lib/
+  providers/{tmdb,anilist,igdb}/     external APIs (see above)
+  media/                             types (MediaType, Episode), log, cache, status, release, format, credits
+  artwork/                           pick, dedupe, cached sources
+  lists/media-map.ts                 cached media lookup for list previews
+  profile/media.ts                   per-module profile catalog config
+  supabase/                          client, server
 supabase/schema.sql                  DDL (see warnings below)
 ```
 
@@ -75,8 +84,8 @@ supabase/schema.sql                  DDL (see warnings below)
 - Media detail pages are `"use client"` and share the same composition: `MediaLayout` + action/info columns + tabs + review/list/artwork modals. When adding or changing a feature for one module, check whether the other 3 modules need the same change to stay consistent.
 - User log logic lives in `hooks/useMediaLog.ts` + per-module config in `lib/media/log.ts` (`LOG_CONFIG`: table, id column, date mode, episodes/hours tracking, status labels and DB status conversion). Pages never query `user_*` tables directly. Rules: removing the status keeps the log while it still has a favorite, rating or review (the row is deleted only when nothing is left); unreleased media only allow the watchlist/backlog status (`isMediaReleased`); toasts come from `statusToast` / `favoriteLimitToast`.
 - Artwork shown on a detail page = page picker choice → logged `custom_*` artwork → random default picked on page entry (`pickRandomPoster`/`pickRandomBackdrop`, or `useArtworkOptions().randomPoster/randomBackdrop` when the source is the artwork route). Review and list modals open with that artwork; saving a review persists it as the log's `custom_*`; list items keep their own artwork. Picker lists come from `hooks/useArtworkOptions.ts`, loaded lazily on picker/modal open unless the random default needs them (`eagerPosters`/`eagerBackdrops`).
-- Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, always through `lib/media/cache.ts` (`upsertMediaCache` + `movieCacheInput`/`tvCacheInput`/`animeCacheInput`/`gameCacheInput`), never with a hand-written `upsert`. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists.ts → fetchCachedMediaMap`).
-- `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`.
+- Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, always through `lib/media/cache.ts` (`upsertMediaCache` + `movieCacheInput`/`tvCacheInput`/`animeCacheInput`/`gameCacheInput`), never with a hand-written `upsert`. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists/media-map.ts → fetchCachedMediaMap`).
+- `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`, typed as `MediaType` from `lib/media/types.ts` (never repeat the literal union).
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
 
 ## Database schema (Supabase)
@@ -113,7 +122,7 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
   - same as user_series without `season_number`; `anime_id` → animes
 
 - **`public.user_games`** — unique `(user_id, game_id)`
-  - `status` nullable, in `('playing','completed','paused','dropped','backlog')`. The shared UI components work with watch-style keys; `LOG_CONFIG.game` converts through `gameStatusToShared` / `sharedStatusToGame` (`lib/media-utils.ts`). `hours_played` is edited from the review modal.
+  - `status` nullable, in `('playing','completed','paused','dropped','backlog')`. The shared UI components work with watch-style keys; `LOG_CONFIG.game` converts through `gameStatusToShared` / `sharedStatusToGame` (`lib/media/status.ts`). `hours_played` is edited from the review modal.
   - `is_favorite`, `rating`, `review`, `has_spoilers`, `custom_poster_path`, `custom_backdrop_path`
   - `hours_played` numeric(5,1) default 0, `platform` text, `start_date`, `end_date`, `created_at`, `updated_at`
 

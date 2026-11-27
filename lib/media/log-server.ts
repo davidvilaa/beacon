@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   EMPTY_LOG,
@@ -14,6 +15,8 @@ export async function getInitialMediaLog(
 ): Promise<InitialMediaLog> {
   const season = logSeason(mediaType, seasonNumber);
   const empty: InitialMediaLog = { userId: null, seasonNumber: season, log: EMPTY_LOG, canAddFavorite: true };
+
+  await connection();
 
   try {
     const supabase = await createServerSupabase();

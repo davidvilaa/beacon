@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { connection } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { gameStatusToShared } from "@/lib/media/status";
 import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
@@ -34,6 +35,7 @@ export const loadReviewPage = cache(async function loadReviewPage(
   id: string,
   username: string
 ): Promise<ReviewPageData> {
+  await connection();
   const supabase = await createServerSupabase();
   const { data: claims } = await supabase.auth.getClaims();
   const currentUserId = (claims?.claims?.sub as string | undefined) ?? null;

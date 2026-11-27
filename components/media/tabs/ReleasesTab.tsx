@@ -49,12 +49,12 @@ export default function ReleasesTab({
               {group.countries.map((c) => (
                 <div
                   key={c.code}
-                  className="inline-flex items-center rounded-sm bg-zinc-800 border border-zinc-700/80 overflow-hidden min-w-0"
+                  className="inline-flex items-center rounded-sm bg-zinc-700 border border-zinc-600/70 overflow-hidden min-w-0"
                 >
                   <img
                     src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
                     alt=""
-                    className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-700/60"
+                    className="w-6 self-stretch object-cover shrink-0 border-r border-zinc-600/70"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                     }}
@@ -67,7 +67,7 @@ export default function ReleasesTab({
                       {c.country}
                     </span>
                     {c.certification && (
-                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded-sm bg-zinc-700/60 text-zinc-300 border border-zinc-600/50">
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded-sm bg-zinc-800 text-zinc-200 border border-zinc-600/50">
                         {c.certification}
                       </span>
                     )}

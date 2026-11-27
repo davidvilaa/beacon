@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { User, ChevronDown, ChevronUp } from "lucide-react";
 import { getPosterUrl } from "@/lib/providers/tmdb/client";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
 
 export interface CastMember {
   id: number | string;
@@ -19,29 +18,21 @@ export interface CastMember {
 export interface CastTabProps {
   cast: CastMember[];
   emptyMessage?: string;
-  gridClassName?: string;
 }
 
 export default function CastTab({
   cast,
   emptyMessage = "No cast information available.",
-  gridClassName,
 }: CastTabProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const displayedCast = isExpanded ? cast : cast.slice(0, 12);
-  const hasCharacterImages = cast.some((c) => Boolean(c.character_image));
-
   if (cast.length === 0) {
     return <p className="text-xs text-zinc-500 py-4">{emptyMessage}</p>;
   }
 
-  const defaultGrid = hasCharacterImages
-    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3"
-    : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3";
-
   return (
     <div>
-      <div className={gridClassName || defaultGrid}>
+      <div className="flex flex-wrap gap-2">
         {displayedCast.map((actor, idx) => {
           const profileUrl = actor.profile_path
             ? actor.profile_path.startsWith("http")
@@ -53,8 +44,7 @@ export default function CastTab({
 
           const content = (
             <>
-              <CardGradientBorder roundedClassName="rounded-sm" />
-              <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-r border-zinc-700/60 overflow-hidden flex items-center justify-center">
+              <div className="relative w-9 self-stretch shrink-0 bg-zinc-900 border-r border-zinc-600/70 overflow-hidden flex items-center justify-center">
                 {profileUrl ? (
                   <Image
                     src={profileUrl}
@@ -67,18 +57,18 @@ export default function CastTab({
                   <User className="w-4 h-4 text-zinc-500" />
                 )}
               </div>
-              <div className="flex-1 min-w-0 px-2 sm:px-2.5 flex flex-col justify-center">
-                <p className="text-xs sm:text-sm font-semibold text-zinc-100 group-hover:text-accent transition-colors truncate leading-tight">
+              <div className="min-w-0 px-2.5 flex flex-col justify-center">
+                <p className="text-xs font-semibold text-zinc-100 truncate leading-tight">
                   {actor.name}
                 </p>
                 {actor.character && (
-                  <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                    as <span className="text-zinc-300 font-medium">{actor.character}</span>
+                  <p className="text-[10px] text-zinc-300 truncate leading-tight mt-0.5">
+                    as <span className="text-zinc-100 font-medium">{actor.character}</span>
                   </p>
                 )}
               </div>
               {actor.character_image && (
-                <div className="relative h-full aspect-square w-10 sm:w-11 shrink-0 bg-zinc-900 border-l border-zinc-700/60 overflow-hidden flex items-center justify-center">
+                <div className="relative w-9 self-stretch shrink-0 bg-zinc-900 border-l border-zinc-600/70 overflow-hidden flex items-center justify-center">
                   <Image
                     src={actor.character_image}
                     alt={actor.character || ""}
@@ -96,7 +86,7 @@ export default function CastTab({
               <Link
                 key={`${actor.id}-${idx}`}
                 href={targetHref}
-                className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group cursor-pointer min-w-0 overflow-hidden h-10 sm:h-11"
+                className="inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700 border border-zinc-600/70 hover:brightness-75 transition cursor-pointer"
               >
                 {content}
               </Link>
@@ -106,7 +96,7 @@ export default function CastTab({
           return (
             <div
               key={`${actor.id}-${idx}`}
-              className="relative flex items-stretch rounded-sm bg-zinc-800 border border-zinc-700/80 hover:bg-zinc-700/50 transition-all group min-w-0 overflow-hidden h-10 sm:h-11"
+              className="inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700 border border-zinc-600/70"
             >
               {content}
             </div>

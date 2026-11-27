@@ -14,6 +14,7 @@ import {
   type ReviewRecord,
   type TmdbMeta,
 } from "@/lib/details/review-types";
+import { seasonTitle } from "@/lib/media/seasons";
 
 export interface ReviewPageData {
   review: ReviewRecord | null;
@@ -373,8 +374,16 @@ export const loadReviewPage = cache(async function loadReviewPage(
       tmdb.summary ||
       "";
 
+    const seasonCount = Array.isArray(tmdb.seasons)
+      ? tmdb.seasons.filter((s: { season_number: number }) => s.season_number > 0).length
+      : 0;
+    const displayTitle =
+      record.media_type === "tv"
+        ? seasonTitle(titleStr, seasonSummary || { season_number: record.season_number || 1 }, seasonCount)
+        : titleStr;
+
     tmdbMeta = {
-      title: titleStr,
+      title: displayTitle,
       original_title: originalTitleStr,
       release_date: date,
       runtime:

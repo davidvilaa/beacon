@@ -497,11 +497,6 @@ export default function ListModal({
                     <h2 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight leading-tight truncate">
                       {media.title}
                     </h2>
-                    {media.mediaType === "tv" && media.seasonNumber && (
-                      <p className="text-xs font-semibold text-accent mt-0.5">
-                        {media.seasonTitle || `Season ${media.seasonNumber}`}
-                      </p>
-                    )}
                   </div>
 
                   <button

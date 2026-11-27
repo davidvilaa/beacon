@@ -1,4 +1,4 @@
-import { seasonHref } from "@/lib/media/seasons";
+import { seasonHref, seasonTitle } from "@/lib/media/seasons";
 import { LOG_CONFIG, type LogMediaType, type LogStatus } from "@/lib/media/log";
 
 export type ProfileSort = "recent" | "rating_desc" | "rating_asc" | "title_asc" | "title_desc";
@@ -102,7 +102,7 @@ export function profileSelect(mediaType: LogMediaType): string {
     "has_spoilers",
     "custom_poster_path",
     ...(log.bySeason ? ["season_number"] : []),
-    `${config.relation}(${config.titleColumn}, ${config.posterColumn})`,
+    `${config.relation}(${config.titleColumn}, ${config.posterColumn}${log.bySeason ? ", number_of_seasons" : ""})`,
   ];
   return columns.join(", ");
 }
@@ -141,7 +141,13 @@ export function rowToCard(mediaType: LogMediaType, row: ProfileLogRow): ProfileC
     key: season ? `${mediaId}-${season}` : String(mediaId),
     mediaId,
     entryLogId: row.id,
-    title: media?.[config.titleColumn] || config.fallbackTitle,
+    title: season
+      ? seasonTitle(
+          media?.[config.titleColumn] || config.fallbackTitle,
+          { season_number: season },
+          Number(media?.number_of_seasons ?? 0)
+        )
+      : media?.[config.titleColumn] || config.fallbackTitle,
     posterPath: row.custom_poster_path || media?.[config.posterColumn] || null,
     href: season ? seasonHref(mediaId, season) : `/${mediaType}/${mediaId}`,
     rating: row.rating ? Number(row.rating) : null,

@@ -49,6 +49,8 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
     return tv.seasons?.find((s) => s.season_number === activeSeason) || null;
   }, [tv, activeSeason]);
 
+  const displayTitle = seasonTitle(tv.name, currentSeasonSummary, regularSeasons.length);
+
   const currentSeasonEpisodeCount =
     currentSeasonDetails?.episodes?.length || currentSeasonSummary?.episode_count || 0;
 
@@ -138,7 +140,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
     <>
       <MediaLayout
         backdropUrl={backdropUrl}
-        backdropAlt={tv.name}
+        backdropAlt={displayTitle}
         isBackdropLoaded={loadedBackdrop === backdropUrl}
         onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
         hasMultipleBackdrops={log.isSignedIn && (tv.images?.backdrops?.length || 0) > 1}
@@ -146,7 +148,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
-            title={tv.name}
+            title={displayTitle}
             hasMultiplePosters={log.isSignedIn}
             onOpenPosterPicker={() => openWithArtwork("poster")}
             mediaType="tv"
@@ -166,7 +168,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
       >
         <MediaInfoColumn
           typeLabel="Series"
-          title={seasonTitle(tv.name, currentSeasonSummary, regularSeasons.length)}
+          title={displayTitle}
           originalTitle={tv.original_name}
           releaseDate={rawDate}
           runtimeMinutes={totalRuntimeMinutes}
@@ -267,7 +269,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
         isOpen={openModal === "log"}
         onClose={() => setOpenModal(null)}
         typeLabel="Series"
-        title={tv.name}
+        title={displayTitle}
         releaseDate={rawDate}
         runtimeMinutes={totalRuntimeMinutes}
         episodesCount={episodesCount}
@@ -308,7 +310,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
           mediaId: tv.id,
           seasonNumber: activeSeason,
           seasonTitle: currentSeasonSummary?.name || `Season ${activeSeason}`,
-          title: tv.name,
+          title: displayTitle,
           overview: currentSeasonDetails?.overview || currentSeasonSummary?.overview || tv.overview,
           posterPath:
             currentSeasonDetails?.poster_path || currentSeasonSummary?.poster_path || tv.poster_path,

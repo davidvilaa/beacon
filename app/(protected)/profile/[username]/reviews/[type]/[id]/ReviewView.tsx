@@ -278,7 +278,6 @@ export default function ReviewView({ initialReview, tmdbMeta, currentUserId }: R
         <div className="flex-1 min-w-0 w-full">
           <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
             {resolvedTypeLabel}
-            {review.media_type === "tv" && ` · Season ${review.season_number || 1}`}
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
             <Link href={mediaHref} className="hover:text-accent transition-colors">

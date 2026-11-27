@@ -26,6 +26,7 @@ import { getBackdropUrl } from "@/lib/providers/tmdb/client";
 import { formatFullDate } from "@/lib/media/format";
 import type { MediaType } from "@/lib/media/types";
 import { seasonHref } from "@/lib/media/seasons";
+import { seasonTitle } from "@/lib/media/seasons";
 
 interface ListOwner {
   id: string;
@@ -167,7 +168,11 @@ function ListDetailContent() {
 
         const mappedItems: ListGridItem[] = sortedRawItems.map((item: any) => {
           const cached = mediaMap.get(`${item.media_type}-${item.media_id}`);
-          const displayTitle = cached?.title || "Media";
+          const baseTitle = cached?.title || "Media";
+          const displayTitle =
+            item.media_type === "tv" && item.season_number
+              ? seasonTitle(baseTitle, { season_number: item.season_number }, cached?.seasonCount ?? 0)
+              : baseTitle;
 
           return {
             id: item.id,

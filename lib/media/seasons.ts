@@ -20,5 +20,5 @@ export function seasonTitle(
 ): string {
   if (!season || seasonCount <= 1) return showName;
   const name = season.name?.trim() || `Season ${season.season_number}`;
-  return name.toLowerCase().includes(showName.toLowerCase()) ? name : `${showName}: ${name}`;
+  return name.toLowerCase().includes(showName.toLowerCase()) ? name : `${showName} ${name}`;
 }

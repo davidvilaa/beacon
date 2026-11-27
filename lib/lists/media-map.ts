@@ -9,6 +9,7 @@ export interface RawListItemRef {
 
 export interface CachedMediaMeta {
   title: string;
+  seasonCount?: number;
   posterPath: string | null;
   backdropPath: string | null;
 }
@@ -39,9 +40,9 @@ export async function fetchCachedMediaMap(
           data: [] as { id: number; title: string; poster_path: string | null; backdrop_path: string | null }[],
         }),
     seriesIds.length > 0
-      ? supabase.from("series").select("id, name, poster_path, backdrop_path").in("id", seriesIds)
+      ? supabase.from("series").select("id, name, poster_path, backdrop_path, number_of_seasons").in("id", seriesIds)
       : Promise.resolve({
-          data: [] as { id: number; name: string; poster_path: string | null; backdrop_path: string | null }[],
+          data: [] as { id: number; name: string; poster_path: string | null; backdrop_path: string | null; number_of_seasons: number | null }[],
         }),
     animeIds.length > 0
       ? supabase.from("animes").select("id, title, poster_path, backdrop_path").in("id", animeIds)
@@ -65,6 +66,7 @@ export async function fetchCachedMediaMap(
   for (const s of seriesRes.data || []) {
     map.set(`tv-${s.id}`, {
       title: s.name,
+      seasonCount: s.number_of_seasons ?? 0,
       posterPath: s.poster_path,
       backdropPath: s.backdrop_path,
     });

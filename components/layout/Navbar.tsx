@@ -106,7 +106,7 @@ export default function Navbar() {
               type="text"
               maxLength={50}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.slice(0, 50).toUpperCase())}
+              onChange={(e) => setSearchQuery(e.target.value.slice(0, 50))}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSearchSubmit();
@@ -116,9 +116,9 @@ export default function Navbar() {
                   e.currentTarget.blur();
                 }
               }}
-              placeholder="Search"
+              placeholder="search.."
               aria-label="Search"
-              className="w-full min-w-0 bg-transparent text-sm uppercase text-zinc-100 placeholder:normal-case placeholder:text-zinc-500 focus:outline-none"
+              className="w-full min-w-0 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
             />
           </div>
 

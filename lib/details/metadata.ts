@@ -13,7 +13,7 @@ export function buildMediaMetadata({
   description?: string | null;
   image?: string | null;
 }): Metadata {
-  const fullTitle = `${title}${year ? ` (${year})` : ""} · ${SITE_NAME}`;
+  const fullTitle = `${title}${year ? ` (${year})` : ""}`;
   const summary = description ? description.slice(0, 200) : undefined;
   return {
     title: fullTitle,
@@ -33,4 +33,4 @@ export function buildMediaMetadata({
   };
 }
 
-export const notFoundMetadata: Metadata = { title: `Not found · ${SITE_NAME}` };
+export const notFoundMetadata: Metadata = { title: "Not found" };

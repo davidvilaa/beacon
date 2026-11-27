@@ -49,7 +49,7 @@ export default function ReleasesTab({
               {group.countries.map((c) => (
                 <div
                   key={c.code}
-                  className="inline-flex items-center rounded-sm bg-zinc-700 border border-zinc-600/70 overflow-hidden min-w-0"
+                  className="inline-flex items-center rounded-sm bg-zinc-700/80 border border-zinc-600/60 overflow-hidden min-w-0"
                 >
                   <img
                     src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}

@@ -73,7 +73,7 @@ export default function DetailsTab({
                 <Link
                   key={company.id}
                   href={company.href || `/company/${company.id}`}
-                  className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70 hover:brightness-75 transition cursor-pointer"
+                  className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60 hover:brightness-75 transition cursor-pointer"
                 >
                   <span className="text-xs font-medium text-zinc-100">
                     {company.name}
@@ -103,7 +103,7 @@ export default function DetailsTab({
             {developers.map((dev, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {dev}
@@ -125,7 +125,7 @@ export default function DetailsTab({
             {publishers.map((pub, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {pub}
@@ -143,7 +143,7 @@ export default function DetailsTab({
           </span>
         </div>
         <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70 max-w-full">
+          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60 max-w-full">
             <span
               className="text-xs sm:text-sm font-medium text-zinc-200 truncate"
               title={originalTitle || "—"}
@@ -161,7 +161,7 @@ export default function DetailsTab({
           </span>
         </div>
         <div className="flex-1 flex items-center">
-          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+          <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
             <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
               {status || "—"}
             </span>
@@ -177,7 +177,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {format}
               </span>
@@ -194,7 +194,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200 capitalize">
                 {season}
               </span>
@@ -211,7 +211,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs font-bold uppercase text-zinc-200">
                 {originalLanguage.toUpperCase()}
               </span>
@@ -228,7 +228,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {seasonsCount} Seasons • {episodesCount ?? 0} Episodes
               </span>
@@ -245,7 +245,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {episodesCount}
               </span>
@@ -262,7 +262,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {formatCurrency(budget)}
               </span>
@@ -279,7 +279,7 @@ export default function DetailsTab({
             </span>
           </div>
           <div className="flex-1 flex items-center">
-            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70">
+            <div className="inline-flex items-center px-3 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60">
               <span className="text-xs sm:text-sm font-medium text-zinc-200">
                 {formatCurrency(revenue)}
               </span>
@@ -303,7 +303,7 @@ export default function DetailsTab({
               return (
                 <div
                   key={genreKey}
-                  className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                  className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
                 >
                   <span className="text-xs font-medium text-zinc-200">
                     {genreName}
@@ -328,7 +328,7 @@ export default function DetailsTab({
             {platforms.map((plat, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {plat}
@@ -350,7 +350,7 @@ export default function DetailsTab({
             {gameModes.map((mode, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {mode}
@@ -372,7 +372,7 @@ export default function DetailsTab({
             {themes.map((theme, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700 border border-zinc-600/70"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60"
               >
                 <span className="text-xs font-medium text-zinc-200">
                   {theme}

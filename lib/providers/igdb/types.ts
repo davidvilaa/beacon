@@ -79,6 +79,8 @@ export interface IGDBGameDetail {
 }
 
 export interface IGDBSearchItem {
+  total_rating_count?: number;
+  hypes?: number;
   id: number;
   name: string;
   summary?: string;

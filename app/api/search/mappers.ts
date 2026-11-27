@@ -210,8 +210,8 @@ export function mapGame(game: IGDBSearchItem) {
       ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
       : "",
     vote_average: game.rating ? game.rating / 10 : 0,
-    vote_count: 0,
-    popularity: game.total_rating || game.rating || 0,
+    vote_count: game.total_rating_count || 0,
+    popularity: game.hypes || 0,
     genre_ids: [],
     moduleType: "games",
     media_type: "game",

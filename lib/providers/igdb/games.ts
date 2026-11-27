@@ -34,7 +34,7 @@ export async function searchGames(
 
   const escapedQuery = cleanQuery.replace(/"/g, '\\"');
   const body = `
-    fields id, name, summary, cover.image_id, first_release_date, rating, total_rating;
+    fields id, name, summary, cover.image_id, first_release_date, rating, total_rating, total_rating_count, hypes;
     search "${escapedQuery}";
     limit ${limit};
     offset ${offset};

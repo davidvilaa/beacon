@@ -20,6 +20,10 @@ import {
   type SearchListRow,
   type SearchCompanyRow,
 } from "@/app/api/search/mappers";
+import { sortByScore } from "@/app/api/search/ranking";
+
+const ALL_TMDB_PAGES = 3;
+const ALL_POOL_PER_SOURCE = 20;
 
 function normalizeModule(val: string): string {
   const v = val.toLowerCase().trim();
@@ -44,7 +48,7 @@ function getItemDate(item: any): string {
   );
 }
 
-function sortItems(items: any[], sortBy: string): any[] {
+function sortItems(items: any[], sortBy: string, query: string): any[] {
   if (sortBy === "newest") {
     return [...items].sort((a, b) => {
       const dateA = getItemDate(a);
@@ -65,7 +69,7 @@ function sortItems(items: any[], sortBy: string): any[] {
       return dateA.localeCompare(dateB);
     });
   }
-  return [...items].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+  return sortByScore(items, query);
 }
 
 export async function GET(request: Request) {
@@ -181,6 +185,7 @@ export async function GET(request: Request) {
     const tmdbPage = Math.floor((uiPage - 1) / 2) + 1;
     let rawResults: any[] = [];
     let totalResults = 0;
+    let pageOffset = ((uiPage - 1) % 2) * 10;
 
     if (moduleType === "series") {
       const data = await searchTv(query, tmdbPage);
@@ -200,7 +205,7 @@ export async function GET(request: Request) {
         media_type: "tv",
         href: `/tv/${t.id}`,
       }));
-      rawResults = sortItems(rawResults, sortBy);
+      rawResults = sortItems(rawResults, sortBy, query);
       totalResults = data.total_results || 0;
     } else if (moduleType === "movies") {
       const data = await searchMovies(query, tmdbPage);
@@ -210,12 +215,12 @@ export async function GET(request: Request) {
         media_type: "movie",
         href: `/movie/${m.id}`,
       }));
-      rawResults = sortItems(rawResults, sortBy);
+      rawResults = sortItems(rawResults, sortBy, query);
       totalResults = data.total_results || 0;
     } else if (moduleType === "people") {
       const data = await searchPerson(query, tmdbPage);
       rawResults = (data.results || []).map((p: any) => mapPerson(p));
-      rawResults = sortItems(rawResults, sortBy);
+      rawResults = sortItems(rawResults, sortBy, query);
       totalResults = data.total_results || 0;
     } else if (moduleType === "companies") {
       const data = await searchCompany(query, tmdbPage);
@@ -223,7 +228,7 @@ export async function GET(request: Request) {
       totalResults = data.total_results || 0;
     } else if (moduleType === "anime") {
       const animeData = await searchAnime(query, uiPage, 10, sortBy);
-      const results = (animeData.results || []).map(mapAnime);
+      const results = sortItems((animeData.results || []).map(mapAnime), sortBy, query);
 
       return NextResponse.json({
         page: uiPage,
@@ -233,7 +238,7 @@ export async function GET(request: Request) {
       });
     } else if (moduleType === "games") {
       const gamesData = await searchGames(query, uiPage, 10, sortBy);
-      const results = (gamesData.results || []).map(mapGame);
+      const results = sortItems((gamesData.results || []).map(mapGame), sortBy, query);
 
       return NextResponse.json({
         page: uiPage,
@@ -256,58 +261,46 @@ export async function GET(request: Request) {
     } else {
       const supabase = createAnonClient();
 
-      const [multiData, usersRes, listsRes, companyData, animeData, gamesData] = await Promise.all([
-        searchMulti(query, tmdbPage),
-        uiPage === 1
-          ? supabase
-              .from("users")
-              .select("id, username, avatar_url, bio")
-              .ilike("username", likePattern)
-              .limit(3)
-          : Promise.resolve({ data: [] }),
-        uiPage === 1
-          ? supabase
-              .from("lists")
-              .select(`
+      const [multiPages, usersRes, listsRes, companyData, animeData, gamesData] = await Promise.all([
+        Promise.all(Array.from({ length: ALL_TMDB_PAGES }, (_, i) => searchMulti(query, i + 1))),
+        supabase
+            .from("users")
+            .select("id, username, avatar_url, bio")
+            .ilike("username", likePattern)
+            .limit(3),
+        supabase
+            .from("lists")
+            .select(`
+              id,
+              title,
+              description,
+              is_private,
+              is_numbered,
+              created_at,
+              updated_at,
+              users (
                 id,
-                title,
-                description,
-                is_private,
-                is_numbered,
-                created_at,
-                updated_at,
-                users (
-                  id,
-                  username
-                ),
-                list_items (
-                  id,
-                  media_type,
-                  media_id,
-                  custom_poster_path,
-                  position,
-                  created_at
-                )
-              `)
-              .eq("is_private", false)
-              .ilike("title", likePattern)
-              .limit(3)
-          : Promise.resolve({ data: [] }),
-        uiPage === 1
-          ? searchCompany(query, 1)
-          : Promise.resolve({ results: [], total_results: 0 }),
-        uiPage === 1
-          ? searchAnime(query, 1, 3, sortBy)
-          : Promise.resolve({ results: [] as any[], pageInfo: { total: 0, currentPage: 1, lastPage: 1, hasNextPage: false, perPage: 3 } }),
-        uiPage === 1
-          ? searchGames(query, 1, 3, sortBy)
-          : Promise.resolve({ results: [], total: 0, page: 1, limit: 3 }),
+                username
+              ),
+              list_items (
+                id,
+                media_type,
+                media_id,
+                custom_poster_path,
+                position,
+                created_at
+              )
+            `)
+            .eq("is_private", false)
+            .ilike("title", likePattern)
+            .limit(3),
+        searchCompany(query, 1),
+        searchAnime(query, 1, ALL_POOL_PER_SOURCE, sortBy),
+        searchGames(query, 1, ALL_POOL_PER_SOURCE, sortBy),
       ]);
 
-      const lowerQuery = query.trim().toLowerCase();
-
       const userItems = ((usersRes.data || []) as SearchUserRow[]).map((u) =>
-        mapUser(u, u.username.toLowerCase() === lowerQuery ? 100 : 1)
+        mapUser(u)
       );
 
       const listRows = (listsRes.data || []) as unknown as SearchListRow[];
@@ -316,14 +309,23 @@ export async function GET(request: Request) {
         collectListPreviewRefs(listRows)
       );
       const listItems = listRows.map((l) =>
-        mapList(l, listMediaMap, l.title.toLowerCase() === lowerQuery ? 50 : 1)
+        mapList(l, listMediaMap)
       );
 
       const companyItems = ((companyData.results || []) as SearchCompanyRow[])
         .slice(0, 2)
-        .map((c) => mapCompany(c, c.name.toLowerCase() === lowerQuery ? 100 : 0.5));
+        .map((c) => mapCompany(c, 0));
 
-      const tmdbItems = (multiData.results || []).map(mapTmdbItem);
+      const seenTmdb = new Set<string>();
+      const tmdbItems = multiPages
+        .flatMap((page) => page.results || [])
+        .filter((item) => {
+          const key = `${item.media_type}-${item.id}`;
+          if (seenTmdb.has(key)) return false;
+          seenTmdb.add(key);
+          return true;
+        })
+        .map(mapTmdbItem);
       const animeItems = (animeData.results || []).map(mapAnime);
       const gameItems = (gamesData.results || []).map(mapGame);
 
@@ -336,12 +338,12 @@ export async function GET(request: Request) {
         ...tmdbItems,
       ];
 
-      rawResults = sortItems(allCandidates, sortBy);
-      totalResults = (multiData.total_results || 0) + userItems.length + listItems.length + companyItems.length + animeItems.length + gameItems.length;
+      rawResults = sortItems(allCandidates, sortBy, query);
+      totalResults = allCandidates.length;
+      pageOffset = (uiPage - 1) * 10;
     }
 
-    const startIndex = ((uiPage - 1) % 2) * 10;
-    const sliced = rawResults.slice(startIndex, startIndex + 10);
+    const sliced = rawResults.slice(pageOffset, pageOffset + 10);
 
     const results = await Promise.all(
       sliced.map(async (item) => {

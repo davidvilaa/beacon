@@ -58,7 +58,7 @@ app/
     search, settings
   (admin)/                           empty placeholder
   api/                               routes the browser still needs (singular media names); detail data is loaded by server pages
-    search (global multi-module search incl. users/lists; result mappers in `mappers.ts`)
+    search (global multi-module search incl. users/lists; mappers in `mappers.ts`, relevance order in `ranking.ts`)
     movie/[id]/{posters,backdrops}, tv/[id]/{posters,backdrops,season/[seasonNumber]}
     anime/[id]/{episodes,posters,backdrops}, game/[id]/{posters,backdrops}
 components/
@@ -87,6 +87,7 @@ supabase/schema.sql                  DDL (see warnings below)
 - User log logic lives in `hooks/useMediaLog.ts` + per-module config in `lib/media/log.ts` (`LOG_CONFIG`: table, id column, date mode, episodes/hours tracking, status labels and DB status conversion). Pages never query `user_*` tables directly. Rules: removing the status keeps the log while it still has a favorite, rating or review (the row is deleted only when nothing is left); unreleased media only allow the watchlist/backlog status (`isMediaReleased`); toasts come from `statusToast` / `favoriteLimitToast`.
 - Artwork shown on a detail page = page picker choice → logged `custom_*` artwork → random default picked on page entry (`pickRandomPoster`/`pickRandomBackdrop`, or `useArtworkOptions().randomPoster/randomBackdrop` when the source is the artwork route). Review and list modals open with that artwork; saving a review persists it as the log's `custom_*`; list items keep their own artwork. Picker lists come from `hooks/useArtworkOptions.ts`, loaded lazily on picker/modal open unless the random default needs them (`eagerPosters`/`eagerBackdrops`).
 - Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, only through the server action `ensureMediaCached(mediaType, mediaId)` (`lib/media/cache-actions.ts`): the browser sends type and id, the server fetches the data from the provider and writes it with `lib/media/cache.ts`, using `SUPABASE_SERVICE_ROLE_KEY` (`lib/supabase/admin.ts`). Never write to these tables from client code. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists/media-map.ts → fetchCachedMediaMap`).
+- Search ordering ("Most Popular") uses `searchScore` (`app/api/search/ranking.ts`): title match + fame normalized per source (TMDB `vote_count`, IGDB `total_rating_count`, AniList members, log scale, with trend/hype for unreleased titles) + a soft movie/TV boost. People, companies, users and lists are deliberately capped low. The unfiltered view ranks a bounded pool (3 TMDB pages, 20 anime, 20 games). Never compare raw popularity numbers across sources.
 - `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`, typed as `MediaType` from `lib/media/types.ts` (never repeat the literal union).
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
 

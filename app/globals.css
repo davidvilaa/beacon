@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1d232a;
+  --background: #222326;
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
   --foreground: #fafafa;
   --accent: #a8dadc;
@@ -10,17 +10,17 @@
 }
 
 @theme {
-  --color-zinc-50: #f9fafb;
-  --color-zinc-100: #f0f3f7;
-  --color-zinc-200: #e1e6ee;
-  --color-zinc-300: #cbd3df;
-  --color-zinc-400: #a3aebf;
-  --color-zinc-500: #8390a4;
-  --color-zinc-600: #5d6a7f;
-  --color-zinc-700: #404a57;
-  --color-zinc-800: #2e3641;
-  --color-zinc-900: #1d232a;
-  --color-zinc-950: #11151c;
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f2f2f3;
+  --color-zinc-200: #e3e4e6;
+  --color-zinc-300: #cdced2;
+  --color-zinc-400: #a8a9af;
+  --color-zinc-500: #898b92;
+  --color-zinc-600: #62646b;
+  --color-zinc-700: #46484e;
+  --color-zinc-800: #34363b;
+  --color-zinc-900: #222326;
+  --color-zinc-950: #1a1b1e;
 }
 
 @theme inline {

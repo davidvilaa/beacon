@@ -1,6 +1,6 @@
 "use client";
 
-import { UserCircle, Settings2, LogOut, CircleUserRound, Search, X } from "lucide-react";
+import { UserCircle, Settings2, LogOut, CircleUserRound, Search } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,49 +13,10 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
-
-  useEffect(() => {
-    if (isSearchOpen) {
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 200);
-      return () => clearTimeout(timer);
-    } else {
-      setSearchQuery("");
-    }
-  }, [isSearchOpen]);
-
-  useEffect(() => {
-    if (!isSearchOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsSearchOpen(false);
-      }
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(e.target as Node)
-      ) {
-        setIsSearchOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isSearchOpen]);
 
   useEffect(() => {
     const fetchUserMeta = async (userId: string) => {
@@ -123,8 +84,8 @@ export default function Navbar() {
     if (trimmed) {
       window.dispatchEvent(new CustomEvent("beacon-search-executed"));
       router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-      setIsSearchOpen(false);
       setSearchQuery("");
+      searchInputRef.current?.blur();
     }
   };
 
@@ -134,22 +95,32 @@ export default function Navbar() {
         showNav ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      <header className="relative z-10 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-6 backdrop-blur-md">
-        <div 
-          className={`flex h-full items-center justify-between w-full transition-opacity duration-300 ease-in-out ${
-            isSearchOpen ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"
-          }`}
-        >
-          <Logo className="text-xl" />
-          
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsSearchOpen(true)}
+      <header className="flex h-14 items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950 px-4 sm:px-6">
+        <Logo className="text-xl" />
+
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-8 w-32 min-w-0 items-center gap-2 border border-zinc-800 bg-zinc-900 px-2.5 transition-colors focus-within:border-accent/60 sm:w-64">
+            <Search className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              maxLength={50}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value.slice(0, 50).toUpperCase())}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearchSubmit();
+                }
+                if (e.key === "Escape") {
+                  setSearchQuery("");
+                  e.currentTarget.blur();
+                }
+              }}
+              placeholder="Search"
               aria-label="Search"
-              className="p-1.5 text-zinc-400 hover:text-accent transition-colors rounded-full hover:bg-zinc-800 cursor-pointer"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+              className="w-full min-w-0 bg-transparent text-sm uppercase text-zinc-100 placeholder:normal-case placeholder:text-zinc-500 focus:outline-none"
+            />
+          </div>
 
             {user ? (
               <div className="relative group">
@@ -185,67 +156,19 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
                 <Link href="/login">
                   <SecondaryButton className="py-1.5 px-3.5">
                     Sign in
                   </SecondaryButton>
                 </Link>
-                <Link href="/register">
+                <Link href="/register" className="hidden sm:block">
                   <PrimaryButton className="py-1.5 px-3.5">
                     Sign up
                   </PrimaryButton>
                 </Link>
               </div>
             )}
-          </div>
-        </div>
-
-        <div 
-          className="absolute top-0 bottom-0 w-[2px] bg-accent transition-all duration-300 ease-in-out pointer-events-none z-30"
-          style={{
-            left: isSearchOpen ? "0%" : "calc(100% - 2px)",
-            opacity: isSearchOpen ? 1 : 0,
-          }} 
-        />
-
-        <div
-          ref={searchContainerRef}
-          className={`absolute inset-0 px-6 flex items-center transition-all duration-300 ease-in-out z-20 ${
-            isSearchOpen 
-              ? "pointer-events-auto opacity-100" 
-              : "pointer-events-none opacity-0"
-          }`}
-          style={{
-            clipPath: isSearchOpen ? "inset(0 0% 0 0)" : "inset(0 0 0 100%)",
-          }}
-        >
-          <div className="flex items-center gap-3 w-full">
-            <Search className="w-5 h-5 text-accent shrink-0" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              maxLength={50}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.slice(0, 50).toUpperCase())}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearchSubmit();
-                }
-              }}
-              placeholder="..."
-              className="w-full bg-transparent text-zinc-100/80 text-lg sm:text-xl tracking-wider uppercase focus:outline-none placeholder:text-zinc-600 font-[family-name:var(--font-geist-sans)]"
-            />
-            <button
-              onClick={() => {
-                setIsSearchOpen(false);
-                setSearchQuery("");
-              }}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-sm hover:bg-zinc-800/60 transition-colors shrink-0 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
         </div>
       </header>
     </div>

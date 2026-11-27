@@ -4,7 +4,6 @@ import { forwardRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
-import CardGradientBorder from "@/components/ui/CardGradientBorder";
 import type { MediaType } from "@/lib/media/types";
 
 export interface MediaCardProps {
@@ -108,14 +107,12 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
         ref={ref}
         href={resolvedHref}
         title={title}
-        className={`group relative flex flex-col rounded-sm overflow-hidden cursor-pointer transition-all duration-200 select-none ${
+        className={`group relative flex flex-col rounded-sm overflow-hidden cursor-pointer select-none ${
           isCurrent
             ? "border-2 border-accent"
-            : "border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 hover:scale-[1.03] hover:z-10"
+            : "border border-zinc-800 bg-zinc-900/40"
         } ${hasFooter ? "w-full" : "aspect-[2/3] w-full"} ${className}`}
       >
-        {!isCurrent && <CardGradientBorder roundedClassName="rounded-sm" />}
-
         <div
           className={`relative bg-zinc-900 overflow-hidden ${
             hasFooter
@@ -138,6 +135,9 @@ const MediaCard = forwardRef<HTMLAnchorElement, MediaCardProps>(
                 {title}
               </span>
             </div>
+          )}
+          {!isCurrent && (
+            <div className="pointer-events-none absolute inset-0 bg-black/35 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           )}
         </div>
 

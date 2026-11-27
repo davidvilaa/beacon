@@ -1,11 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
+  --background: #222a35;
   --foreground: #fafafa;
   --accent: #a8dadc;
   --accent-hover: #8ec5c8;
   color-scheme: dark;
+}
+
+@theme {
+  --color-zinc-50: #f9fafb;
+  --color-zinc-100: #f0f3f7;
+  --color-zinc-200: #e1e6ee;
+  --color-zinc-300: #cbd3df;
+  --color-zinc-400: #a3aebf;
+  --color-zinc-500: #8390a4;
+  --color-zinc-600: #5d6a7f;
+  --color-zinc-700: #455164;
+  --color-zinc-800: #333d4b;
+  --color-zinc-900: #222a35;
+  --color-zinc-950: #11151c;
 }
 
 @theme inline {
@@ -27,7 +41,7 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #09090b inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-zinc-950) inset !important;
   -webkit-text-fill-color: #fafafa !important;
   transition: background-color 5000s ease-in-out 0s;
   caret-color: white !important;

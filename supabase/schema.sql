@@ -103,12 +103,6 @@ alter table public.movies enable row level security;
 create policy "movies_read_policy"
   on public.movies for select using (true);
 
-create policy "movies_insert_policy"
-  on public.movies for insert with check ((select auth.role()) = 'authenticated');
-
-create policy "movies_update_policy"
-  on public.movies for update using ((select auth.role()) = 'authenticated');
-
 create trigger trigger_movies_updated_at
   before update on public.movies
   for each row execute function public.handle_updated_at();
@@ -129,12 +123,6 @@ alter table public.series enable row level security;
 
 create policy "series_read_policy"
   on public.series for select using (true);
-
-create policy "series_insert_policy"
-  on public.series for insert with check ((select auth.role()) = 'authenticated');
-
-create policy "series_update_policy"
-  on public.series for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_series_updated_at
   before update on public.series
@@ -158,12 +146,6 @@ alter table public.animes enable row level security;
 create policy "animes_read_policy"
   on public.animes for select using (true);
 
-create policy "animes_insert_policy"
-  on public.animes for insert with check ((select auth.role()) = 'authenticated');
-
-create policy "animes_update_policy"
-  on public.animes for update using ((select auth.role()) = 'authenticated');
-
 create trigger trigger_animes_updated_at
   before update on public.animes
   for each row execute function public.handle_updated_at();
@@ -183,12 +165,6 @@ alter table public.games enable row level security;
 
 create policy "games_read_policy"
   on public.games for select using (true);
-
-create policy "games_insert_policy"
-  on public.games for insert with check ((select auth.role()) = 'authenticated');
-
-create policy "games_update_policy"
-  on public.games for update using ((select auth.role()) = 'authenticated');
 
 create trigger trigger_games_updated_at
   before update on public.games

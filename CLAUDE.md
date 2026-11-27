@@ -106,7 +106,7 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
 - **`public.animes`** — `id` bigint PK (AniList id), `title` text not null, `overview`, `poster_path`, `backdrop_path`, `format`, `episodes` int default 0, `status`, `created_at`, `updated_at`
 - **`public.games`** — `id` bigint PK (IGDB id), `name` text not null, `summary`, `cover_url`, `backdrop_url`, `first_release_date` timestamptz, `created_at`, `updated_at`
 
-  Cache tables RLS: select public; insert/update for `authenticated`.
+  Cache tables RLS: select public; no insert/update/delete policies, so only the server (secret key) can write.
 
 - **`public.user_movies`** — unique `(user_id, movie_id)`
   - `id` uuid PK, `user_id` → users, `movie_id` → movies

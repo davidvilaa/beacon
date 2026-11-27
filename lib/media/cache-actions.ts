@@ -41,10 +41,17 @@ export async function ensureMediaCached(mediaType: MediaType, mediaId: number): 
     const { data } = await session.auth.getClaims();
     if (!data?.claims?.sub) return false;
 
+    const admin = createAdminClient();
+    if (!admin) {
+      console.error("SUPABASE_SERVICE_ROLE_KEY is not set");
+      return false;
+    }
+
     const input = await loadCacheInput(mediaType, mediaId);
     if (!input) return false;
 
-    const error = await upsertMediaCache(createAdminClient() ?? session, mediaType, input);
+    const error = await upsertMediaCache(admin, mediaType, input);
+    if (error) console.error("Media cache write failed", error.message);
     return !error;
   } catch {
     return false;

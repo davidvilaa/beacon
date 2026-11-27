@@ -30,8 +30,18 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-navbar: var(--navbar);
+  --animate-beacon-fill: beacon-fill 1.3s ease-in-out infinite both;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+@keyframes beacon-fill {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  45%, 65% {
+    opacity: 1;
+  }
 }
 
 body {

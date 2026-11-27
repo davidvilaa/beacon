@@ -1,3 +1,5 @@
+import BeaconMark from "@/components/ui/BeaconMark";
+
 export default function Loading({
   text = "Loading...",
   className = "",
@@ -7,9 +9,10 @@ export default function Loading({
 }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 py-16 ${className}`}
+      role="status"
+      className={`flex flex-col items-center justify-center gap-2 py-16 ${className}`}
     >
-      <div className="w-6 h-6 rounded-full border-2 border-zinc-800 border-t-accent animate-spin" />
+      <BeaconMark animated className="h-12 w-12 rotate-90" />
       {text && <p className="text-xs text-zinc-500 font-medium">{text}</p>}
     </div>
   );

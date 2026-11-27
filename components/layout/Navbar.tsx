@@ -96,7 +96,7 @@ export default function Navbar() {
       }`}
     >
       <header className="flex h-14 items-center justify-between gap-3 border-b border-zinc-800 bg-navbar px-4 sm:px-6">
-        <Logo className="text-xl" withMark />
+        <Logo className="text-xl" />
 
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-8 w-32 min-w-0 items-center gap-2 border border-zinc-800 bg-zinc-900 px-2.5 transition-colors focus-within:border-accent/60 sm:w-64">

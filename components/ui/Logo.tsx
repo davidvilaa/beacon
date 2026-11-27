@@ -3,31 +3,16 @@ import BeaconMark from "@/components/ui/BeaconMark";
 
 interface LogoProps {
   className?: string;
-  withMark?: boolean;
 }
 
-export default function Logo({ className = "", withMark = false }: LogoProps) {
-  if (withMark) {
-    return (
-      <Link
-        href="/"
-        className={`inline-flex shrink-0 items-center gap-1.5 font-black tracking-widest text-zinc-50 select-none ${className}`}
-      >
-        <BeaconMark className="h-[1.9em] w-[1.9em]" />
-        <span>BEACON</span>
-      </Link>
-    );
-  }
-
+export default function Logo({ className = "" }: LogoProps) {
   return (
-    <Link 
-      href="/" 
-      className={`group relative inline-flex items-center justify-center font-black tracking-widest transition-all duration-300 ${className}`}
+    <Link
+      href="/"
+      className={`inline-flex shrink-0 items-center gap-1.5 font-black tracking-widest text-zinc-50 select-none transition hover:brightness-75 ${className}`}
     >
-      <span className="absolute w-[0.2em] h-[0.2em] rounded-full bg-[#a8dadc] blur-md opacity-45 group-hover:opacity-85 group-hover:blur-lg transition-all duration-300 pointer-events-none" />
-      <span className="relative bg-[radial-gradient(circle_at_center,_#a8dadc_0%,_#a8dadc_35%,_#ffffff_85%)] bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(168,218,220,0.25)] group-hover:drop-shadow-[0_0_18px_rgba(168,218,220,0.6)] transition-all duration-300 select-none">
-        BEACON
-      </span>
+      <BeaconMark className="h-[1.9em] w-[1.9em]" />
+      <span>BEACON</span>
     </Link>
   );
 }

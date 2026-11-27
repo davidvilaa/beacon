@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PAGES = ['/', '/login', '/register'];
+const PUBLIC_PAGES = ['/', '/login', '/register', '/manifest.webmanifest'];
 const AUTH_PAGES = ['/login', '/register'];
 const PUBLIC_PAGE_PREFIXES = ['/movie/', '/tv/', '/anime/', '/game/', '/person/', '/company/'];
 const PUBLIC_API_PATTERNS = [/^\/api\/tv\/\d+\/season\/\d+$/, /^\/api\/anime\/\d+\/episodes$/];

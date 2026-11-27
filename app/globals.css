@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #222a35;
+  --background: #1d232a;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
   --foreground: #fafafa;
   --accent: #a8dadc;
   --accent-hover: #8ec5c8;
@@ -16,9 +17,9 @@
   --color-zinc-400: #a3aebf;
   --color-zinc-500: #8390a4;
   --color-zinc-600: #5d6a7f;
-  --color-zinc-700: #455164;
-  --color-zinc-800: #333d4b;
-  --color-zinc-900: #222a35;
+  --color-zinc-700: #404a57;
+  --color-zinc-800: #2e3641;
+  --color-zinc-900: #1d232a;
   --color-zinc-950: #11151c;
 }
 
@@ -32,7 +33,8 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: var(--grain);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

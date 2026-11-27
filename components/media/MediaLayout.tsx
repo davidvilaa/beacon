@@ -80,7 +80,6 @@ export default function MediaLayout({
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent pointer-events-none" />
           <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-zinc-950/60 to-transparent pointer-events-none" />
         </div>
       )}

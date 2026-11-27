@@ -181,14 +181,14 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-900">
+      <div className="flex min-h-screen items-center justify-center">
         <Loading />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-900 text-zinc-50 py-12">
+    <div className="flex min-h-screen items-center justify-center text-zinc-50 py-12">
       <div className="w-full max-w-2xl p-8 border border-zinc-800 bg-zinc-900 rounded-sm shadow-xl">
         <div className="text-center mb-6">
           <Logo className="text-3xl" />

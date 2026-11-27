@@ -1,10 +1,24 @@
 import Link from "next/link";
+import BeaconMark from "@/components/ui/BeaconMark";
 
 interface LogoProps {
   className?: string;
+  withMark?: boolean;
 }
 
-export default function Logo({ className = "" }: LogoProps) {
+export default function Logo({ className = "", withMark = false }: LogoProps) {
+  if (withMark) {
+    return (
+      <Link
+        href="/"
+        className={`inline-flex shrink-0 items-center gap-2 font-black tracking-widest text-zinc-50 select-none ${className}`}
+      >
+        <span>BEACON</span>
+        <BeaconMark className="h-[1.5em] w-[1.5em]" />
+      </Link>
+    );
+  }
+
   return (
     <Link 
       href="/" 

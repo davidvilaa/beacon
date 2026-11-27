@@ -1,15 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Building2,
-  User as UserIcon,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Building2, User as UserIcon } from "lucide-react";
 import { getPosterUrl } from "@/lib/providers/tmdb/client";
 import type { Movie } from "@/lib/providers/tmdb/types";
 import Loading from "@/components/ui/Loading";
@@ -51,38 +46,31 @@ const SORT_OPTIONS: Option[] = [
   { id: "oldest", label: "Oldest" },
 ];
 
-function getPageNumbers(current: number, total: number): (number | string)[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  if (current <= 4) {
-    return [1, 2, 3, 4, 5, "...", total];
-  }
-  if (current >= total - 3) {
-    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
-  }
-  return [1, "...", current - 1, current, current + 1, "...", total];
+function itemKey(item: SearchMovieItem): string {
+  return item.href || `${item.moduleType || item.media_type || "media"}-${item.id}`;
 }
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const query = searchParams.get("q") || "";
-  const pageParam = parseInt(searchParams.get("page") || "1", 10);
-  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("popularity");
   const [movies, setMovies] = useState<SearchMovieItem[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalResults, setTotalResults] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastQuery, setLastQuery] = useState(query);
+  const requestKeyRef = useRef("");
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  if (lastQuery !== query) {
+    setLastQuery(query);
     setSelectedFilter("all");
     setSortBy("popularity");
-  }, [query]);
+  }
 
   useEffect(() => {
     const handleSearchExecuted = () => {
@@ -90,85 +78,88 @@ function SearchContent() {
       setSortBy("popularity");
     };
     window.addEventListener("beacon-search-executed", handleSearchExecuted);
-    return () => {
-      window.removeEventListener("beacon-search-executed", handleSearchExecuted);
-      setSelectedFilter("all");
-      setSortBy("popularity");
-    };
+    return () => window.removeEventListener("beacon-search-executed", handleSearchExecuted);
   }, []);
 
+  const fetchPage = useCallback(
+    async (pageNumber: number) => {
+      const filterParam =
+        selectedFilter !== "all" ? `&module=${encodeURIComponent(selectedFilter)}` : "";
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(query.trim())}&page=${pageNumber}${filterParam}&sort_by=${encodeURIComponent(sortBy)}`
+      );
+      const data = await res.json();
+      return {
+        results: (data.results || []) as SearchMovieItem[],
+        hasMore: Boolean(data.has_more),
+      };
+    },
+    [query, selectedFilter, sortBy]
+  );
+
   useEffect(() => {
+    const key = `${query}|${selectedFilter}|${sortBy}`;
+    requestKeyRef.current = key;
+
     if (!query.trim()) {
       setMovies([]);
-      setTotalPages(0);
-      setTotalResults(0);
+      setHasMore(false);
       setLoading(false);
       return;
     }
 
-    let isCancelled = false;
     setLoading(true);
-
-    const filterParam =
-      selectedFilter !== "all"
-        ? `&module=${encodeURIComponent(selectedFilter)}`
-        : "";
-    const sortParam = `&sort_by=${encodeURIComponent(sortBy)}`;
-
-    fetch(
-      `/api/search?q=${encodeURIComponent(
-        query.trim()
-      )}&page=${currentPage}${filterParam}${sortParam}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        if (!isCancelled) {
-          setMovies(data.results || []);
-          setTotalPages(data.total_pages || 0);
-          setTotalResults(data.total_results || 0);
-          setLoading(false);
-        }
+    setMovies([]);
+    setPage(1);
+    fetchPage(1)
+      .then(({ results, hasMore: more }) => {
+        if (requestKeyRef.current !== key) return;
+        setMovies(results);
+        setHasMore(more);
       })
-      .catch((err) => {
-        if (!isCancelled) {
-          console.error(err);
-          setMovies([]);
-          setTotalPages(0);
-          setTotalResults(0);
-          setLoading(false);
-        }
+      .catch(() => {
+        if (requestKeyRef.current !== key) return;
+        setMovies([]);
+        setHasMore(false);
+      })
+      .finally(() => {
+        if (requestKeyRef.current === key) setLoading(false);
       });
+  }, [query, selectedFilter, sortBy, fetchPage]);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [query, currentPage, selectedFilter, sortBy]);
+  const loadMore = useCallback(() => {
+    if (!hasMore || loading || loadingMore) return;
+    const key = requestKeyRef.current;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    fetchPage(nextPage)
+      .then(({ results, hasMore: more }) => {
+        if (requestKeyRef.current !== key) return;
+        setMovies((prev) => {
+          const seen = new Set(prev.map(itemKey));
+          return [...prev, ...results.filter((item) => !seen.has(itemKey(item)))];
+        });
+        setPage(nextPage);
+        setHasMore(more);
+      })
+      .catch(() => {
+        if (requestKeyRef.current === key) setHasMore(false);
+      })
+      .finally(() => setLoadingMore(false));
+  }, [hasMore, loading, loadingMore, page, fetchPage]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage === currentPage || newPage < 1 || newPage > totalPages) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    router.push(`/search?${params.toString()}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleFilterChange = (filterId: string) => {
-    setSelectedFilter(filterId);
-    if (currentPage !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", "1");
-      router.push(`/search?${params.toString()}`);
-    }
-  };
-
-  const handleSortChange = (sortId: string) => {
-    setSortBy(sortId);
-    if (currentPage !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", "1");
-      router.push(`/search?${params.toString()}`);
-    }
-  };
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "600px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, movies.length]);
 
   const filteredMovies = movies;
 
@@ -185,7 +176,7 @@ function SearchContent() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <Select
             value={selectedFilter}
-            onChange={handleFilterChange}
+            onChange={setSelectedFilter}
             options={RESULT_OPTIONS}
             variant="compact"
             className="w-36 sm:w-44"
@@ -193,7 +184,7 @@ function SearchContent() {
 
           <Select
             value={sortBy}
-            onChange={handleSortChange}
+            onChange={setSortBy}
             options={SORT_OPTIONS}
             variant="compact"
             className="w-36 sm:w-44"
@@ -419,7 +410,7 @@ function SearchContent() {
 
               return (
                 <MediaCard
-                  key={`${movie.moduleType || "media"}-${movie.id}`}
+                  key={itemKey(movie)}
                   variant="horizontal"
                   id={movie.id}
                   href={resolvedHref}
@@ -437,58 +428,9 @@ function SearchContent() {
           )}
         </div>
 
-        {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-center gap-1.5 mt-8 pt-6 border-t border-zinc-800/60">
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              aria-label="Previous page"
-              className="w-8 h-8 rounded-sm border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {getPageNumbers(currentPage, totalPages).map((p, idx) => {
-              if (p === "...") {
-                return (
-                  <span
-                    key={`ellipsis-${idx}`}
-                    className="w-8 h-8 flex items-center justify-center text-xs text-zinc-600 select-none"
-                  >
-                    ...
-                  </span>
-                );
-              }
-
-              const pageNum = Number(p);
-              const isActive = pageNum === currentPage;
-
-              return (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`w-8 h-8 rounded-sm text-xs font-medium transition-all cursor-pointer active:scale-95 ${
-                    isActive
-                      ? "bg-accent text-zinc-950 font-bold border border-accent"
-                      : "border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              aria-label="Next page"
-              className="w-8 h-8 rounded-sm border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-400 flex items-center justify-center transition-colors cursor-pointer active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+        {hasMore && !loading && (
+          <div ref={sentinelRef} className="py-6">
+            {loadingMore && <Loading text="" className="py-0" />}
           </div>
         )}
       </section>

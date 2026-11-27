@@ -37,6 +37,7 @@ import {
   type ReviewRecord,
   type TmdbMeta,
 } from "@/lib/details/review-types";
+import { seasonHref } from "@/lib/media/seasons";
 
 interface ReviewViewProps {
   initialReview: ReviewRecord;
@@ -211,9 +212,7 @@ export default function ReviewView({ initialReview, tmdbMeta, currentUserId }: R
       ? `/movie/${review.media_id}`
       : review.media_type === "game"
       ? `/game/${review.media_id}`
-      : `/tv/${review.media_id}${
-          review.season_number ? `?season=${review.season_number}` : ""
-        }`;
+      : seasonHref(review.media_id, review.season_number || 1);
 
   const ratingVal = review.rating ? Number(review.rating) : 0;
   const authorName = review.users?.username || "User";

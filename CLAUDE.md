@@ -25,7 +25,7 @@ Media logging platform (Letterboxd / Backloggd / AniList style) for **movies, TV
 ## Stack
 - **Next.js 16** (App Router, Turbopack, `cacheComponents`, `partialPrefetching`). This is NOT the Next.js from training data — read `node_modules/next/dist/docs/` before using unfamiliar APIs. Note: middleware is `proxy.ts` (exports `proxy`), not `middleware.ts`.
 - **React 19.3**, **TypeScript** strict, **Tailwind CSS v4** (CSS-first config in `app/globals.css`, no tailwind.config).
-- **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; server clients in `lib/supabase/server.ts` → `createAnonClient()` and `createServerSupabase()` (reads the session cookies, use `auth.getClaims()`); session check in `proxy.ts` via `getUser()`). Public without an account: `/`, auth pages, media/person/company detail pages and GET `/api/tv/[id]/season/[n]` and `/api/anime/[id]/episodes` (artwork routes and pickers require an account); every action that needs an account goes through `useMediaLog().requireAccount()` (toast + redirect to `/login`). Auth via `supabase.auth`. Storage bucket `avatars`.
+- **Supabase** (`@supabase/ssr`, browser client `lib/supabase/client.ts` → `createClient()`; server clients in `lib/supabase/server.ts` → `createAnonClient()` and `createServerSupabase()` (reads the session cookies, use `auth.getClaims()`); session check in `proxy.ts` via `getUser()`). Public without an account: `/`, auth pages, media/person/company detail pages and GET `/api/anime/[id]/episodes` (artwork routes and pickers require an account); every action that needs an account goes through `useMediaLog().requireAccount()` (toast + redirect to `/login`). Auth via `supabase.auth`. Storage bucket `avatars`.
 - Icons: `lucide-react`, `react-icons`.
 - Path alias: `@/*` → project root.
 - Commands: `npm run build`, `npm run lint` (eslint 9 flat config). Production builds type-check with `tsconfig.build.json` (selected in `next.config.ts` via `typescript.tsconfigPath` when `NODE_ENV=production`), which excludes the dev-generated `.next/dev/types`, so `npm run build` works while the dev server is running. Keep both tsconfig files in sync when changing compiler options or includes.
@@ -48,7 +48,8 @@ Content filtering (excluded TMDB genres like talk shows/news/reality/soap/kids/m
 app/
   (public)/login, register           auth pages
   (protected)/                       pages with Navbar (layout.tsx)
-    movie/[id] tv/[id] anime/[id] game/[id]    media detail pages: server page.tsx + client *View.tsx
+    movie/[id] anime/[id] game/[id]  media detail pages: server page.tsx + client *View.tsx
+    tv/[id]/season/[season]          one page per season (server page.tsx + TvView.tsx); tv/[id] only redirects to a season (also old ?season= links)
     person/[id] company/[id]         TMDB/AniList people & companies (server page.tsx + client *View.tsx)
     lists/[id]                       list detail
     profile/page.tsx                 redirects to the signed-in user's profile
@@ -59,7 +60,7 @@ app/
   (admin)/                           empty placeholder
   api/                               routes the browser still needs (singular media names); detail data is loaded by server pages
     search (global multi-module search incl. users/lists; mappers in `mappers.ts`, relevance order in `ranking.ts`)
-    movie/[id]/{posters,backdrops}, tv/[id]/{posters,backdrops,season/[seasonNumber]}
+    movie/[id]/{posters,backdrops}, tv/[id]/{posters,backdrops}
     anime/[id]/{episodes,posters,backdrops}, game/[id]/{posters,backdrops}
 components/
   ui/                                design-system primitives only (Button, Select, Checkbox, DatePicker, Toast, Loading, Logo, CardGradientBorder)
@@ -87,7 +88,7 @@ supabase/schema.sql                  DDL (see warnings below)
 - User log logic lives in `hooks/useMediaLog.ts` + per-module config in `lib/media/log.ts` (`LOG_CONFIG`: table, id column, date mode, episodes/hours tracking, status labels and DB status conversion). Pages never query `user_*` tables directly. Rules: removing the status keeps the log while it still has a favorite, rating or review (the row is deleted only when nothing is left); unreleased media only allow the watchlist/backlog status (`isMediaReleased`); toasts come from `statusToast` / `favoriteLimitToast`.
 - Artwork shown on a detail page = page picker choice → logged `custom_*` artwork → random default picked on page entry (`pickRandomPoster`/`pickRandomBackdrop`, or `useArtworkOptions().randomPoster/randomBackdrop` when the source is the artwork route). Review and list modals open with that artwork; saving a review persists it as the log's `custom_*`; list items keep their own artwork. Picker lists come from `hooks/useArtworkOptions.ts`, loaded lazily on picker/modal open unless the random default needs them (`eagerPosters`/`eagerBackdrops`).
 - Media metadata is cached in Supabase (`movies`, `series`, `animes`, `games`) when a user logs it or adds it to a list, only through the server action `ensureMediaCached(mediaType, mediaId)` (`lib/media/cache-actions.ts`): the browser sends type and id, the server fetches the data from the provider and writes it with `lib/media/cache.ts`, using `SUPABASE_SERVICE_ROLE_KEY` (`lib/supabase/admin.ts`). Never write to these tables from client code. Artwork selection and dedupe live in `lib/artwork/` (`pick.ts`, `dedupe.ts`, cached `sources.ts`). Lists resolve titles/artwork from this cache (`lib/lists/media-map.ts → fetchCachedMediaMap`).
-- Search ordering ("Most Popular") uses `searchScore` (`app/api/search/ranking.ts`): title match + fame normalized per source (TMDB `vote_count`, IGDB `total_rating_count`, AniList members, log scale, with trend/hype for unreleased titles) + a soft movie/TV boost. People, companies, users and lists are deliberately capped low. The unfiltered view ranks a bounded pool (3 TMDB pages, 20 anime, 20 games). Never compare raw popularity numbers across sources.
+- Search ordering ("Most Popular") uses `searchScore` (`app/api/search/ranking.ts`): title match + fame normalized per source (TMDB `vote_count`, IGDB `total_rating_count`, AniList members, log scale, with trend/hype for unreleased titles) + a soft movie/TV boost. People, companies, users and lists are deliberately capped low. The unfiltered view ranks a bounded pool (3 TMDB pages, 20 anime, 20 games). Never compare raw popularity numbers across sources. Series are ranked as one show and then expanded into one entry per season (`app/api/search/seasons.ts`), lazily, only up to the page being returned; seasons of a show stay together (ascending, or descending for Newest). The search page uses infinite scroll (`has_more` in the API response). Build season links with `seasonHref` (`lib/media/seasons.ts`).
 - `media_type` values everywhere: `'movie' | 'tv' | 'anime' | 'game'`, typed as `MediaType` from `lib/media/types.ts` (never repeat the literal union).
 - Users can override artwork per log/list item via `custom_poster_path` / `custom_backdrop_path`.
 

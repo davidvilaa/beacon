@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
 import { getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/providers/tmdb/client";
-import type { TvDetails, TvSeasonDetails } from "@/lib/providers/tmdb/types";
-import Select from "@/components/ui/Select";
+import type { TvDetails } from "@/lib/providers/tmdb/types";
+import FranchiseSlider from "@/components/media/FranchiseSlider";
 import MediaLayout from "@/components/media/MediaLayout";
 import MediaActionColumn from "@/components/media/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/media/columns/MediaInfoColumn";
@@ -22,6 +21,7 @@ import { isMediaReleased } from "@/lib/media/release";
 import type { InitialMediaLog } from "@/lib/media/log";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";
+import { regularSeasons as getRegularSeasons, seasonHref, seasonTitle } from "@/lib/media/seasons";
 
 type TvTab = "cast" | "crew" | "details" | "episodes" | "trailer";
 type OpenModal = "poster" | "backdrop" | "log" | "list" | null;
@@ -35,31 +35,19 @@ interface TvViewProps {
 }
 
 export default function TvView({ tv, initialSeason, initialLog, randomPoster, randomBackdrop }: TvViewProps) {
-  const searchParams = useSearchParams();
   const id = String(tv.id);
-
-  const [activeSeason, setActiveSeason] = useState<number>(initialSeason);
-  const [seasonCache, setSeasonCache] = useState<Record<number, TvSeasonDetails>>(() =>
-    tv.initialSeason ? { [initialSeason]: tv.initialSeason } : {}
-  );
-  const [isSeasonLoading, setIsSeasonLoading] = useState(false);
+  const activeSeason = initialSeason;
+  const currentSeasonDetails = tv.initialSeason ?? null;
 
   const [loadedBackdrop, setLoadedBackdrop] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<OpenModal>(null);
   const [selectedTab, setActiveTab] = useState<TvTab>("cast");
 
-  const regularSeasons = useMemo(() => {
-    if (!tv.seasons) return [];
-    return tv.seasons
-      .filter((s) => s.season_number > 0)
-      .sort((a, b) => a.season_number - b.season_number);
-  }, [tv]);
+  const regularSeasons = useMemo(() => getRegularSeasons(tv.seasons), [tv]);
 
   const currentSeasonSummary = useMemo(() => {
     return tv.seasons?.find((s) => s.season_number === activeSeason) || null;
   }, [tv, activeSeason]);
-
-  const currentSeasonDetails = seasonCache[activeSeason] || null;
 
   const currentSeasonEpisodeCount =
     currentSeasonDetails?.episodes?.length || currentSeasonSummary?.episode_count || 0;
@@ -85,7 +73,6 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
   const artwork = useArtworkOptions({
     postersUrl: `/api/tv/${id}/posters?season=${activeSeason}`,
     backdropsUrl: `/api/tv/${id}/backdrops`,
-    eagerPosters: Boolean(initialLog.userId) && activeSeason !== initialSeason,
     randomPool: 5,
   });
 
@@ -96,7 +83,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
     isReleased,
     episodeCount: currentSeasonEpisodeCount,
     defaultPoster:
-      (activeSeason === initialSeason ? randomPoster : artwork.randomPoster) ||
+      randomPoster ||
       currentSeasonDetails?.poster_path ||
       currentSeasonSummary?.poster_path ||
       tv.poster_path ||
@@ -110,73 +97,6 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
     artwork.load();
     setOpenModal(modal);
   };
-
-  useEffect(() => {
-    const seasonParam = parseInt(searchParams.get("season") || "", 10);
-    if (!isNaN(seasonParam) && seasonParam > 0 && seasonParam !== activeSeason) {
-      setActiveSeason(seasonParam);
-    }
-  }, [searchParams, activeSeason]);
-
-  const handleSelectSeason = useCallback(
-    async (seasonNum: number) => {
-      if (seasonNum === activeSeason) return;
-
-      setActiveSeason(seasonNum);
-      window.history.replaceState(null, "", `/tv/${id}?season=${seasonNum}`);
-
-      if (seasonCache[seasonNum]) {
-        return;
-      }
-
-      try {
-        setIsSeasonLoading(true);
-        const res = await fetch(`/api/tv/${id}/season/${seasonNum}`);
-        if (res.ok) {
-          const seasonData: TvSeasonDetails = await res.json();
-          setSeasonCache((prev) => ({ ...prev, [seasonNum]: seasonData }));
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsSeasonLoading(false);
-      }
-    },
-    [activeSeason, id, seasonCache]
-  );
-
-  useEffect(() => {
-    if (!id || seasonCache[activeSeason]) return;
-
-    let ignore = false;
-
-    async function fetchInitialSeason() {
-      try {
-        setIsSeasonLoading(true);
-        const res = await fetch(`/api/tv/${id}/season/${activeSeason}`);
-        if (res.ok) {
-          const data: TvSeasonDetails = await res.json();
-          if (!ignore) {
-            setSeasonCache((prev) => ({ ...prev, [activeSeason]: data }));
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          console.error(err);
-        }
-      } finally {
-        if (!ignore) {
-          setIsSeasonLoading(false);
-        }
-      }
-    }
-
-    fetchInitialSeason();
-
-    return () => {
-      ignore = true;
-    };
-  }, [id, activeSeason, seasonCache]);
 
   const totalRuntimeMinutes = useMemo(() => {
     if (!currentSeasonDetails?.episodes) return 0;
@@ -241,25 +161,12 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
             onEpisodeChange={log.changeEpisode}
             onQuickStatusChange={log.setStatus}
             onToggleFavorite={log.toggleFavorite}
-          >
-            {regularSeasons.length > 1 && (
-              <Select
-                value={String(activeSeason)}
-                onChange={(value) => handleSelectSeason(Number(value))}
-                options={regularSeasons.map((s) => ({
-                  id: String(s.season_number),
-                  label: `Season ${s.season_number}`,
-                }))}
-                variant="compact"
-                className="w-full mb-2"
-              />
-            )}
-          </MediaActionColumn>
+          />
         }
       >
         <MediaInfoColumn
           typeLabel="Series"
-          title={tv.name}
+          title={seasonTitle(tv.name, currentSeasonSummary, regularSeasons.length)}
           originalTitle={tv.original_name}
           releaseDate={rawDate}
           runtimeMinutes={totalRuntimeMinutes}
@@ -298,7 +205,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
             />
           )}
           {activeTab === "episodes" && (
-            <EpisodesTab episodes={currentSeasonDetails?.episodes} isLoading={isSeasonLoading} />
+            <EpisodesTab episodes={currentSeasonDetails?.episodes} isLoading={false} />
           )}
           {activeTab === "trailer" && trailer?.key && (
             <div className="aspect-video w-full max-w-4xl rounded-sm overflow-hidden border border-zinc-800 bg-black">
@@ -308,6 +215,27 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
                 className="w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+              />
+            </div>
+          )}
+          {regularSeasons.length > 1 && (
+            <div className="mt-12 sm:mt-14">
+              <div className="relative border-b border-zinc-800/60 mb-6 pb-3">
+                <span className="text-sm font-bold uppercase tracking-wider text-zinc-100">
+                  Seasons
+                </span>
+              </div>
+
+              <FranchiseSlider
+                parts={regularSeasons.map((season) => ({
+                  id: season.season_number,
+                  title: season.name || `Season ${season.season_number}`,
+                  posterPath: season.poster_path || tv.poster_path,
+                  href: seasonHref(tv.id, season.season_number),
+                  mediaType: "tv" as const,
+                }))}
+                currentMovieId={activeSeason}
+                mediaType="tv"
               />
             </div>
           )}

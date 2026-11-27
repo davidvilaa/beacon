@@ -1,3 +1,4 @@
+import { seasonHref } from "@/lib/media/seasons";
 import { LOG_CONFIG, type LogMediaType, type LogStatus } from "@/lib/media/log";
 
 export type ProfileSort = "recent" | "rating_desc" | "rating_asc" | "title_asc" | "title_desc";
@@ -142,7 +143,7 @@ export function rowToCard(mediaType: LogMediaType, row: ProfileLogRow): ProfileC
     entryLogId: row.id,
     title: media?.[config.titleColumn] || config.fallbackTitle,
     posterPath: row.custom_poster_path || media?.[config.posterColumn] || null,
-    href: season ? `/${mediaType}/${mediaId}?season=${season}` : `/${mediaType}/${mediaId}`,
+    href: season ? seasonHref(mediaId, season) : `/${mediaType}/${mediaId}`,
     rating: row.rating ? Number(row.rating) : null,
     review: row.review,
     hasSpoilers: Boolean(row.has_spoilers),

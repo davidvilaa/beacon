@@ -25,6 +25,7 @@ import { fetchCachedMediaMap } from "@/lib/lists/media-map";
 import { getBackdropUrl } from "@/lib/providers/tmdb/client";
 import { formatFullDate } from "@/lib/media/format";
 import type { MediaType } from "@/lib/media/types";
+import { seasonHref } from "@/lib/media/seasons";
 
 interface ListOwner {
   id: string;
@@ -439,7 +440,7 @@ function ListDetailContent() {
                   mediaType={item.mediaType}
                   href={
                     item.mediaType === "tv" && item.seasonNumber
-                      ? `/tv/${item.mediaId}?season=${item.seasonNumber}`
+                      ? seasonHref(item.mediaId, item.seasonNumber)
                       : undefined
                   }
                   title={item.title}

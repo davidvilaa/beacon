@@ -21,6 +21,7 @@ import {
   type SearchCompanyRow,
 } from "@/app/api/search/mappers";
 import { sortByScore } from "@/app/api/search/ranking";
+import { expandSeasons } from "@/app/api/search/seasons";
 
 const ALL_TMDB_PAGES = 3;
 const ALL_POOL_PER_SOURCE = 20;
@@ -94,6 +95,7 @@ export async function GET(request: Request) {
         results: [],
         total_pages: 0,
         total_results: 0,
+        has_more: false,
       });
     }
 
@@ -122,6 +124,7 @@ export async function GET(request: Request) {
         results: ((users || []) as SearchUserRow[]).map((u) => mapUser(u)),
         total_pages: Math.ceil((count || 0) / 10),
         total_results: count || 0,
+        has_more: uiPage < (Math.ceil((count || 0) / 10)),
       });
     }
 
@@ -179,6 +182,7 @@ export async function GET(request: Request) {
         results: mappedLists,
         total_pages: Math.ceil((count || 0) / 10),
         total_results: count || 0,
+        has_more: uiPage < (Math.ceil((count || 0) / 10)),
       });
     }
 
@@ -186,27 +190,39 @@ export async function GET(request: Request) {
     let rawResults: any[] = [];
     let totalResults = 0;
     let pageOffset = ((uiPage - 1) % 2) * 10;
+    let expandTv = false;
 
     if (moduleType === "series") {
-      const data = await searchTv(query, tmdbPage);
-      rawResults = (data.results || []).map((t) => ({
-        id: t.id,
-        title: t.name,
-        original_title: t.original_name,
-        overview: t.overview,
-        poster_path: t.poster_path,
-        backdrop_path: t.backdrop_path,
-        release_date: t.first_air_date,
-        vote_average: t.vote_average,
-        vote_count: t.vote_count,
-        popularity: t.popularity,
-        genre_ids: t.genre_ids,
-        moduleType: "series",
-        media_type: "tv",
-        href: `/tv/${t.id}`,
-      }));
+      const pages = await Promise.all(
+        Array.from({ length: ALL_TMDB_PAGES }, (_, i) => searchTv(query, i + 1))
+      );
+      const seenShows = new Set<number>();
+      rawResults = pages
+        .flatMap((data) => data.results || [])
+        .filter((t) => {
+          if (seenShows.has(t.id)) return false;
+          seenShows.add(t.id);
+          return true;
+        })
+        .map((t) => ({
+          id: t.id,
+          title: t.name,
+          original_title: t.original_name,
+          overview: t.overview,
+          poster_path: t.poster_path,
+          backdrop_path: t.backdrop_path,
+          release_date: t.first_air_date,
+          vote_average: t.vote_average,
+          vote_count: t.vote_count,
+          popularity: t.popularity,
+          genre_ids: t.genre_ids,
+          moduleType: "series",
+          media_type: "tv",
+          href: `/tv/${t.id}`,
+        }));
       rawResults = sortItems(rawResults, sortBy, query);
-      totalResults = data.total_results || 0;
+      totalResults = rawResults.length;
+      expandTv = true;
     } else if (moduleType === "movies") {
       const data = await searchMovies(query, tmdbPage);
       rawResults = (data.results || []).map((m) => ({
@@ -235,6 +251,7 @@ export async function GET(request: Request) {
         results,
         total_pages: Math.min(Math.ceil((animeData.pageInfo?.total || 0) / 10), 1000),
         total_results: animeData.pageInfo?.total || 0,
+        has_more: uiPage < (Math.min(Math.ceil((animeData.pageInfo?.total || 0) / 10), 1000)),
       });
     } else if (moduleType === "games") {
       const gamesData = await searchGames(query, uiPage, 10, sortBy);
@@ -245,6 +262,7 @@ export async function GET(request: Request) {
         results,
         total_pages: Math.min(Math.ceil((gamesData.total || 0) / 10), 1000),
         total_results: gamesData.total || 0,
+        has_more: uiPage < (Math.min(Math.ceil((gamesData.total || 0) / 10), 1000)),
       });
     } else if (
       moduleType &&
@@ -340,10 +358,19 @@ export async function GET(request: Request) {
 
       rawResults = sortItems(allCandidates, sortBy, query);
       totalResults = allCandidates.length;
-      pageOffset = (uiPage - 1) * 10;
+      expandTv = true;
     }
 
-    const sliced = rawResults.slice(pageOffset, pageOffset + 10);
+    let sliced: any[];
+    let hasMore: boolean;
+    if (expandTv) {
+      const expanded = await expandSeasons(rawResults, (uiPage - 1) * 10, 10, sortBy);
+      sliced = expanded.page;
+      hasMore = expanded.hasMore;
+    } else {
+      sliced = rawResults.slice(pageOffset, pageOffset + 10);
+      hasMore = uiPage < Math.min(Math.ceil(totalResults / 10), 1000);
+    }
 
     const results = await Promise.all(
       sliced.map(async (item) => {
@@ -370,13 +397,16 @@ export async function GET(request: Request) {
       })
     );
 
-    const totalPages = Math.min(Math.ceil(totalResults / 10), 1000);
+    const totalPages = expandTv
+      ? uiPage + (hasMore ? 1 : 0)
+      : Math.min(Math.ceil(totalResults / 10), 1000);
 
     return NextResponse.json({
       page: uiPage,
       results,
       total_pages: totalPages,
       total_results: totalResults,
+      has_more: hasMore,
     });
   } catch (error: any) {
     return NextResponse.json(

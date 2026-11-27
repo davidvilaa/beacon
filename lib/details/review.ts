@@ -4,7 +4,6 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { gameStatusToShared } from "@/lib/media/status";
 import { getIgdbImageUrl } from "@/lib/providers/igdb/client";
 import { getAnimeTitle, getAnimePosterUrl, getAnimeBackdropUrl, stripHtml } from "@/lib/providers/anilist/client";
-import type { TvSeasonSummary } from "@/lib/providers/tmdb/types";
 import { getMovieDetail } from "@/lib/details/movie";
 import { getTvDetail } from "@/lib/details/tv";
 import { getAnimeDetail } from "@/lib/details/anime";
@@ -19,7 +18,6 @@ import {
 export interface ReviewPageData {
   review: ReviewRecord | null;
   tmdbMeta: TmdbMeta | null;
-  tvSeasons: TvSeasonSummary[];
   currentUserId: string | null;
 }
 
@@ -312,17 +310,13 @@ export const loadReviewPage = cache(async function loadReviewPage(
   }
 
   if (!record) {
-    return { review: null, tmdbMeta: null, tvSeasons: [], currentUserId };
+    return { review: null, tmdbMeta: null, currentUserId };
   }
 
   let tmdbMeta: TmdbMeta | null = null;
-  let tvSeasons: TvSeasonSummary[] = [];
   const tmdb = await loadMediaData(record).catch(() => null);
 
   if (tmdb) {
-    if (Array.isArray(tmdb.seasons)) {
-      tvSeasons = tmdb.seasons;
-    }
 
     const isAnime = record.media_type === "anime";
     const titleStr = isAnime
@@ -398,5 +392,5 @@ export const loadReviewPage = cache(async function loadReviewPage(
     };
   }
 
-  return { review: record, tmdbMeta, tvSeasons, currentUserId };
+  return { review: record, tmdbMeta, currentUserId };
 });

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { getPosterUrl, getBackdropUrl, getBestTmdbTrailer } from "@/lib/providers/tmdb/client";
 import type { TvDetails, TvSeasonDetails } from "@/lib/providers/tmdb/types";
-import SeasonRevolver from "@/components/media/SeasonRevolver";
+import Select from "@/components/ui/Select";
 import MediaLayout from "@/components/media/MediaLayout";
 import MediaActionColumn from "@/components/media/columns/MediaActionColumn";
 import MediaInfoColumn from "@/components/media/columns/MediaInfoColumn";
@@ -242,23 +242,17 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
             onQuickStatusChange={log.setStatus}
             onToggleFavorite={log.toggleFavorite}
           >
-            {regularSeasons.length > 0 && (
-              <>
-                <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
-                  <SeasonRevolver
-                    seasons={regularSeasons}
-                    activeSeason={activeSeason}
-                    onSelectSeason={handleSelectSeason}
-                  />
-                </div>
-                <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-sm bg-zinc-900 border border-zinc-800">
-                  <SeasonRevolver
-                    seasons={regularSeasons}
-                    activeSeason={activeSeason}
-                    onSelectSeason={handleSelectSeason}
-                  />
-                </div>
-              </>
+            {regularSeasons.length > 1 && (
+              <Select
+                value={String(activeSeason)}
+                onChange={(value) => handleSelectSeason(Number(value))}
+                options={regularSeasons.map((s) => ({
+                  id: String(s.season_number),
+                  label: `Season ${s.season_number}`,
+                }))}
+                variant="compact"
+                className="w-full mb-2"
+              />
             )}
           </MediaActionColumn>
         }

@@ -22,12 +22,10 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import MediaLayout from "@/components/media/MediaLayout";
 import CardGradientBorder from "@/components/ui/CardGradientBorder";
-import SeasonRevolver from "@/components/media/SeasonRevolver";
 import MediaReviewModal, {
   MediaReviewData,
 } from "@/components/media/modals/MediaReviewModal";
 import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
-import type { TvSeasonSummary } from "@/lib/providers/tmdb/types";
 import { formatFullDate } from "@/lib/media/format";
 import { sharedStatusToGame } from "@/lib/media/status";
 import { getAnimeTitle } from "@/lib/providers/anilist/client";
@@ -43,11 +41,10 @@ import {
 interface ReviewViewProps {
   initialReview: ReviewRecord;
   tmdbMeta: TmdbMeta | null;
-  tvSeasons: TvSeasonSummary[];
   currentUserId: string | null;
 }
 
-export default function ReviewView({ initialReview, tmdbMeta, tvSeasons, currentUserId }: ReviewViewProps) {
+export default function ReviewView({ initialReview, tmdbMeta, currentUserId }: ReviewViewProps) {
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
@@ -81,22 +78,6 @@ export default function ReviewView({ initialReview, tmdbMeta, tvSeasons, current
   const backdropUrl = useMemo(() => {
     return getBackdropUrl(backdropPath, "original");
   }, [backdropPath]);
-
-  const regularSeasons = useMemo(() => {
-    if (review?.media_type !== "tv") return [];
-    const filtered = (tvSeasons || []).filter((s) => s.season_number > 0);
-    if (filtered.length > 0) return filtered;
-    const seasonNum = review.season_number || 1;
-    return Array.from({ length: seasonNum }, (_, idx) => ({
-      id: idx + 1,
-      season_number: idx + 1,
-      name: `Season ${idx + 1}`,
-      overview: "",
-      poster_path: null,
-      air_date: null,
-      episode_count: 0,
-    }));
-  }, [review, tvSeasons]);
 
   const handleSaveReview = async (reviewData: MediaReviewData) => {
     if (!review || !isOwner) return;
@@ -247,25 +228,6 @@ export default function ReviewView({ initialReview, tmdbMeta, tvSeasons, current
 
   const posterColumnNode = (
     <div className="relative w-56 sm:w-full">
-      {regularSeasons.length > 0 && (
-        <>
-          <div className="hidden sm:flex absolute -left-20 sm:-left-24 lg:-left-26 top-1/2 -translate-y-1/2 z-30 flex-col items-center">
-            <SeasonRevolver
-              seasons={regularSeasons}
-              activeSeason={review.season_number || 1}
-              readOnly
-            />
-          </div>
-          <div className="sm:hidden flex items-center justify-center mb-3 p-1 rounded-sm bg-zinc-900 border border-zinc-800">
-            <SeasonRevolver
-              seasons={regularSeasons}
-              activeSeason={review.season_number || 1}
-              readOnly
-            />
-          </div>
-        </>
-      )}
-
       <div
         className={`relative aspect-[2/3] w-full ${
           isOwner ? "rounded-t-sm" : "rounded-sm"
@@ -317,6 +279,7 @@ export default function ReviewView({ initialReview, tmdbMeta, tvSeasons, current
         <div className="flex-1 min-w-0 w-full">
           <p className="text-sm font-bold uppercase tracking-wider text-zinc-500 mb-1">
             {resolvedTypeLabel}
+            {review.media_type === "tv" && ` · Season ${review.season_number || 1}`}
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-100 tracking-tight leading-tight">
             <Link href={mediaHref} className="hover:text-accent transition-colors">

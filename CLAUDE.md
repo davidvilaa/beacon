@@ -64,7 +64,7 @@ app/
 components/
   ui/                                design-system primitives only (Button, Select, Checkbox, DatePicker, Toast, Loading, Logo, CardGradientBorder)
   layout/Navbar.tsx
-  media/                             MediaLayout, MediaCard, FranchiseSlider, SeasonRevolver
+  media/                             MediaLayout, MediaCard, FranchiseSlider
   media/columns/                     MediaActionColumn (status/fav/rating), MediaInfoColumn
   media/modals/                      MediaReviewModal (log/review), ArtworkPickerModal, BackdropPickerModal
   media/tabs/                        Cast, Crew, Details, Episodes, Releases, MediaTabsNav

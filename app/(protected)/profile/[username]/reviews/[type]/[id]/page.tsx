@@ -39,7 +39,6 @@ async function ReviewContent({ params }: ReviewPageProps) {
     <ReviewView
       initialReview={data.review}
       tmdbMeta={data.tmdbMeta}
-      tvSeasons={data.tvSeasons}
       currentUserId={data.currentUserId}
     />
   );

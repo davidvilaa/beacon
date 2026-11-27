@@ -18,7 +18,6 @@ import DetailsTab from "@/components/media/tabs/DetailsTab";
 import ReleasesTab from "@/components/media/tabs/ReleasesTab";
 import { getMovieCrewSections, getReleaseDateGroups } from "@/lib/media/credits";
 import { isMediaReleased } from "@/lib/media/release";
-import { movieCacheInput } from "@/lib/media/cache";
 import type { InitialMediaLog } from "@/lib/media/log";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";
@@ -53,12 +52,9 @@ export default function MovieView({ movie, initialLog, randomPoster, randomBackd
     [movie]
   );
 
-  const cacheInput = useMemo(() => movieCacheInput(movie), [movie]);
-
   const log = useMediaLog({
     mediaType: "movie",
     mediaId: movie.id,
-    cacheInput,
     isReleased,
     defaultPoster: randomPoster ?? movie.poster_path ?? null,
     defaultBackdrop: randomBackdrop ?? movie.backdrop_path ?? null,

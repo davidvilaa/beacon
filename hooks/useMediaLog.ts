@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/Toast";
-import { upsertMediaCache, type MediaCacheInput } from "@/lib/media/cache";
+import { ensureMediaCached } from "@/lib/media/cache-actions";
 import {
   EMPTY_LOG,
   LOG_CONFIG,
@@ -38,7 +38,6 @@ interface UseMediaLogOptions {
   mediaType: LogMediaType;
   mediaId: number | null;
   seasonNumber?: number;
-  cacheInput: MediaCacheInput | null;
   isReleased: boolean;
   episodeCount?: number;
   defaultPoster?: string | null;
@@ -50,7 +49,6 @@ export function useMediaLog({
   mediaType,
   mediaId,
   seasonNumber,
-  cacheInput,
   isReleased,
   episodeCount = 0,
   defaultPoster = null,
@@ -124,7 +122,7 @@ export function useMediaLog({
 
   const persist = useCallback(
     async (next: MediaLogState, includeArtwork: boolean): Promise<"saved" | "deleted" | "failed"> => {
-      if (!userId || !mediaId || !cacheInput) return "failed";
+      if (!userId || !mediaId) return "failed";
 
       if (!hasLogContent(next)) {
         if (log.exists) {
@@ -141,8 +139,8 @@ export function useMediaLog({
         return "deleted";
       }
 
-      const cacheError = await upsertMediaCache(supabase, mediaType, cacheInput);
-      if (cacheError) {
+      const cached = await ensureMediaCached(mediaType, mediaId).catch(() => false);
+      if (!cached) {
         addToast("Error saving media data", "error");
         return "failed";
       }
@@ -166,7 +164,7 @@ export function useMediaLog({
       setLog({ ...next, exists: true });
       return "saved";
     },
-    [userId, mediaId, cacheInput, log.exists, log.isFavorite, rowFilter, supabase, config.table, config.idColumn, config.conflict, mediaType, season, addToast]
+    [userId, mediaId, log.exists, log.isFavorite, rowFilter, supabase, config.table, config.idColumn, config.conflict, mediaType, season, addToast]
   );
 
   const withCompletedEpisodes = useCallback(

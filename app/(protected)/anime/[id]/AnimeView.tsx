@@ -18,7 +18,6 @@ import EpisodesTab from "@/components/media/tabs/EpisodesTab";
 import type { Episode } from "@/lib/media/types";
 import FranchiseSlider, { FranchiseItem } from "@/components/media/FranchiseSlider";
 import { isMediaReleased } from "@/lib/media/release";
-import { animeCacheInput } from "@/lib/media/cache";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";
 import type { InitialMediaLog } from "@/lib/media/log";
@@ -205,12 +204,9 @@ export default function AnimeView({
     backdropsUrl: `/api/anime/${id}/backdrops`,
   });
 
-  const cacheInput = useMemo(() => animeCacheInput(anime), [anime]);
-
   const log = useMediaLog({
     mediaType: "anime",
     mediaId: anime.id,
-    cacheInput,
     isReleased,
     episodeCount: anime.episodes || 0,
     defaultPoster: randomPoster || getAnimePosterUrl(anime),

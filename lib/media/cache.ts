@@ -136,12 +136,3 @@ export function gameCacheInput(game: IGDBGameDetail): MediaCacheInput {
       : null,
   };
 }
-
-export async function upsertMediaCacheOrThrow(
-  supabase: SupabaseClient,
-  mediaType: CachedMediaType,
-  input: MediaCacheInput
-) {
-  const error = await upsertMediaCache(supabase, mediaType, input);
-  if (error) throw error;
-}

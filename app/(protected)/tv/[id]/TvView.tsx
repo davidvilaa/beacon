@@ -19,7 +19,6 @@ import DetailsTab from "@/components/media/tabs/DetailsTab";
 import EpisodesTab from "@/components/media/tabs/EpisodesTab";
 import { getTvCrewSections } from "@/lib/media/credits";
 import { isMediaReleased } from "@/lib/media/release";
-import { tvCacheInput } from "@/lib/media/cache";
 import type { InitialMediaLog } from "@/lib/media/log";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";
@@ -90,13 +89,10 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
     randomPool: 5,
   });
 
-  const cacheInput = useMemo(() => tvCacheInput(tv), [tv]);
-
   const log = useMediaLog({
     mediaType: "tv",
     mediaId: tv.id,
     seasonNumber: activeSeason,
-    cacheInput,
     isReleased,
     episodeCount: currentSeasonEpisodeCount,
     defaultPoster:

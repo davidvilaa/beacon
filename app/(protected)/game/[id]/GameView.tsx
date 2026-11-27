@@ -14,7 +14,6 @@ import MediaTabsNav from "@/components/media/tabs/MediaTabsNav";
 import DetailsTab from "@/components/media/tabs/DetailsTab";
 import FranchiseSlider, { FranchiseItem } from "@/components/media/FranchiseSlider";
 import { isMediaReleased } from "@/lib/media/release";
-import { gameCacheInput } from "@/lib/media/cache";
 import { useMediaLog } from "@/hooks/useMediaLog";
 import { useArtworkOptions } from "@/hooks/useArtworkOptions";
 import type { InitialMediaLog } from "@/lib/media/log";
@@ -160,8 +159,6 @@ export default function GameView({
     backdropsUrl: `/api/game/${id}/backdrops`,
   });
 
-  const cacheInput = useMemo(() => gameCacheInput(game), [game]);
-
   const defaultPoster = getIgdbImageUrl(game.cover?.image_id, "1080p");
   const defaultBackdrop = getIgdbImageUrl(
     game.artworks?.[0]?.image_id || game.screenshots?.[0]?.image_id,
@@ -171,7 +168,6 @@ export default function GameView({
   const log = useMediaLog({
     mediaType: "game",
     mediaId: game.id,
-    cacheInput,
     isReleased,
     defaultPoster: randomPoster || defaultPoster || null,
     defaultBackdrop: randomBackdrop || defaultBackdrop || null,

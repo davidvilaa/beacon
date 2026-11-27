@@ -11,7 +11,7 @@ import BackdropPickerModal from "@/components/media/modals/BackdropPickerModal";
 import ListCard from "@/components/lists/ListCard";
 import { fetchCachedMediaMap, RawListItemRef } from "@/lib/lists/media-map";
 import { getPosterUrl, getBackdropUrl } from "@/lib/providers/tmdb/client";
-import { upsertMediaCache } from "@/lib/media/cache";
+import { ensureMediaCached } from "@/lib/media/cache-actions";
 import type { MediaType } from "@/lib/media/types";
 
 const CACHE_ERROR_LABELS = { movie: "movie", tv: "series", anime: "anime", game: "game" } as const;
@@ -323,19 +323,8 @@ export default function ListModal({
           : null;
 
       if (toAdd.length > 0) {
-        const cacheError = await upsertMediaCache(supabase, media.mediaType, {
-          id: media.mediaId,
-          title: media.title,
-          overview: media.overview ?? null,
-          posterPath: media.posterPath ?? null,
-          backdropPath: media.backdropPath ?? null,
-          numberOfSeasons: media.mediaType === "tv" ? media.numberOfSeasons ?? 0 : undefined,
-          numberOfEpisodes:
-            media.mediaType === "tv" || media.mediaType === "anime"
-              ? media.numberOfEpisodes ?? 0
-              : undefined,
-        });
-        if (cacheError) {
+        const cached = await ensureMediaCached(media.mediaType, media.mediaId).catch(() => false);
+        if (!cached) {
           addToast(`Error saving ${CACHE_ERROR_LABELS[media.mediaType]} metadata`, "error");
           return;
         }

@@ -13,6 +13,7 @@ Media logging platform for movies, TV series, anime and video games. Log what yo
 1. Install dependencies with `npm install`.
 2. Create `.env.local` with:
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server only)
    - `TMDB_ACCESS_TOKEN`, `TMDB_API_KEY`
    - `IGDB_CLIENT_ID`, `IGDB_CLIENT_SECRET`
 3. Create the database by running `supabase/schema.sql` on a new Supabase project. `supabase/reset.sql` drops every table and must never be run against production.

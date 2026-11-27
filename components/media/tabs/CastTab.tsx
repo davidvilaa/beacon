@@ -109,7 +109,7 @@ export default function CastTab({
                 key={`${actor.id}-${idx}`}
                 href={targetHref}
                 data-chip
-                className="grow inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700/80 border border-zinc-600/60 hover:brightness-75 transition cursor-pointer"
+                className="grow inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700/60 border border-zinc-600/50 hover:brightness-75 transition cursor-pointer"
               >
                 {content}
               </Link>
@@ -120,7 +120,7 @@ export default function CastTab({
             <div
               key={`${actor.id}-${idx}`}
               data-chip
-              className="grow inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700/80 border border-zinc-600/60"
+              className="grow inline-flex items-stretch max-w-full min-w-0 h-9 overflow-hidden rounded-sm bg-zinc-700/60 border border-zinc-600/50"
             >
               {content}
             </div>

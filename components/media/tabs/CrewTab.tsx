@@ -39,7 +39,7 @@ export default function CrewTab({
               <Link
                 key={person.id}
                 href={`/person/${person.id}`}
-                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/80 border border-zinc-600/60 hover:brightness-75 transition cursor-pointer"
+                className="inline-flex items-center px-2.5 py-1 rounded-sm bg-zinc-700/60 border border-zinc-600/50 hover:brightness-75 transition cursor-pointer"
               >
                 <span className="text-xs font-medium text-zinc-100">
                   {person.name}

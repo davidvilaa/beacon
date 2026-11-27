@@ -49,7 +49,7 @@ export default function ReleasesTab({
               {group.countries.map((c) => (
                 <div
                   key={c.code}
-                  className="inline-flex items-center rounded-sm bg-zinc-700/80 border border-zinc-600/60 overflow-hidden min-w-0"
+                  className="inline-flex items-center rounded-sm bg-zinc-700/60 border border-zinc-600/50 overflow-hidden min-w-0"
                 >
                   <img
                     src={`https://flagcdn.com/w80/${c.code.toLowerCase()}.png`}
@@ -67,7 +67,7 @@ export default function ReleasesTab({
                       {c.country}
                     </span>
                     {c.certification && (
-                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded-sm bg-zinc-800 text-zinc-200 border border-zinc-600/50">
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded-sm bg-zinc-900 text-zinc-200 border border-zinc-600/50">
                         {c.certification}
                       </span>
                     )}

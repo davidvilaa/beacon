@@ -11,9 +11,9 @@ export default function Logo({ className = "", withMark = false }: LogoProps) {
     return (
       <Link
         href="/"
-        className={`inline-flex shrink-0 items-center gap-2 font-black tracking-widest text-zinc-50 select-none ${className}`}
+        className={`inline-flex shrink-0 items-center gap-1.5 font-black tracking-widest text-zinc-50 select-none ${className}`}
       >
-        <BeaconMark className="h-[1.4em] w-[1.4em]" />
+        <BeaconMark className="h-[1.9em] w-[1.9em]" />
         <span>BEACON</span>
       </Link>
     );

@@ -13,8 +13,8 @@ export default function Logo({ className = "", withMark = false }: LogoProps) {
         href="/"
         className={`inline-flex shrink-0 items-center gap-2 font-black tracking-widest text-zinc-50 select-none ${className}`}
       >
+        <BeaconMark className="h-[1.4em] w-[1.4em]" />
         <span>BEACON</span>
-        <BeaconMark className="h-[1.5em] w-[1.5em]" />
       </Link>
     );
   }

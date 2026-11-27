@@ -209,8 +209,9 @@ export async function getAnimeById(id: number): Promise<AnimeMedia | null> {
   try {
     const data = await fetchAniList<AniListMediaResponse>(query, { id });
     return data.data?.Media || null;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof Error && /error 404|not found/i.test(error.message)) return null;
+    throw error;
   }
 }
 

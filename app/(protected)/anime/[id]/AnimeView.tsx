@@ -274,8 +274,8 @@ export default function AnimeView({
     ...(hasTrailer ? [{ key: "trailer", label: "Trailer" }] : []),
   ];
 
-  const hasMultiplePosters = Math.max(posterCount, artwork.posters.length) > 1;
-  const hasMultipleBackdrops = Math.max(backdropCount, artwork.backdrops.length) > 1;
+  const hasMultiplePosters = log.isSignedIn && Math.max(posterCount, artwork.posters.length) > 1;
+  const hasMultipleBackdrops = log.isSignedIn && Math.max(backdropCount, artwork.backdrops.length) > 1;
 
   return (
     <>

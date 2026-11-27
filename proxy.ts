@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_PAGES = ['/', '/login', '/register'];
 const AUTH_PAGES = ['/login', '/register'];
 const PUBLIC_PAGE_PREFIXES = ['/movie/', '/tv/', '/anime/', '/game/', '/person/', '/company/'];
-const PUBLIC_API_PREFIXES = ['/api/movie/', '/api/tv/', '/api/anime/', '/api/game/'];
+const PUBLIC_API_PATTERNS = [/^\/api\/tv\/\d+\/season\/\d+$/, /^\/api\/anime\/\d+\/episodes$/];
 
 const startsWithAny = (pathname: string, prefixes: string[]) =>
   prefixes.some((prefix) => pathname.startsWith(prefix));
@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/api')) {
-    const isPublicApi = request.method === 'GET' && startsWithAny(pathname, PUBLIC_API_PREFIXES);
+    const isPublicApi = request.method === 'GET' && PUBLIC_API_PATTERNS.some((pattern) => pattern.test(pathname));
     if (!user && !isPublicApi) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

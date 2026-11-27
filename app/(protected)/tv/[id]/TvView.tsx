@@ -86,7 +86,7 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
   const artwork = useArtworkOptions({
     postersUrl: `/api/tv/${id}/posters?season=${activeSeason}`,
     backdropsUrl: `/api/tv/${id}/backdrops`,
-    eagerPosters: activeSeason !== initialSeason,
+    eagerPosters: Boolean(initialLog.userId) && activeSeason !== initialSeason,
     randomPool: 5,
   });
 
@@ -225,13 +225,13 @@ export default function TvView({ tv, initialSeason, initialLog, randomPoster, ra
         backdropAlt={tv.name}
         isBackdropLoaded={loadedBackdrop === backdropUrl}
         onBackdropLoaded={() => setLoadedBackdrop(backdropUrl)}
-        hasMultipleBackdrops={(tv.images?.backdrops?.length || 0) > 1}
+        hasMultipleBackdrops={log.isSignedIn && (tv.images?.backdrops?.length || 0) > 1}
         onOpenBackdropPicker={() => openWithArtwork("backdrop")}
         posterColumn={
           <MediaActionColumn
             posterUrl={posterUrl}
             title={tv.name}
-            hasMultiplePosters={true}
+            hasMultiplePosters={log.isSignedIn}
             onOpenPosterPicker={() => openWithArtwork("poster")}
             mediaType="tv"
             status={log.status}

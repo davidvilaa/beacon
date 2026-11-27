@@ -93,8 +93,8 @@ export default function MovieView({ movie, initialLog, randomPoster, randomBackd
   const backdropOptions = artwork.backdropsLoaded
     ? artwork.backdrops
     : (movie.images?.backdrops || []).slice(0, 80);
-  const hasMultiplePosters = (movie.images?.posters?.length || 0) > 1;
-  const hasMultipleBackdrops = (movie.images?.backdrops?.length || 0) > 1;
+  const hasMultiplePosters = log.isSignedIn && (movie.images?.posters?.length || 0) > 1;
+  const hasMultipleBackdrops = log.isSignedIn && (movie.images?.backdrops?.length || 0) > 1;
 
   return (
     <>

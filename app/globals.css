@@ -6,6 +6,7 @@
   --foreground: #fafafa;
   --accent: #a8dadc;
   --accent-hover: #8ec5c8;
+  --navbar: #141517;
   color-scheme: dark;
 }
 
@@ -28,6 +29,7 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-navbar: var(--navbar);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

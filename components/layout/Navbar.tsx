@@ -95,7 +95,7 @@ export default function Navbar() {
         showNav ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      <header className="flex h-14 items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950 px-4 sm:px-6">
+      <header className="flex h-14 items-center justify-between gap-3 border-b border-zinc-800 bg-navbar px-4 sm:px-6">
         <Logo className="text-xl" />
 
         <div className="flex min-w-0 items-center gap-3">

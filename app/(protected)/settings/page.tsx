@@ -10,6 +10,17 @@ import Select from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
 import { PrimaryButton } from "@/components/ui/Button";
 import Loading from "@/components/ui/Loading";
+import {
+  AVATAR_MAX_BYTES,
+  AVATAR_TYPES,
+  BIO_MAX_LENGTH,
+  MAX_SOCIAL_LINKS,
+  SOCIAL_VALUE_MAX_LENGTH,
+  USERNAME_PATTERN,
+  isUsernameTaken,
+  isValidSocialLink,
+  normalizeSocialLinks,
+} from "@/lib/profile/validation";
 
 const PLATFORMS = [
   { id: 'github', label: 'GitHub', placeholder: 'Username', icon: <FaGithub className="w-4 h-4" /> },
@@ -68,6 +79,11 @@ export default function Settings() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!AVATAR_TYPES.includes(file.type) || file.size > AVATAR_MAX_BYTES) {
+        addToast("Photo must be a JPG, PNG or WebP of up to 5 MB", "error");
+        e.target.value = "";
+        return;
+      }
       setAvatarFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
@@ -82,8 +98,27 @@ export default function Settings() {
       setSaving(false);
       return;
     }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    if (!USERNAME_PATTERN.test(username)) {
       addToast("Username can only contain letters, numbers, and underscores", "error");
+      setSaving(false);
+      return;
+    }
+    if (bio.length > BIO_MAX_LENGTH) {
+      addToast(`Bio can have up to ${BIO_MAX_LENGTH} characters`, "error");
+      setSaving(false);
+      return;
+    }
+
+    const cleanLinks = normalizeSocialLinks(socialLinks);
+    const invalidLink = cleanLinks.find((link) => !isValidSocialLink(link));
+    if (invalidLink || cleanLinks.length > MAX_SOCIAL_LINKS) {
+      const label = PLATFORMS.find((p) => p.id === invalidLink?.platform)?.label;
+      addToast(label ? `Invalid ${label} link` : "Too many social links", "error");
+      setSaving(false);
+      return;
+    }
+    if (await isUsernameTaken(supabase, username, user.id)) {
+      addToast("That username is already taken", "error");
       setSaving(false);
       return;
     }
@@ -107,22 +142,20 @@ export default function Settings() {
       }
     }
 
-    const cleanLinks = socialLinks.filter(link => link.platform !== "" && link.value.trim() !== "");
-
     const { error } = await supabase
       .from("users")
       .update({ 
         username, 
         bio,
         social_links: cleanLinks,
-        avatar_url: finalAvatarUrl 
+        avatar_url: finalAvatarUrl || null
       })
       .eq("id", user.id);
       
     setSaving(false);
     
     if (error) {
-      addToast("Error updating profile", "error");
+      addToast(error.code === "23505" ? "That username is already taken" : "Error updating profile", "error");
     } else {
       setSocialLinks(cleanLinks);
       window.dispatchEvent(new Event("profile-updated"));
@@ -141,7 +174,7 @@ export default function Settings() {
   };
 
   const addLink = () => {
-    if (socialLinks.length < 10) {
+    if (socialLinks.length < MAX_SOCIAL_LINKS) {
       setSocialLinks([...socialLinks, { platform: '', value: '' }]);
     }
   };
@@ -180,7 +213,7 @@ export default function Settings() {
             </div>
             <input 
               type="file" 
-              accept="image/*" 
+              accept={AVATAR_TYPES.join(",")} 
               className="hidden" 
               ref={fileInputRef}
               onChange={handleFileChange}
@@ -211,14 +244,14 @@ export default function Settings() {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell us a bit about yourself..."
                   className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none resize-none h-24"
-                  maxLength={300}
+                  maxLength={BIO_MAX_LENGTH}
                 />
               </div>
               <div>
                 <div className="flex justify-between items-end mb-2">
                   <label className="block text-sm font-medium text-zinc-400">Social links</label>
                   <span className="text-xs text-zinc-600">
-                    {socialLinks.length}/10
+                    {socialLinks.length}/{MAX_SOCIAL_LINKS}
                   </span>
                 </div>
                 
@@ -235,6 +268,7 @@ export default function Settings() {
                         type="text"
                         value={link.value}
                         disabled={!link.platform}
+                        maxLength={SOCIAL_VALUE_MAX_LENGTH}
                         placeholder={!link.platform ? "Choose platform..." : PLATFORMS.find(p => p.id === link.platform)?.placeholder}
                         onChange={(e) => handleLinkChange(index, 'value', e.target.value)}
                         className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-sm focus:border-accent focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -249,7 +283,7 @@ export default function Settings() {
                     </div>
                   ))}
 
-                  {socialLinks.length < 10 && (
+                  {socialLinks.length < MAX_SOCIAL_LINKS && (
                     <button
                       type="button"
                       onClick={addLink}

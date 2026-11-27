@@ -98,6 +98,7 @@ Full DDL in `supabase/schema.sql` (create-only, mirrors the live DB). `supabase/
   - `avatar_url` text
   - `bio` text default `''`
   - `social_links` jsonb default `'[]'`
+  - Limits enforced in the DB and mirrored in `lib/profile/validation.ts`: username `^[A-Za-z0-9_]{3,20}$` and unique case-insensitively (`users_username_lower_key`), bio up to 300, up to 10 `social_links` (github/twitter/instagram handles or a `custom` web URL up to 200), `avatar_url` only from this project's `avatars` bucket.
   - No `created_at`/`updated_at`. RLS: select public; update only `auth.uid() = id`; no insert policy (rows are created by trigger `on_auth_user_created` → `handle_new_user()`, security definer, copying `username` and `avatar_url` from signup metadata).
 
 - **`public.movies`** — `id` bigint PK (TMDB id), `title` text not null, `overview`, `poster_path`, `backdrop_path`, `created_at`, `updated_at`

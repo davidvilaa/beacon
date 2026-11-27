@@ -14,6 +14,40 @@ create table public.users (
   social_links jsonb null default '[]'::jsonb
 );
 
+create or replace function public.is_valid_social_links(links jsonb)
+returns boolean as $$
+  select case
+    when links is null then true
+    when jsonb_typeof(links) <> 'array' then false
+    when jsonb_array_length(links) > 10 then false
+    else not exists (
+      select 1 from jsonb_array_elements(links) as l
+      where coalesce(
+        case l ->> 'platform'
+          when 'github' then (l ->> 'value') ~ '^[A-Za-z0-9-]{1,39}$'
+          when 'twitter' then (l ->> 'value') ~ '^[A-Za-z0-9_]{1,15}$'
+          when 'instagram' then (l ->> 'value') ~ '^[A-Za-z0-9._]{1,30}$'
+          when 'custom' then length(l ->> 'value') <= 200
+            and (l ->> 'value') ~* '^(https?://)?([a-z0-9-]+\.)+[a-z]{2,}(:[0-9]+)?([/?#][^[:space:]]*)?$'
+          else false
+        end, false) = false
+    )
+  end
+$$ language sql immutable set search_path = public;
+
+alter table public.users
+  add constraint users_username_format check (username ~ '^[A-Za-z0-9_]{3,20}$'),
+  add constraint users_bio_length check (char_length(bio) <= 300),
+  add constraint users_social_links_valid check (public.is_valid_social_links(social_links)),
+  add constraint users_avatar_url_valid check (
+    avatar_url is null or (
+      char_length(avatar_url) <= 500
+      and avatar_url like 'https://ljlobppnmrfeccxurmnd.supabase.co/storage/v1/object/public/avatars/%'
+    )
+  );
+
+create unique index users_username_lower_key on public.users (lower(username));
+
 alter table public.users enable row level security;
 
 create policy "Perfiles visibles para todos"

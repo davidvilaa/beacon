@@ -7,6 +7,7 @@ import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import { useToast } from "@/components/ui/Toast";
 import { PrimaryButton } from "@/components/ui/Button";
+import { isUsernameTaken } from "@/lib/profile/validation";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -73,6 +74,12 @@ export default function Register() {
     }
 
     setLoading(true);
+    if (await isUsernameTaken(supabase, username)) {
+      addToast("That username is already taken", "error");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
